@@ -57,11 +57,12 @@ h1, p { color: #333; }
 
 /* Analysis split-screen */
 #container { display:flex; height:80vh; margin-top:20px; }
-#analysis-actions { flex:1; padding:20px; overflow:auto; }
+#analysis-actions, #markings-actions { flex:1; padding:20px; overflow:auto; }
 #divider { width:4px; background:#ccc; cursor:col-resize; }
-#moat-table { flex:1; padding:10px; overflow:auto; }
+#moat-table, #markings-table { flex:1; padding:10px; overflow:auto; }
 table { width:100%; border-collapse:collapse; }
 th, td { border:1px solid #ccc; padding:8px; text-align:center; }
+.highlight { background: yellow; }
 
 /* Chart canvas sizing inside modal */
 #chart-modal .modal-content {

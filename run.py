@@ -34,6 +34,16 @@ def init_db():
             filename TEXT
         )
     ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS verified_markings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            part_number TEXT,
+            mfg_number1 TEXT,
+            mfg_number2 TEXT,
+            manufacturer TEXT,
+            verified_markings TEXT
+        )
+    ''')
     conn.commit()
     conn.close()
 
@@ -44,6 +54,24 @@ init_db()
 @app.route('/')
 def home():
     return render_template('home.html')
+
+@app.route('/part-markings', methods=['GET', 'POST'])
+def part_markings():
+    conn = get_db()
+    if request.method == 'POST':
+        part_number = request.form.get('part_number')
+        mfg1 = request.form.get('mfg_number1')
+        mfg2 = request.form.get('mfg_number2')
+        manufacturer = request.form.get('manufacturer')
+        markings = request.form.get('verified_markings')
+        conn.execute(
+            'INSERT INTO verified_markings (part_number, mfg_number1, mfg_number2, manufacturer, verified_markings) VALUES (?,?,?,?,?)',
+            (part_number, mfg1, mfg2, manufacturer, markings)
+        )
+        conn.commit()
+    rows = conn.execute('SELECT * FROM verified_markings ORDER BY id').fetchall()
+    conn.close()
+    return render_template('part_markings.html', markings=rows)
 
 @app.route('/analysis', methods=['GET', 'POST'])
 def analysis():
