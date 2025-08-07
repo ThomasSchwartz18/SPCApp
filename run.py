@@ -1,0 +1,154 @@
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+import os
+import sqlite3
+import pandas as pd
+from datetime import datetime
+
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = 'uploads'
+DATABASE = 'spcapp.db'
+
+# Ensure upload folder exists
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# --- Database helpers ---
+def get_db():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    conn = get_db()
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS moat (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            model_name TEXT,
+            total_boards INTEGER,
+            total_parts_per_board INTEGER,
+            total_parts INTEGER,
+            ng_parts INTEGER,
+            ng_ppm REAL,
+            falsecall_parts INTEGER,
+            falsecall_ppm REAL,
+            upload_time TEXT,
+            filename TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+# Initialize database
+init_db()
+
+# --- Routes ---
+@app.route('/')
+def home():
+    return render_template('home.html')
+
+@app.route('/analysis', methods=['GET', 'POST'])
+def analysis():
+    show = False
+    # Handle upload via POST
+    if request.method == 'POST' and 'ppm_report' in request.files:
+        file = request.files['ppm_report']
+        if file:
+            filename = file.filename
+            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(save_path)
+
+            ext = os.path.splitext(save_path)[1].lower()
+            engine = 'xlrd' if ext == '.xls' else 'openpyxl'
+
+            df = pd.read_excel(save_path, engine=engine, header=5, usecols='B:I')
+            df = df[df.iloc[:, 0] != 'Total']
+            df.columns = [
+                'model_name','total_boards','total_parts_per_board','total_parts',
+                'ng_parts','ng_ppm','falsecall_parts','falsecall_ppm'
+            ]
+            df['upload_time'] = datetime.utcnow().isoformat()
+            df['filename'] = filename
+
+            conn = get_db()
+            df.to_sql('moat', conn, if_exists='append', index=False)
+            conn.close()
+
+        return redirect(url_for('analysis', view='moat'))
+
+    # GET: determine if MOAT view
+    args = request.args
+    if args.get('view') == 'moat':
+        show = True
+        conn = get_db()
+        rows = conn.execute('SELECT * FROM moat ORDER BY id').fetchall()
+        conn.close()
+
+        total_rows = len(rows)
+        if total_rows:
+            times = [datetime.fromisoformat(r['upload_time']) for r in rows]
+            earliest = min(times).date().isoformat()
+            latest = max(times).date().isoformat()
+        else:
+            earliest = latest = ''
+    else:
+        rows = []
+        total_rows = 0
+        earliest = latest = ''
+
+    return render_template(
+        'analysis.html',
+        moat=rows,
+        show_moat=show,
+        total_rows=total_rows,
+        earliest=earliest,
+        latest=latest
+    )
+
+@app.route('/analysis/chart-data')
+def chart_data():
+    start = request.args.get('start')
+    end = request.args.get('end')
+    threshold = request.args.get('threshold', type=int, default=0)
+    conn = get_db()
+    query = 'SELECT model_name, SUM(falsecall_parts)*1.0/SUM(total_boards) AS rate FROM moat WHERE 1=1'
+    params = []
+    if start:
+        query += ' AND upload_time >= ?'
+        params.append(f'{start}T00:00:00')
+    if end:
+        query += ' AND upload_time <= ?'
+        params.append(f'{end}T23:59:59')
+    query += ' GROUP BY model_name HAVING SUM(total_boards) >= ?'
+    params.append(threshold)
+    data = conn.execute(query, params).fetchall()
+    conn.close()
+    return jsonify([{'model': r['model_name'], 'rate': r['rate']} for r in data])
+
+@app.route('/uploads')
+def list_uploads():
+    try:
+        conn = get_db()
+        files = conn.execute('SELECT DISTINCT filename FROM moat').fetchall()
+        conn.close()
+        return jsonify(files=[f['filename'] for f in files])
+    except Exception as e:
+        app.logger.error('Error in list_uploads', exc_info=e)
+        return jsonify(files=[], error=str(e)), 500
+
+@app.route('/uploads/delete', methods=['POST'])
+def delete_upload():
+    data = request.json or {}
+    filename = data.get('filename')
+    if not filename:
+        return jsonify(error='Filename required'), 400
+    conn = get_db()
+    conn.execute('DELETE FROM moat WHERE filename = ?', (filename,))
+    conn.commit()
+    conn.close()
+    path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if os.path.exists(path):
+        os.remove(path)
+    return jsonify(success=True)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
+

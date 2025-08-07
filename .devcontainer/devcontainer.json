@@ -1,0 +1,12 @@
+// .devcontainer/devcontainer.json
+{
+  "name": "FloorFlow Python Dev",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": { "VARIANT": "3.10" }
+  },
+  "forwardPorts": [5000, 8000],
+  "postCreateCommand": "pip install -r requirements.txt",
+  "workspaceFolder": "/workspaces/floorflow",
+  "remoteUser": "vscode"
+}

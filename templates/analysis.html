@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Data Analysis - PPM MOAT & Control Chart</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <!-- Chart.js for control chart rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="/static/js/analysis.js" defer></script>
+</head>
+<body>
+  <a href="/">← Home</a>
+  <h1>Data Analysis - PPM MOAT</h1>
+  {% if not show_moat %}
+    <button onclick="window.location='{{ url_for('analysis') }}?view=moat'">View MOAT</button>
+  {% else %}
+    <div class="moat-stats">
+      {% if total_rows %}
+        Total rows: {{ total_rows }} | Table range: {{ earliest }} - {{ latest }}
+        &nbsp;|&nbsp;
+        <button id="show-uploads-btn">Manage Uploads</button>
+      {% endif %}
+    </div>
+    <div id="container">
+      <div id="analysis-actions">
+        <form method="post" enctype="multipart/form-data" style="margin-bottom:20px;">
+          <input type="file" name="ppm_report" accept=".xls,.xlsx" required>
+          <button type="submit">Upload PPM Report</button>
+        </form>
+        <!-- Control Chart settings -->
+        <button id="control-chart-btn">Control Chart Settings</button>
+        <div id="chart-settings" style="display:none; margin-top:10px;">
+          <label>Start: <input type="date" id="start-date"></label><br>
+          <label>End:   <input type="date" id="end-date"></label><br>
+          <label>Y Max: <input type="number" id="y-max" value="100" step="0.1"></label><br>
+          <label>Min Boards: <input type="number" id="min-boards" value="7"></label><br>
+          <button id="run-chart-btn">Run Chart</button>
+        </div>
+      </div>
+      <div id="divider"></div>
+      <div id="moat-table">
+        <table>
+          <thead><tr>
+            <th>Model Name</th><th>Total Boards</th><th>Total Parts/Board</th>
+            <th>Total Parts</th><th>NG Parts</th><th>NG PPM</th>
+            <th>FalseCall Parts</th><th>FalseCall PPM</th><th>Upload Time</th>
+          </tr></thead>
+          <tbody>
+          {% for row in moat %}
+          <tr>
+            <td>{{ row['model_name'] }}</td>
+            <td>{{ row['total_boards'] }}</td>
+            <td>{{ row['total_parts_per_board'] }}</td>
+            <td>{{ row['total_parts'] }}</td>
+            <td>{{ row['ng_parts'] }}</td>
+            <td>{{ row['ng_ppm'] }}</td>
+            <td>{{ row['falsecall_parts'] }}</td>
+            <td>{{ row['falsecall_ppm'] }}</td>
+            <td>{{ row['upload_time'] }}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Uploads Modal -->
+    <div id="uploads-modal" class="modal">
+      <div class="modal-content">
+        <span id="close-uploads-modal" class="close">&times;</span>
+        <h2>Uploaded Files</h2>
+        <ul id="uploads-list"></ul>
+      </div>
+    </div>
+
+    <!-- Chart Modal -->
+    <div id="chart-modal" class="modal">
+      <div class="modal-content">
+        <span id="close-chart-modal" class="close">&times;</span>
+        <h2>Control Chart - Avg FalseCall Rate</h2>
+        <canvas id="chart-canvas" height="200"></canvas>
+      </div>
+    </div>
+  {% endif %}
+</body>
+</html>

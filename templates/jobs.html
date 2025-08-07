@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Jobs Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <a href="{{ url_for('main_views.home') }}">← Home</a>
+  <h1>Jobs Dashboard</h1>
+
+  <form id="add-form">
+    <input type="text" id="name" placeholder="New job name" required>
+    <button type="submit">Add Job</button>
+  </form>
+
+  <table id="jobs-table">
+    <thead>
+      <tr><th>ID</th><th>Name</th><th>Status</th><th>Location</th><th>Updated</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <form id="update-form">
+    <input type="number" id="job_id" placeholder="Job ID" required>
+    <select id="status">
+      <option>Waiting</option>
+      <option>In Progress</option>
+      <option>Blocked</option>
+      <option>Done</option>
+    </select>
+    <input type="text" id="location" placeholder="Location" required>
+    <button type="submit">Update Job</button>
+  </form>
+
+  <script src="{{ url_for('static', filename='js/jobs.js') }}"></script>
+</body>
+</html>
