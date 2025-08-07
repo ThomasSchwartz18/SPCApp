@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Verified Part Markings</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="/static/js/part_markings.js" defer></script>
+</head>
+<body>
+  <a href="/">← Home</a>
+  <h1>Verified Part Markings</h1>
+  <div id="container">
+    <div id="markings-actions">
+      <input type="text" id="search-part-number" placeholder="Search Part Number">
+      <button id="search-btn" type="button">Search</button>
+      <form method="post" style="margin-top:20px;">
+        <label>Part Number <input type="text" name="part_number" required></label><br>
+        <label>Mfg Number 1 <input type="text" name="mfg_number1"></label><br>
+        <label>Mfg Number 2 <input type="text" name="mfg_number2"></label><br>
+        <label>Manufacturer <input type="text" name="manufacturer"></label><br>
+        <label>Verified Markings <input type="text" name="verified_markings"></label><br>
+        <button type="submit">Add</button>
+      </form>
+    </div>
+    <div id="divider"></div>
+    <div id="markings-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Verified Markings</th>
+            <th>Manufacturer</th>
+            <th>Mfg Number 2</th>
+            <th>Mfg Number 1</th>
+            <th>Part Number</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in markings %}
+          <tr>
+            <td>{{ row['verified_markings'] }}</td>
+            <td>{{ row['manufacturer'] }}</td>
+            <td>{{ row['mfg_number2'] }}</td>
+            <td>{{ row['mfg_number1'] }}</td>
+            <td>{{ row['part_number'] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>
