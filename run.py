@@ -59,6 +59,47 @@ def home():
 def part_markings():
     conn = get_db()
     if request.method == 'POST':
+        # Handle spreadsheet upload
+        if 'excel_file' in request.files and request.files['excel_file'].filename:
+            file = request.files['excel_file']
+            filename = file.filename
+            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(save_path)
+
+            ext = os.path.splitext(save_path)[1].lower()
+            engine = 'xlrd' if ext == '.xls' else 'openpyxl'
+
+            df = pd.read_excel(
+                save_path,
+                engine=engine,
+                header=None,
+                usecols='A:E',
+                names=[
+                    'verified_markings',
+                    'manufacturer',
+                    'mfg_number2',
+                    'mfg_number1',
+                    'part_number',
+                ],
+            ).dropna(how='all')
+
+            conn.executemany(
+                'INSERT INTO verified_markings (part_number, mfg_number1, mfg_number2, manufacturer, verified_markings) VALUES (?,?,?,?,?)',
+                df[
+                    [
+                        'part_number',
+                        'mfg_number1',
+                        'mfg_number2',
+                        'manufacturer',
+                        'verified_markings',
+                    ]
+                ].values.tolist(),
+            )
+            conn.commit()
+            conn.close()
+            return redirect(url_for('part_markings'))
+
+        # Handle single record submission
         part_number = request.form.get('part_number')
         mfg1 = request.form.get('mfg_number1')
         mfg2 = request.form.get('mfg_number2')
@@ -66,7 +107,7 @@ def part_markings():
         markings = request.form.get('verified_markings')
         conn.execute(
             'INSERT INTO verified_markings (part_number, mfg_number1, mfg_number2, manufacturer, verified_markings) VALUES (?,?,?,?,?)',
-            (part_number, mfg1, mfg2, manufacturer, markings)
+            (part_number, mfg1, mfg2, manufacturer, markings),
         )
         conn.commit()
     rows = conn.execute('SELECT * FROM verified_markings ORDER BY id').fetchall()
