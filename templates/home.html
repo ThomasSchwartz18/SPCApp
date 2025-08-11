@@ -7,6 +7,20 @@
 </head>
 <body>
   <h1>Welcome to SPCApp</h1>
+  <div class="job-previews">
+    <h2>Floor Jobs Preview</h2>
+    {% for job in sample_jobs %}
+      <div class="job-preview">
+        <strong>{{ job.job }} – due {{ job.due_date }} ({{ job.due_in }})</strong>
+        <ul>
+          {% for loc, count in job.locations %}
+            <li>{{ loc }}....{{ count }}</li>
+          {% endfor %}
+          <li>Total: {{ job.total }}</li>
+        </ul>
+      </div>
+    {% endfor %}
+  </div>
   <p>Select a section below:</p>
   <div class="widgets">
     <div class="widget" onclick="location.href='/jobs'">

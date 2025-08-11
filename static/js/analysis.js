@@ -89,7 +89,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 pointBackgroundColor: 'black',
                 pointBorderColor: 'black',
                 fill: false,
-                tension: 0
+                tension: 0,
+                borderWidth: 1
               }]
             },
             options: {
@@ -111,7 +112,7 @@ window.addEventListener('DOMContentLoaded', () => {
     downloadFcBtn.addEventListener('click', () => {
       if (!chartInstance) return;
       const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF();
+      const pdf = new jsPDF({ orientation: 'landscape' });
       pdf.text('Control Chart - Avg FalseCall Rate', 10, 10);
       const dateText = document.getElementById('fc-chart-date-range').textContent;
       pdf.text(dateText, 10, 20);
@@ -155,7 +156,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 pointBackgroundColor: 'black',
                 pointBorderColor: 'black',
                 fill: false,
-                tension: 0
+                tension: 0,
+                borderWidth: 1
               }]
             },
             options: {
@@ -177,7 +179,7 @@ window.addEventListener('DOMContentLoaded', () => {
     downloadNgBtn.addEventListener('click', () => {
       if (!ngChartInstance) return;
       const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF();
+      const pdf = new jsPDF({ orientation: 'landscape' });
       pdf.text('Control Chart - Avg NG Rate', 10, 10);
       const dateText = document.getElementById('ng-chart-date-range').textContent;
       pdf.text(dateText, 10, 20);
