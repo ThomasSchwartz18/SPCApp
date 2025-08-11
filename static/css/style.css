@@ -16,8 +16,11 @@ h1, p { color: #333; }
 .widget:hover { background:#f9f9f9; }
 
 /* Job preview section */
-.job-previews { margin-bottom: 20px; }
-.job-preview { margin-bottom: 10px; }
+.job-previews { margin: 0 -20px 20px -20px; width: calc(100% + 40px); }
+.job-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; width: 100%; }
+.job-preview { margin-bottom: 0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+.job-preview.warning { background: #fff3cd; }
+.job-preview.danger { background: #f8d7da; }
 .job-preview ul { list-style: none; padding-left: 0; margin: 5px 0 0 0; }
 .job-preview li { font-family: monospace; }
 
