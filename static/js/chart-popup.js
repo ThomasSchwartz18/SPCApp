@@ -10,22 +10,52 @@ window.addEventListener('DOMContentLoaded', () => {
     .then(res => res.json())
     .then(data => {
       const labels = data.map(d => d.model);
-      const values = data.map(d => d.rate);
+      const inRangeValues = data.map(d => (d.rate <= yMax ? d.rate : null));
+      const outliers = data.filter(d => d.rate > yMax);
       new Chart(ctx, {
         type: 'line',
         data: {
           labels,
-          datasets: [{
-            label: 'FalseCall Rate',
-            data: values,
-            borderColor: 'black',
-            pointBackgroundColor: 'black',
-            pointBorderColor: 'black',
-            fill: false,
-            tension: 0
-          }]
+          datasets: [
+            {
+              label: 'FalseCall Rate',
+              data: inRangeValues,
+              borderColor: 'black',
+              pointBackgroundColor: 'black',
+              pointBorderColor: 'black',
+              fill: false,
+              tension: 0,
+              clip: false
+            },
+            {
+              label: 'Outliers',
+              data: outliers.map(d => ({ x: d.model, y: yMax, real: d.rate })),
+              borderColor: 'red',
+              pointBackgroundColor: 'red',
+              pointBorderColor: 'red',
+              showLine: false,
+              pointStyle: 'triangle',
+              rotation: 180,
+              clip: false
+            }
+          ]
         },
-        options: { scales: { y: { beginAtZero: true, max: yMax } } }
+        options: {
+          layout: { padding: { top: 20 } },
+          scales: { y: { beginAtZero: true, max: yMax } },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: ctx => {
+                  if (ctx.dataset.label === 'Outliers') {
+                    return `${ctx.label}: ${ctx.raw.real}`;
+                  }
+                  return `${ctx.dataset.label}: ${ctx.parsed.y}`;
+                }
+              }
+            }
+          }
+        }
       });
     })
     .catch(console.error);
