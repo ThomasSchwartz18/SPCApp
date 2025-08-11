@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory
 import os
 import sqlite3
 import pandas as pd
 from datetime import datetime
 import re
+from xlsx2html import xlsx2html
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -146,10 +147,11 @@ def aoi_report():
 
             ext = os.path.splitext(save_path)[1].lower()
             engine = 'xlrd' if ext == '.xls' else 'openpyxl'
-            df = pd.read_excel(save_path, engine=engine, header=None)
+            df = pd.read_excel(save_path, engine=engine, header=None, usecols='A:F')
 
             records = []
             i = 0
+            first_report_date = manual_date
             while i < len(df):
                 cell = str(df.iloc[i, 0]) if not pd.isna(df.iloc[i, 0]) else ''
                 if cell.startswith('AOI') and 'Shift' in cell:
@@ -164,6 +166,8 @@ def aoi_report():
                                 report_date = datetime.strptime(date_str, '%m/%d/%y').date().isoformat()
                             except ValueError:
                                 report_date = date_str
+                        if not first_report_date and report_date:
+                            first_report_date = report_date
                     else:
                         shift = ''
                         report_date = manual_date or ''
@@ -194,6 +198,12 @@ def aoi_report():
                     records
                 )
                 conn.commit()
+                try:
+                    html_name = f"{first_report_date or os.path.splitext(filename)[0]}.html"
+                    html_path = os.path.join(app.config['UPLOAD_FOLDER'], html_name)
+                    xlsx2html(save_path, html_path)
+                except Exception as e:
+                    app.logger.error('HTML conversion failed', exc_info=e)
         conn.close()
         return redirect(url_for('aoi_report'))
 
@@ -204,12 +214,15 @@ def aoi_report():
 
     selected_date = request.args.get('date')
     data = {}
+    html_exists = False
     if selected_date:
         rows = conn.execute('SELECT * FROM aoi_reports WHERE report_date = ? ORDER BY shift, id', (selected_date,)).fetchall()
         for r in rows:
             data.setdefault(r['shift'], []).append(r)
+        html_file = os.path.join(app.config['UPLOAD_FOLDER'], f"{selected_date}.html")
+        html_exists = os.path.exists(html_file)
     conn.close()
-    return render_template('aoi.html', upload=False, data=data, selected_date=selected_date)
+    return render_template('aoi.html', upload=False, data=data, selected_date=selected_date, html_exists=html_exists)
 
 @app.route('/analysis', methods=['GET', 'POST'])
 def analysis():
@@ -314,6 +327,11 @@ def delete_upload():
     if os.path.exists(path):
         os.remove(path)
     return jsonify(success=True)
+
+
+@app.route('/aoi/html/<path:filename>')
+def aoi_html(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

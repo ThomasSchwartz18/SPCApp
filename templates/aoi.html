@@ -42,7 +42,9 @@
       </div>
     </div>
     {% if selected_date %}
-      {% if data %}
+      {% if html_exists %}
+        <iframe src="{{ url_for('aoi_html', filename=selected_date + '.html') }}" width="100%" height="600"></iframe>
+      {% elif data %}
         {% for shift, rows in data.items() %}
           <h2>{{ shift }} Shift</h2>
           <table>
