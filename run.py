@@ -77,7 +77,6 @@ init_db()
 @app.route('/')
 def home():
     # Example placeholder data; replace with SAP integration later
-    jobs = []
     today = datetime.today()
     example_data = [
         {
@@ -91,14 +90,30 @@ def home():
             'locations': [('Hand Assembly', 100)],
         },
     ]
+
+    # Sort by days until due so earliest jobs appear first
+    example_data.sort(key=lambda x: x['due_in_days'])
+
+    jobs = []
     for item in example_data:
         due_date = today + timedelta(days=item['due_in_days'])
+
+        days = item['due_in_days']
+        if days <= 2:
+            highlight = 'danger'
+        elif days <= 6:
+            highlight = 'warning'
+        else:
+            highlight = ''
+
         jobs.append({
             'job': item['job'],
             'due_date': due_date.strftime('%Y-%m-%d'),
-            'due_in': f"{item['due_in_days']} days",
+            'due_in': f"{days} days",
             'locations': item['locations'],
-            'total': sum(count for _, count in item['locations'])
+            'total': sum(count for _, count in item['locations']),
+            'highlight': highlight,
+            'due_in_days': days,
         })
     return render_template('home.html', sample_jobs=jobs)
 
