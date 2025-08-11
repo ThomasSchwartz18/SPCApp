@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, s
 import os
 import sqlite3
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 from xlsx2html import xlsx2html
 
@@ -76,7 +76,31 @@ init_db()
 # --- Routes ---
 @app.route('/')
 def home():
-    return render_template('home.html')
+    # Example placeholder data; replace with SAP integration later
+    jobs = []
+    today = datetime.today()
+    example_data = [
+        {
+            'job': 'JOB123',
+            'due_in_days': 5,
+            'locations': [('Hand Assembly', 295), ('Rework', 5)],
+        },
+        {
+            'job': 'JOB456',
+            'due_in_days': 10,
+            'locations': [('Hand Assembly', 100)],
+        },
+    ]
+    for item in example_data:
+        due_date = today + timedelta(days=item['due_in_days'])
+        jobs.append({
+            'job': item['job'],
+            'due_date': due_date.strftime('%Y-%m-%d'),
+            'due_in': f"{item['due_in_days']} days",
+            'locations': item['locations'],
+            'total': sum(count for _, count in item['locations'])
+        })
+    return render_template('home.html', sample_jobs=jobs)
 
 @app.route('/part-markings', methods=['GET', 'POST'])
 def part_markings():

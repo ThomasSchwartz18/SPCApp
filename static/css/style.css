@@ -15,6 +15,12 @@ h1, p { color: #333; }
 }
 .widget:hover { background:#f9f9f9; }
 
+/* Job preview section */
+.job-previews { margin-bottom: 20px; }
+.job-preview { margin-bottom: 10px; }
+.job-preview ul { list-style: none; padding-left: 0; margin: 5px 0 0 0; }
+.job-preview li { font-family: monospace; }
+
 /* MOAT stats text */
 .moat-stats {
   font-size: 0.9em;
