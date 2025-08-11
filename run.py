@@ -295,8 +295,10 @@ def chart_data():
     start = request.args.get('start')
     end = request.args.get('end')
     threshold = request.args.get('threshold', type=int, default=0)
+    metric = request.args.get('metric', 'fc')
+    column = 'falsecall_parts' if metric == 'fc' else 'ng_parts'
     conn = get_db()
-    query = 'SELECT model_name, SUM(falsecall_parts)*1.0/SUM(total_boards) AS rate FROM moat WHERE 1=1'
+    query = f'SELECT model_name, SUM({column})*1.0/SUM(total_boards) AS rate FROM moat WHERE 1=1'
     params = []
     if start:
         query += ' AND upload_time >= ?'
