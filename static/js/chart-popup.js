@@ -12,8 +12,19 @@ window.addEventListener('DOMContentLoaded', () => {
       const labels = data.map(d => d.model);
       const values = data.map(d => d.rate);
       new Chart(ctx, {
-        type: 'bar',
-        data: { labels, datasets: [{ label: 'FalseCall Rate', data: values }] },
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'FalseCall Rate',
+            data: values,
+            borderColor: 'black',
+            pointBackgroundColor: 'black',
+            pointBorderColor: 'black',
+            fill: false,
+            tension: 0
+          }]
+        },
         options: { scales: { y: { beginAtZero: true, max: yMax } } }
       });
     })
