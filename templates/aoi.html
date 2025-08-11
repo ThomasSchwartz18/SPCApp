@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
+  <a href="/">← Home</a>
   <h1>AOI Daily Report</h1>
   <p>
     <a href="/aoi">View Reports</a> |
@@ -13,17 +14,33 @@
   </p>
 
   {% if upload %}
-    <form method="post" enctype="multipart/form-data">
-      <label for="excel_file">Excel File:</label>
-      <input type="file" id="excel_file" name="excel_file" accept=".xls,.xlsx">
-      <button type="submit">Upload</button>
-    </form>
+    <div class="action-panel">
+      <div class="action-card">
+        <h2>Upload Daily Report</h2>
+        <p class="desc">Choose the AOI report file and optionally set the report date.</p>
+        <form method="post" enctype="multipart/form-data">
+          <label>Report Date
+            <input type="date" name="report_date">
+          </label><br>
+          <label>Excel File
+            <input type="file" name="excel_file" accept=".xls,.xlsx" required>
+          </label><br>
+          <p class="field-desc">If left blank, the date from the file will be used.</p>
+          <button type="submit">Upload</button>
+        </form>
+      </div>
+    </div>
   {% else %}
-    <form method="get" action="/aoi">
-      <label for="date">Select Date:</label>
-      <input type="date" id="date" name="date" value="{{ selected_date }}">
-      <button type="submit">View</button>
-    </form>
+    <div class="action-panel">
+      <div class="action-card">
+        <h2>View Daily Report</h2>
+        <form method="get" action="/aoi">
+          <label for="date">Select Date</label>
+          <input type="date" id="date" name="date" value="{{ selected_date }}">
+          <button type="submit">View</button>
+        </form>
+      </div>
+    </div>
     {% if selected_date %}
       {% if data %}
         {% for shift, rows in data.items() %}

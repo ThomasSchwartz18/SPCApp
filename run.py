@@ -133,6 +133,12 @@ def aoi_report():
     conn = get_db()
     if request.method == 'POST' and 'excel_file' in request.files:
         file = request.files['excel_file']
+        manual_date = request.form.get('report_date')
+        if manual_date:
+            try:
+                manual_date = datetime.strptime(manual_date, '%Y-%m-%d').date().isoformat()
+            except ValueError:
+                manual_date = None
         if file and file.filename:
             filename = file.filename
             save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -151,13 +157,16 @@ def aoi_report():
                     if m:
                         shift = m.group(1)
                         date_str = m.group(2)
-                        try:
-                            report_date = datetime.strptime(date_str, '%m/%d/%y').date().isoformat()
-                        except ValueError:
-                            report_date = date_str
+                        if manual_date:
+                            report_date = manual_date
+                        else:
+                            try:
+                                report_date = datetime.strptime(date_str, '%m/%d/%y').date().isoformat()
+                            except ValueError:
+                                report_date = date_str
                     else:
                         shift = ''
-                        report_date = ''
+                        report_date = manual_date or ''
                     i += 1
                     # move to header row
                     while i < len(df) and str(df.iloc[i,0]) != 'Operator':
