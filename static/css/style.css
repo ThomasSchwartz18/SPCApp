@@ -64,6 +64,68 @@ table { width:100%; border-collapse:collapse; }
 th, td { border:1px solid #ccc; padding:8px; text-align:center; }
 .highlight { background: yellow; }
 
+/* Action panels */
+.action-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.action-card {
+  background: #f4f7f9;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.action-card h2 {
+  margin-top: 0;
+  font-size: 1.2em;
+}
+
+.action-card p {
+  margin: 0 0 10px;
+  color: #555;
+  font-size: 0.9em;
+}
+
+.field-desc {
+  font-size: 0.8em;
+  color: #666;
+  margin-top: 6px;
+}
+
+.action-card label {
+  display: block;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.action-card input[type="text"],
+.action-card input[type="number"],
+.action-card input[type="date"],
+.action-card input[type="file"] {
+  width: 100%;
+  padding: 6px;
+  margin-top: 4px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.action-card button {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border: none;
+  background: #007bff;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.action-card button:hover {
+  background: #0056b3;
+}
+
 /* Chart canvas sizing inside modal */
 #chart-modal .modal-content {
   display: flex;
