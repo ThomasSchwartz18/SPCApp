@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AOI Daily Report</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <h1>AOI Daily Report</h1>
+  <p>
+    <a href="/aoi">View Reports</a> |
+    <a href="/aoi?view=upload">Upload Report</a>
+  </p>
+
+  {% if upload %}
+    <form method="post" enctype="multipart/form-data">
+      <label for="excel_file">Excel File:</label>
+      <input type="file" id="excel_file" name="excel_file" accept=".xls,.xlsx">
+      <button type="submit">Upload</button>
+    </form>
+  {% else %}
+    <form method="get" action="/aoi">
+      <label for="date">Select Date:</label>
+      <input type="date" id="date" name="date" value="{{ selected_date }}">
+      <button type="submit">View</button>
+    </form>
+    {% if selected_date %}
+      {% if data %}
+        {% for shift, rows in data.items() %}
+          <h2>{{ shift }} Shift</h2>
+          <table>
+            <tr>
+              <th>Operator</th>
+              <th>Customer</th>
+              <th>Assembly</th>
+              <th>Quantity Inspected</th>
+              <th>Quantity Rejected</th>
+              <th>Additional Information</th>
+            </tr>
+            {% for r in rows %}
+            <tr>
+              <td>{{ r['operator'] }}</td>
+              <td>{{ r['customer'] }}</td>
+              <td>{{ r['assembly'] }}</td>
+              <td>{{ r['qty_inspected'] }}</td>
+              <td>{{ r['qty_rejected'] }}</td>
+              <td>{{ r['additional_info'] }}</td>
+            </tr>
+            {% endfor %}
+          </table>
+        {% endfor %}
+      {% else %}
+        <p>No report found for {{ selected_date }}.</p>
+      {% endif %}
+    {% endif %}
+  {% endif %}
+</body>
+</html>
