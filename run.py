@@ -80,13 +80,53 @@ def home():
     today = datetime.today()
     example_data = [
         {
-            'job': 'JOB123',
+            'job': '[Assembly #] (DRAFT)',
             'due_in_days': 5,
             'locations': [('Hand Assembly', 295), ('Rework', 5)],
         },
         {
-            'job': 'JOB456',
+            'job': '[Assembly #] (DRAFT)',
             'due_in_days': 10,
+            'locations': [('Depanel', 75)],
+        },
+        {
+            'job': '[Assembly #] (DRAFT)',
+            'due_in_days': 4,
+            'locations': [('Final Inspect', 1500)],
+        },
+        {
+            'job': '[Assembly #] (DRAFT)',
+            'due_in_days': 2,
+            'locations': [('Hand Assembly', 25)],
+        },
+        {
+            'job': '[Assembly #] (DRAFT)',
+            'due_in_days': -2,
+            'locations': [('AOI', 230), ('Rework', 20)],
+        },
+        {
+            'job': '[Assembly #] (DRAFT)',
+            'due_in_days': 13,
+            'locations': [('SMT', 1000)],
+        },
+        {
+            'job': '[Assembly #] (DRAFT)',
+            'due_in_days': 9,
+            'locations': [('AOI', 100), ('Rework', 75)],
+        },
+        {
+            'job': '[Assembly #] (DRAFT)',
+            'due_in_days': 1,
+            'locations': [('ERSA', 450), ('AOI', 478), ('Rework', 72)],
+        },
+        {
+            'job': '[Assembly #] (DRAFT)',
+            'due_in_days': 0,
+            'locations': [('Hand Assembly', 100)],
+        },
+        {
+            'job': '[Assembly #] (DRAFT)',
+            'due_in_days': -1,
             'locations': [('Hand Assembly', 100)],
         },
     ]
