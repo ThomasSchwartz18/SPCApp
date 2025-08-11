@@ -46,9 +46,17 @@ window.addEventListener('DOMContentLoaded', () => {
         ctx.lineTo(right, yPos);
         ctx.stroke();
       }
-      if (options.yellow) {
-        const yPos = y.getPixelForValue(options.yellow.value);
-        ctx.strokeStyle = options.yellow.color;
+      if (options.orange) {
+        const yPos = y.getPixelForValue(options.orange.value);
+        ctx.strokeStyle = options.orange.color;
+        ctx.beginPath();
+        ctx.moveTo(left, yPos);
+        ctx.lineTo(right, yPos);
+        ctx.stroke();
+      }
+      if (options.green) {
+        const yPos = y.getPixelForValue(options.green.value);
+        ctx.strokeStyle = options.green.color;
         ctx.beginPath();
         ctx.moveTo(left, yPos);
         ctx.lineTo(right, yPos);
@@ -112,7 +120,7 @@ window.addEventListener('DOMContentLoaded', () => {
               layout: { padding: { top: 20 } },
               scales: { y: { beginAtZero: true, max: yMax } },
               plugins: {
-                thresholdPlugin: { red: { value: 20, color: 'red' }, yellow: { value: 10, color: 'yellow' } },
+                thresholdPlugin: { red: { value: 20, color: 'red' }, orange: { value: 10, color: 'orange' }, green: { value: 5, color: 'green'} },
                 tooltip: {
                   callbacks: {
                     label: ctx => {
