@@ -36,6 +36,14 @@ def init_db():
             filename TEXT
         )
     ''')
+
+    # Older database versions may lack the `filename` column. Ensure it exists so
+    # uploaded file names can be tracked for later management/deletion without
+    # storing them directly in the MOAT view.
+    existing_cols = [r['name'] for r in conn.execute("PRAGMA table_info(moat)").fetchall()]
+    if 'filename' not in existing_cols:
+        conn.execute('ALTER TABLE moat ADD COLUMN filename TEXT')
+
     conn.execute('''
         CREATE TABLE IF NOT EXISTS verified_markings (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
