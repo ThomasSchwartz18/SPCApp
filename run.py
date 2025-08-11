@@ -3,6 +3,7 @@ import os
 import sqlite3
 import pandas as pd
 from datetime import datetime
+import re
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -42,6 +43,19 @@ def init_db():
             mfg_number2 TEXT,
             manufacturer TEXT,
             verified_markings TEXT
+        )
+    ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS aoi_reports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            report_date TEXT,
+            shift TEXT,
+            operator TEXT,
+            customer TEXT,
+            assembly TEXT,
+            qty_inspected INTEGER,
+            qty_rejected INTEGER,
+            additional_info TEXT
         )
     ''')
     conn.commit()
@@ -113,6 +127,80 @@ def part_markings():
     rows = conn.execute('SELECT * FROM verified_markings ORDER BY id').fetchall()
     conn.close()
     return render_template('part_markings.html', markings=rows)
+
+@app.route('/aoi', methods=['GET', 'POST'])
+def aoi_report():
+    conn = get_db()
+    if request.method == 'POST' and 'excel_file' in request.files:
+        file = request.files['excel_file']
+        if file and file.filename:
+            filename = file.filename
+            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(save_path)
+
+            ext = os.path.splitext(save_path)[1].lower()
+            engine = 'xlrd' if ext == '.xls' else 'openpyxl'
+            df = pd.read_excel(save_path, engine=engine, header=None)
+
+            records = []
+            i = 0
+            while i < len(df):
+                cell = str(df.iloc[i, 0]) if not pd.isna(df.iloc[i, 0]) else ''
+                if cell.startswith('AOI') and 'Shift' in cell:
+                    m = re.search(r'AOI\s+(.*?)\s+Shift.*\(([^)]+)\)', cell)
+                    if m:
+                        shift = m.group(1)
+                        date_str = m.group(2)
+                        try:
+                            report_date = datetime.strptime(date_str, '%m/%d/%y').date().isoformat()
+                        except ValueError:
+                            report_date = date_str
+                    else:
+                        shift = ''
+                        report_date = ''
+                    i += 1
+                    # move to header row
+                    while i < len(df) and str(df.iloc[i,0]) != 'Operator':
+                        i += 1
+                    i += 1
+                    while i < len(df):
+                        first = df.iloc[i,0]
+                        if pd.isna(first) or str(first).startswith('AOI'):
+                            break
+                        operator = first
+                        customer = df.iloc[i,1]
+                        assembly = df.iloc[i,2]
+                        inspected = df.iloc[i,3] if not pd.isna(df.iloc[i,3]) else 0
+                        rejected = df.iloc[i,4] if not pd.isna(df.iloc[i,4]) else 0
+                        additional = df.iloc[i,5] if df.shape[1] > 5 else ''
+                        records.append((report_date, shift, operator, customer, assembly,
+                                        int(inspected), int(rejected), str(additional) if not pd.isna(additional) else ''))
+                        i += 1
+                else:
+                    i += 1
+
+            if records:
+                conn.executemany(
+                    'INSERT INTO aoi_reports (report_date, shift, operator, customer, assembly, qty_inspected, qty_rejected, additional_info) VALUES (?,?,?,?,?,?,?,?)',
+                    records
+                )
+                conn.commit()
+        conn.close()
+        return redirect(url_for('aoi_report'))
+
+    view = request.args.get('view')
+    if view == 'upload':
+        conn.close()
+        return render_template('aoi.html', upload=True)
+
+    selected_date = request.args.get('date')
+    data = {}
+    if selected_date:
+        rows = conn.execute('SELECT * FROM aoi_reports WHERE report_date = ? ORDER BY shift, id', (selected_date,)).fetchall()
+        for r in rows:
+            data.setdefault(r['shift'], []).append(r)
+    conn.close()
+    return render_template('aoi.html', upload=False, data=data, selected_date=selected_date)
 
 @app.route('/analysis', methods=['GET', 'POST'])
 def analysis():
