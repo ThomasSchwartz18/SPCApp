@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="/static/css/style.css">
   <!-- Chart.js for control chart rendering -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script src="/static/js/analysis.js" defer></script>
 </head>
 <body>
@@ -121,6 +122,7 @@
         <h2>Control Chart - Avg FalseCall Rate</h2>
         <p id="fc-chart-date-range"></p>
         <canvas id="chart-canvas" height="200"></canvas>
+        <button id="download-fc-pdf">Download PDF</button>
       </div>
     </div>
 
@@ -130,6 +132,7 @@
         <h2>Control Chart - Avg NG Rate</h2>
         <p id="ng-chart-date-range"></p>
         <canvas id="chart-ng-canvas" height="200"></canvas>
+        <button id="download-ng-pdf">Download PDF</button>
       </div>
     </div>
   {% endif %}

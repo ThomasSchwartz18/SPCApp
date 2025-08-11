@@ -63,6 +63,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const chartModal = document.getElementById('chart-modal');
   const closeChart = document.getElementById('close-chart-modal');
   const ctx = document.getElementById('chart-canvas');
+  const downloadFcBtn = document.getElementById('download-fc-pdf');
   let chartInstance;
 
   if (runBtn && chartModal && closeChart && ctx) {
@@ -78,8 +79,19 @@ window.addEventListener('DOMContentLoaded', () => {
           const values = data.map(d => d.rate);
           if (chartInstance) chartInstance.destroy();
           chartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: { labels, datasets: [{ label: 'FalseCall Rate', data: values }] },
+            type: 'line',
+            data: {
+              labels,
+              datasets: [{
+                label: 'FalseCall Rate',
+                data: values,
+                borderColor: 'black',
+                pointBackgroundColor: 'black',
+                pointBorderColor: 'black',
+                fill: false,
+                tension: 0
+              }]
+            },
             options: {
               scales: { y: { beginAtZero: true, max: yMax } },
               plugins: { thresholdPlugin: { red: {value:20, color:'red'}, yellow: {value:10, color:'yellow'} } }
@@ -95,11 +107,29 @@ window.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('click', e => { if (e.target === chartModal) chartModal.style.display = 'none'; });
   }
 
+  if (downloadFcBtn) {
+    downloadFcBtn.addEventListener('click', () => {
+      if (!chartInstance) return;
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF();
+      pdf.text('Control Chart - Avg FalseCall Rate', 10, 10);
+      const dateText = document.getElementById('fc-chart-date-range').textContent;
+      pdf.text(dateText, 10, 20);
+      const imgData = chartInstance.toBase64Image();
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      pdf.addImage(imgData, 'PNG', 10, 30, pdfWidth, pdfHeight);
+      pdf.save('fc-control-chart.pdf');
+    });
+  }
+
   // NG Chart modal logic
   const runNgBtn = document.getElementById('run-ng-chart-btn');
   const chartNgModal = document.getElementById('chart-ng-modal');
   const closeNgChart = document.getElementById('close-chart-ng-modal');
   const ngCtx = document.getElementById('chart-ng-canvas');
+  const downloadNgBtn = document.getElementById('download-ng-pdf');
   let ngChartInstance;
 
   if (runNgBtn && chartNgModal && closeNgChart && ngCtx) {
@@ -115,8 +145,19 @@ window.addEventListener('DOMContentLoaded', () => {
           const values = data.map(d => d.rate);
           if (ngChartInstance) ngChartInstance.destroy();
           ngChartInstance = new Chart(ngCtx, {
-            type: 'bar',
-            data: { labels, datasets: [{ label: 'NG Rate', data: values }] },
+            type: 'line',
+            data: {
+              labels,
+              datasets: [{
+                label: 'NG Rate',
+                data: values,
+                borderColor: 'black',
+                pointBackgroundColor: 'black',
+                pointBorderColor: 'black',
+                fill: false,
+                tension: 0
+              }]
+            },
             options: {
               scales: { y: { beginAtZero: true, max: yMax } },
               plugins: { thresholdPlugin: { red: {value:0.1, color:'red'} } }
@@ -130,6 +171,23 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     closeNgChart.addEventListener('click', () => { chartNgModal.style.display = 'none'; });
     window.addEventListener('click', e => { if (e.target === chartNgModal) chartNgModal.style.display = 'none'; });
+  }
+
+  if (downloadNgBtn) {
+    downloadNgBtn.addEventListener('click', () => {
+      if (!ngChartInstance) return;
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF();
+      pdf.text('Control Chart - Avg NG Rate', 10, 10);
+      const dateText = document.getElementById('ng-chart-date-range').textContent;
+      pdf.text(dateText, 10, 20);
+      const imgData = ngChartInstance.toBase64Image();
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      pdf.addImage(imgData, 'PNG', 10, 30, pdfWidth, pdfHeight);
+      pdf.save('ng-control-chart.pdf');
+    });
   }
 
   // Uploads modal logic (unchanged)
