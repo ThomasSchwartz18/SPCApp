@@ -16,6 +16,27 @@ from datetime import datetime, timedelta
 import re
 from xlsx2html import xlsx2html
 
+
+AOI_HEADER_REGEX = re.compile(
+    r"AOI\s+(.*?)\s+Shift.*?(?:\(([^)]+)\)|([0-9]{1,2}[-/][0-9]{1,2}[-/][0-9]{2,4}))"
+)
+
+
+def _parse_date(date_str: str):
+    for fmt in ("%m/%d/%y", "%m/%d/%Y", "%m-%d-%y", "%m-%d-%Y"):
+        try:
+            return datetime.strptime(date_str, fmt).date().isoformat()
+        except ValueError:
+            continue
+    return None
+
+
+def _date_from_filename(name: str):
+    m = re.search(r"([0-9]{1,2}[-/][0-9]{1,2}[-/][0-9]{2,4})", name)
+    if m:
+        return _parse_date(m.group(1))
+    return None
+
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.secret_key = os.environ.get('SECRET_KEY', 'spc_secret')
@@ -346,22 +367,20 @@ def aoi_report():
             while i < len(df):
                 cell = str(df.iloc[i, 0]) if not pd.isna(df.iloc[i, 0]) else ''
                 if cell.startswith('AOI') and 'Shift' in cell:
-                    m = re.search(r'AOI\s+(.*?)\s+Shift.*\(([^)]+)\)', cell)
+                    m = AOI_HEADER_REGEX.search(cell)
                     if m:
                         shift = m.group(1)
-                        date_str = m.group(2)
+                        date_str = m.group(2) or m.group(3)
                         if manual_date:
                             report_date = manual_date
                         else:
-                            try:
-                                report_date = datetime.strptime(date_str, '%m/%d/%y').date().isoformat()
-                            except ValueError:
-                                report_date = date_str
-                        if not first_report_date and report_date:
-                            first_report_date = report_date
+                            parsed = _parse_date(date_str)
+                            report_date = parsed if parsed else date_str
                     else:
                         shift = ''
-                        report_date = manual_date or ''
+                        report_date = _date_from_filename(filename) or manual_date or ''
+                    if not first_report_date and report_date:
+                        first_report_date = report_date
                     i += 1
                     # move to header row
                     while i < len(df) and str(df.iloc[i,0]) != 'Operator':
