@@ -15,37 +15,6 @@
   <a href="/">← Home</a>
   <h1>AOI Daily Report</h1>
   <div id="container">
-    <div id="aoi-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Shift</th>
-            <th>Operator</th>
-            <th>Customer</th>
-            <th>Assembly</th>
-            <th>Quantity Inspected</th>
-            <th>Quantity Rejected</th>
-            <th>Additional Information</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for r in records %}
-          <tr>
-            <td>{{ r['report_date'] }}</td>
-            <td>{{ r['shift'] }}</td>
-            <td>{{ r['operator'] }}</td>
-            <td>{{ r['customer'] }}</td>
-            <td>{{ r['assembly'] }}</td>
-            <td>{{ r['qty_inspected'] }}</td>
-            <td>{{ r['qty_rejected'] }}</td>
-            <td>{{ r['additional_info'] }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    <div id="divider"></div>
     <div id="aoi-actions">
       <div class="action-panel">
         {% if current_user == 'ADMIN' or permissions['aoi'] %}
@@ -155,6 +124,37 @@
           </tbody>
         </table>
       </div>
+    </div>
+    <div id="divider"></div>
+    <div id="aoi-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Shift</th>
+            <th>Operator</th>
+            <th>Customer</th>
+            <th>Assembly</th>
+            <th>Quantity Inspected</th>
+            <th>Quantity Rejected</th>
+            <th>Additional Information</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in records %}
+          <tr>
+            <td>{{ r['report_date'] }}</td>
+            <td>{{ r['shift'] }}</td>
+            <td>{{ r['operator'] }}</td>
+            <td>{{ r['customer'] }}</td>
+            <td>{{ r['assembly'] }}</td>
+            <td>{{ r['qty_inspected'] }}</td>
+            <td>{{ r['qty_rejected'] }}</td>
+            <td>{{ r['additional_info'] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
   </div>
 {% endblock %}
