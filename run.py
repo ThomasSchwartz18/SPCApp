@@ -404,19 +404,35 @@ def aoi_report():
             conn.close()
             return redirect(url_for('aoi_report'))
         conn.close()
-        return render_template('aoi.html', upload=True)
+        return render_template('aoi.html', upload=True, available_dates=[])
 
     selected_date = request.args.get('date')
+    date_rows = conn.execute(
+        'SELECT DISTINCT report_date FROM aoi_reports ORDER BY report_date DESC'
+    ).fetchall()
+    available_dates = [r['report_date'] for r in date_rows]
     data = {}
     html_exists = False
     if selected_date:
-        rows = conn.execute('SELECT * FROM aoi_reports WHERE report_date = ? ORDER BY shift, id', (selected_date,)).fetchall()
+        rows = conn.execute(
+            'SELECT * FROM aoi_reports WHERE report_date = ? ORDER BY shift, id',
+            (selected_date,),
+        ).fetchall()
         for r in rows:
             data.setdefault(r['shift'], []).append(r)
-        html_file = os.path.join(app.config['UPLOAD_FOLDER'], f"{selected_date}.html")
+        html_file = os.path.join(
+            app.config['UPLOAD_FOLDER'], f"{selected_date}.html"
+        )
         html_exists = os.path.exists(html_file)
     conn.close()
-    return render_template('aoi.html', upload=False, data=data, selected_date=selected_date, html_exists=html_exists)
+    return render_template(
+        'aoi.html',
+        upload=False,
+        data=data,
+        selected_date=selected_date,
+        html_exists=html_exists,
+        available_dates=available_dates,
+    )
 
 
 @app.route('/aoi/dashboard')
