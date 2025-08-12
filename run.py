@@ -375,6 +375,7 @@ def chart_data():
     end = request.args.get('end')
     threshold = request.args.get('threshold', type=int, default=0)
     metric = request.args.get('metric', 'fc')
+    lines_param = request.args.get('lines', '')
     column = 'falsecall_parts' if metric == 'fc' else 'ng_parts'
     conn = get_db()
     query = f'SELECT model_name, SUM({column})*1.0/SUM(total_boards) AS rate FROM moat WHERE 1=1'
@@ -385,6 +386,12 @@ def chart_data():
     if end:
         query += ' AND upload_time <= ?'
         params.append(f'{end}T23:59:59')
+    if lines_param:
+        lines = [l for l in lines_param.split(',') if l]
+        if lines:
+            clause = ' OR '.join('filename LIKE ?' for _ in lines)
+            query += f' AND ({clause})'
+            params.extend([f'%{line}%' for line in lines])
     query += ' GROUP BY model_name HAVING SUM(total_boards) >= ?'
     params.append(threshold)
     data = conn.execute(query, params).fetchall()
