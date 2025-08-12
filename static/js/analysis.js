@@ -84,13 +84,18 @@ window.addEventListener('DOMContentLoaded', () => {
 
   function getSelectedLines(prefix) {
     const values = [];
+    const labels = [];
     for (let i = 1; i <= 4; i++) {
       const sel = document.getElementById(`${prefix}-select-${i}`);
       if (sel && sel.style.display !== 'none' && sel.value && sel.value !== 'all') {
         values.push(sel.value === 'offline' ? 'LOffline' : `L${sel.value}`);
+        labels.push(sel.options[sel.selectedIndex].text);
       }
     }
-    return values.length ? `&lines=${values.join(',')}` : '';
+    return {
+      query: values.length ? `&lines=${values.join(',')}` : '',
+      text: labels.length ? labels.join(', ') : 'All Lines'
+    };
   }
 
   setupLineSelectors('line');
@@ -144,7 +149,7 @@ window.addEventListener('DOMContentLoaded', () => {
       const end = document.getElementById('end-date').value;
       const yMax = parseFloat(document.getElementById('y-max').value) || 1;
       const threshold = parseInt(document.getElementById('min-boards').value) || 0;
-      const lineQuery = getSelectedLines('line');
+      const { query: lineQuery, text: lineText } = getSelectedLines('line');
       fetch(`/analysis/chart-data?start=${start}&end=${end}&threshold=${threshold}&metric=fc${lineQuery}`)
         .then(res => res.json())
         .then(data => {
@@ -201,7 +206,7 @@ window.addEventListener('DOMContentLoaded', () => {
             plugins: [thresholdPlugin]
           });
           const dateText = start && end ? `${start} to ${end}` : start ? `From ${start}` : end ? `Up to ${end}` : 'All dates';
-          document.getElementById('fc-chart-date-range').textContent = dateText;
+          document.getElementById('fc-chart-date-range').textContent = `${dateText} | Lines: ${lineText}`;
           chartModal.style.display = 'block';
         });
     });
@@ -240,7 +245,7 @@ window.addEventListener('DOMContentLoaded', () => {
       const end = document.getElementById('ng-end-date').value;
       const yMax = parseFloat(document.getElementById('ng-y-max').value) || 1;
       const threshold = parseInt(document.getElementById('ng-min-boards').value) || 0;
-      const lineQuery = getSelectedLines('ng-line');
+      const { query: lineQuery, text: lineText } = getSelectedLines('ng-line');
       fetch(`/analysis/chart-data?start=${start}&end=${end}&threshold=${threshold}&metric=ng${lineQuery}`)
         .then(res => res.json())
         .then(data => {
@@ -297,7 +302,7 @@ window.addEventListener('DOMContentLoaded', () => {
             plugins: [thresholdPlugin]
           });
           const dateText = start && end ? `${start} to ${end}` : start ? `From ${start}` : end ? `Up to ${end}` : 'All dates';
-          document.getElementById('ng-chart-date-range').textContent = dateText;
+          document.getElementById('ng-chart-date-range').textContent = `${dateText} | Lines: ${lineText}`;
           chartNgModal.style.display = 'block';
         });
     });
