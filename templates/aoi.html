@@ -37,10 +37,22 @@
       <div class="action-card">
         <h2>View Daily Report</h2>
         <form method="get" action="/aoi">
-          <label for="date">Select Date</label>
-          <input type="date" id="date" name="date" value="{{ selected_date }}">
+          <label for="date-select">Select Date</label>
+          <select id="date-select" name="date">
+            {% for d in available_dates %}
+            <option value="{{ d }}" {% if d == selected_date %}selected{% endif %}>{{ d }}</option>
+            {% endfor %}
+          </select>
+          <input type="date" id="manual-date" value="{{ selected_date }}">
           <button type="submit">View</button>
         </form>
+        <script>
+          const manualDate = document.getElementById('manual-date');
+          const dateSelect = document.getElementById('date-select');
+          manualDate.addEventListener('change', () => {
+            dateSelect.value = manualDate.value;
+          });
+        </script>
       </div>
     </div>
     {% if selected_date %}
