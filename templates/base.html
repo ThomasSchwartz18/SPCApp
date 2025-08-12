@@ -5,9 +5,10 @@
   <title>{% block title %}SPCApp{% endblock %}</title>
   <link rel="stylesheet" href="/static/css/style.css">
   <script src="/static/js/theme.js" defer></script>
+  <script src="/static/js/editable.js" defer></script>
   {% block head_extra %}{% endblock %}
 </head>
-<body>
+<body data-admin="{{ 'true' if current_user == 'ADMIN' else 'false' }}">
   {% if current_user %}
   <div class="topbar">
     <span class="user-label">user:{{ current_user }}</span>
