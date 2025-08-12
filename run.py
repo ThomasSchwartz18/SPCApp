@@ -435,7 +435,9 @@ def aoi_report():
         return redirect(url_for('aoi_report'))
 
     # GET: fetch rows and analytics
-    rows = conn.execute('SELECT * FROM aoi_reports ORDER BY id').fetchall()
+    rows = conn.execute(
+        'SELECT * FROM aoi_reports ORDER BY report_date DESC, id DESC'
+    ).fetchall()
 
     start = request.args.get('start')
     end = request.args.get('end')

@@ -22,10 +22,11 @@ window.addEventListener('DOMContentLoaded', () => {
   };
 
   const ops = getData('operator-data');
+  const charts = {};
   if (ops && ops.length) {
     const ctx = document.getElementById('operatorsChart');
     if (ctx) {
-      new Chart(ctx, {
+      charts.operators = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: ops.map(o => o.operator),
@@ -59,7 +60,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }),
         backgroundColor: colors[idx % colors.length]
       }));
-      new Chart(ctx, {
+      charts.shift = new Chart(ctx, {
         type: 'bar',
         data: { labels: dates, datasets },
         options: { scales: { y: { beginAtZero: true } } }
@@ -71,7 +72,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (customerData && customerData.length) {
     const ctx = document.getElementById('customerChart');
     if (ctx) {
-      new Chart(ctx, {
+      charts.customer = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: customerData.map(c => c.customer),
@@ -90,7 +91,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (yieldData && yieldData.length) {
     const ctx = document.getElementById('yieldChart');
     if (ctx) {
-      new Chart(ctx, {
+      charts.yield = new Chart(ctx, {
         type: 'line',
         data: {
           labels: yieldData.map(y => y.report_date),
@@ -128,5 +129,51 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // Modal logic for charts
+  const modal = document.getElementById('chart-modal');
+  const modalCanvas = document.getElementById('chart-canvas');
+  const modalTitle = document.getElementById('chart-modal-title');
+  const closeModal = document.getElementById('close-chart-modal');
+  const downloadBtn = document.getElementById('download-chart-pdf');
+  let modalChart;
+
+  function openModal(chart, title) {
+    if (!modal || !modalCanvas) return;
+    if (modalChart) modalChart.destroy();
+    modalChart = new Chart(modalCanvas, {
+      type: chart.config.type,
+      data: structuredClone(chart.config.data),
+      options: structuredClone(chart.config.options)
+    });
+    if (modalTitle) modalTitle.textContent = title || '';
+    modal.style.display = 'block';
+  }
+
+  document.querySelectorAll('.expand-chart').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.chart;
+      const title = btn.dataset.title;
+      if (key && charts[key]) {
+        openModal(charts[key], title);
+      }
+    });
+  });
+
+  closeModal?.addEventListener('click', () => { modal.style.display = 'none'; });
+  window.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+
+  downloadBtn?.addEventListener('click', () => {
+    if (!modalChart) return;
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'landscape' });
+    if (modalTitle) pdf.text(modalTitle.textContent, 10, 10);
+    const imgData = modalChart.toBase64Image();
+    const imgProps = pdf.getImageProperties(imgData);
+    const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    pdf.addImage(imgData, 'PNG', 10, 20, pdfWidth, pdfHeight);
+    pdf.save('chart.pdf');
+  });
 });
 
