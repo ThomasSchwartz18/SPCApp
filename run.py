@@ -14,29 +14,26 @@ import os
 import sqlite3
 import pandas as pd
 from datetime import datetime, timedelta
-import re
-from xlsx2html import xlsx2html
 
-
-AOI_HEADER_REGEX = re.compile(
-    r"AOI\s+(.*?)\s+Shift.*?(?:\(([^)]+)\)|([0-9]{1,2}[-/][0-9]{1,2}[-/][0-9]{2,4}))"
-)
-
-
-def _parse_date(date_str: str):
-    for fmt in ("%m/%d/%y", "%m/%d/%Y", "%m-%d-%y", "%m-%d-%Y"):
-        try:
-            return datetime.strptime(date_str, fmt).date().isoformat()
-        except ValueError:
-            continue
-    return None
-
-
-def _date_from_filename(name: str):
-    m = re.search(r"([0-9]{1,2}[-/][0-9]{1,2}[-/][0-9]{2,4})", name)
-    if m:
-        return _parse_date(m.group(1))
-    return None
+def parse_aoi_rows(path: str):
+    """Return rows from an AOI Excel file without headers."""
+    ext = os.path.splitext(path)[1].lower()
+    engine = 'xlrd' if ext == '.xls' else 'openpyxl'
+    df = pd.read_excel(
+        path,
+        engine=engine,
+        header=None,
+        usecols='A:F',
+        names=[
+            'operator',
+            'customer',
+            'assembly',
+            'qty_inspected',
+            'qty_rejected',
+            'additional_info',
+        ],
+    ).dropna(how='all')
+    return df.to_dict(orient='records')
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -342,169 +339,63 @@ def part_markings():
 @login_required
 def aoi_report():
     conn = get_db()
-    if request.method == 'POST' and 'excel_file' in request.files:
+    if request.method == 'POST':
         if not has_permission('aoi'):
             conn.close()
             return redirect(url_for('aoi_report'))
-        file = request.files['excel_file']
-        manual_date = request.form.get('report_date')
-        if manual_date:
-            try:
-                manual_date = datetime.strptime(manual_date, '%Y-%m-%d').date().isoformat()
-            except ValueError:
-                manual_date = None
-        if file and file.filename:
+
+        report_date = request.form.get('report_date')
+        shift = request.form.get('shift')
+        if 'excel_file' in request.files and request.files['excel_file'].filename:
+            file = request.files['excel_file']
             filename = file.filename
             save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(save_path)
-
-            ext = os.path.splitext(save_path)[1].lower()
-            engine = 'xlrd' if ext == '.xls' else 'openpyxl'
-            df = pd.read_excel(save_path, engine=engine, header=None, usecols='A:F')
-
-            records = []
-            i = 0
-            first_report_date = manual_date
-            while i < len(df):
-                cell = str(df.iloc[i, 0]) if not pd.isna(df.iloc[i, 0]) else ''
-                if cell.startswith('AOI') and 'Shift' in cell:
-                    m = AOI_HEADER_REGEX.search(cell)
-                    if m:
-                        shift = m.group(1)
-                        date_str = m.group(2) or m.group(3)
-                        if manual_date:
-                            report_date = manual_date
-                        else:
-                            parsed = _parse_date(date_str)
-                            report_date = parsed if parsed else date_str
-                    else:
-                        shift = ''
-                        report_date = _date_from_filename(filename) or manual_date or ''
-                    if not first_report_date and report_date:
-                        first_report_date = report_date
-                    i += 1
-                    # move to header row
-                    while i < len(df) and str(df.iloc[i,0]) != 'Operator':
-                        i += 1
-                    i += 1
-                    while i < len(df):
-                        first = df.iloc[i,0]
-                        if pd.isna(first) or str(first).startswith('AOI'):
-                            break
-                        operator = first
-                        customer = df.iloc[i,1]
-                        assembly = df.iloc[i,2]
-                        inspected = df.iloc[i,3] if not pd.isna(df.iloc[i,3]) else 0
-                        rejected = df.iloc[i,4] if not pd.isna(df.iloc[i,4]) else 0
-                        additional = df.iloc[i,5] if df.shape[1] > 5 else ''
-                        if not report_date:
-                            date_rows = conn.execute(
-                                'SELECT DISTINCT report_date FROM aoi_reports ORDER BY report_date DESC'
-                            ).fetchall()
-                            available_dates = [r['report_date'] for r in date_rows]
-                            conn.close()
-                            return render_template(
-                                'aoi.html',
-                                upload=True,
-                                available_dates=available_dates,
-                                error='Report date is required.'
-                            )
-                        records.append(
-                            (
-                                report_date,
-                                shift,
-                                operator,
-                                customer,
-                                assembly,
-                                int(inspected),
-                                int(rejected),
-                                str(additional) if not pd.isna(additional) else '',
-                            )
-                        )
-                        i += 1
-                else:
-                    i += 1
-            if not records:
-                conn.close()
-                flash('No AOI records found in the uploaded file.')
-                return redirect(url_for('aoi_report', view='upload'))
+            rows = parse_aoi_rows(save_path)
+            records = [
+                (
+                    report_date,
+                    shift,
+                    r['operator'],
+                    r['customer'],
+                    r['assembly'],
+                    int(r['qty_inspected'] or 0),
+                    int(r['qty_rejected'] or 0),
+                    r.get('additional_info', ''),
+                )
+                for r in rows
+            ]
             if records:
-                try:
-                    conn.executemany(
-                        'INSERT INTO aoi_reports (report_date, shift, operator, customer, assembly, qty_inspected, qty_rejected, additional_info) VALUES (?,?,?,?,?,?,?,?)',
-                        records
-                    )
-                    conn.commit()
-                except sqlite3.IntegrityError:
-                    conn.rollback()
-                    date_rows = conn.execute(
-                        'SELECT DISTINCT report_date FROM aoi_reports ORDER BY report_date DESC'
-                    ).fetchall()
-                    available_dates = [r['report_date'] for r in date_rows]
-                    conn.close()
-                    return render_template(
-                        'aoi.html',
-                        upload=True,
-                        available_dates=available_dates,
-                        error='Database error: report date is required.'
-                    )
-                try:
-                    html_name = f"{first_report_date or os.path.splitext(filename)[0]}.html"
-                    html_path = os.path.join(app.config['UPLOAD_FOLDER'], html_name)
-                    xlsx2html(save_path, html_path)
-                except Exception as e:
-                    app.logger.error('HTML conversion failed', exc_info=e)
-        conn.close()
-        return redirect(url_for('aoi_report'))
-
-    view = request.args.get('view')
-    if view == 'upload':
-        if not has_permission('aoi'):
+                conn.executemany(
+                    'INSERT INTO aoi_reports (report_date, shift, operator, customer, assembly, qty_inspected, qty_rejected, additional_info) VALUES (?,?,?,?,?,?,?,?)',
+                    records,
+                )
+                conn.commit()
             conn.close()
             return redirect(url_for('aoi_report'))
-        conn.close()
-        return render_template('aoi.html', upload=True, available_dates=[], error=None)
 
-    selected_date = request.args.get('date')
-    date_rows = conn.execute(
-        'SELECT DISTINCT report_date FROM aoi_reports ORDER BY report_date DESC'
-    ).fetchall()
-    available_dates = [r['report_date'] for r in date_rows]
-    data = {}
-    html_exists = False
-    if selected_date:
-        rows = conn.execute(
-            'SELECT * FROM aoi_reports WHERE report_date = ? ORDER BY shift, id',
-            (selected_date,),
-        ).fetchall()
-        for r in rows:
-            data.setdefault(r['shift'], []).append(r)
-        html_file = os.path.join(
-            app.config['UPLOAD_FOLDER'], f"{selected_date}.html"
+        # single record submission
+        operator = request.form.get('operator')
+        customer = request.form.get('customer')
+        assembly = request.form.get('assembly')
+        inspected = request.form.get('qty_inspected') or 0
+        rejected = request.form.get('qty_rejected') or 0
+        additional = request.form.get('additional_info') or ''
+        conn.execute(
+            'INSERT INTO aoi_reports (report_date, shift, operator, customer, assembly, qty_inspected, qty_rejected, additional_info) VALUES (?,?,?,?,?,?,?,?)',
+            (report_date, shift, operator, customer, assembly, inspected, rejected, additional),
         )
-        html_exists = os.path.exists(html_file)
-    conn.close()
-    return render_template(
-        'aoi.html',
-        upload=False,
-        data=data,
-        selected_date=selected_date,
-        html_exists=html_exists,
-        available_dates=available_dates,
-        error=None,
-    )
-
-
-@app.route('/aoi/dashboard')
-@login_required
-def aoi_dashboard():
-    if not has_permission('aoi'):
+        conn.commit()
+        conn.close()
         return redirect(url_for('aoi_report'))
+
+    # GET: fetch rows and analytics
+    rows = conn.execute('SELECT * FROM aoi_reports ORDER BY id').fetchall()
 
     start = request.args.get('start')
     end = request.args.get('end')
     customer = request.args.get('customer')
-    shift = request.args.get('shift')
+    shift_filter = request.args.get('shift')
 
     where = 'WHERE 1=1'
     params = []
@@ -517,11 +408,10 @@ def aoi_dashboard():
     if customer:
         where += ' AND customer = ?'
         params.append(customer)
-    if shift:
+    if shift_filter:
         where += ' AND shift = ?'
-        params.append(shift)
+        params.append(shift_filter)
 
-    conn = get_db()
     op_rows = conn.execute(
         f'SELECT operator, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
         f'FROM aoi_reports {where} GROUP BY operator ORDER BY inspected DESC',
@@ -548,12 +438,8 @@ def aoi_dashboard():
         f'FROM aoi_reports {where} GROUP BY report_date ORDER BY report_date',
         params,
     ).fetchall()
-    customer_opts = [r['customer'] for r in conn.execute(
-        'SELECT DISTINCT customer FROM aoi_reports ORDER BY customer'
-    ).fetchall()]
-    shift_opts = [r['shift'] for r in conn.execute(
-        'SELECT DISTINCT shift FROM aoi_reports ORDER BY shift'
-    ).fetchall()]
+    customer_opts = [r['customer'] for r in conn.execute('SELECT DISTINCT customer FROM aoi_reports ORDER BY customer').fetchall()]
+    shift_opts = [r['shift'] for r in conn.execute('SELECT DISTINCT shift FROM aoi_reports ORDER BY shift').fetchall()]
     conn.close()
 
     operators = []
@@ -561,28 +447,24 @@ def aoi_dashboard():
         inspected = r['inspected'] or 0
         rejected = r['rejected'] or 0
         yield_rate = 1 - (rejected / inspected) if inspected else 0
-        operators.append(
-            {
-                'operator': r['operator'],
-                'inspected': inspected,
-                'rejected': rejected,
-                'yield': yield_rate,
-            }
-        )
+        operators.append({
+            'operator': r['operator'],
+            'inspected': inspected,
+            'rejected': rejected,
+            'yield': yield_rate,
+        })
 
     assemblies = []
     for r in asm_rows:
         inspected = r['inspected'] or 0
         rejected = r['rejected'] or 0
         yield_rate = 1 - (rejected / inspected) if inspected else 0
-        assemblies.append(
-            {
-                'assembly': r['assembly'],
-                'inspected': inspected,
-                'rejected': rejected,
-                'yield': yield_rate,
-            }
-        )
+        assemblies.append({
+            'assembly': r['assembly'],
+            'inspected': inspected,
+            'rejected': rejected,
+            'yield': yield_rate,
+        })
 
     shift_totals = [
         {
@@ -611,7 +493,8 @@ def aoi_dashboard():
     ]
 
     return render_template(
-        'aoi_dashboard.html',
+        'aoi.html',
+        records=rows,
         operators=operators,
         assemblies=assemblies,
         shift_totals=shift_totals,
@@ -622,7 +505,7 @@ def aoi_dashboard():
         start=start,
         end=end,
         selected_customer=customer,
-        selected_shift=shift,
+        selected_shift=shift_filter,
     )
 
 @app.route('/analysis', methods=['GET', 'POST'])
