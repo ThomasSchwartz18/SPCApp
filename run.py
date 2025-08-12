@@ -7,6 +7,7 @@ from flask import (
     jsonify,
     send_from_directory,
     session,
+    flash,
 )
 from functools import wraps
 import os
@@ -401,7 +402,10 @@ def aoi_report():
                         i += 1
                 else:
                     i += 1
-
+            if not records:
+                conn.close()
+                flash('No AOI records found in the uploaded file.')
+                return redirect(url_for('aoi_report', view='upload'))
             if records:
                 conn.executemany(
                     'INSERT INTO aoi_reports (report_date, shift, operator, customer, assembly, qty_inspected, qty_rejected, additional_info) VALUES (?,?,?,?,?,?,?,?)',
