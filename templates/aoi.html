@@ -138,11 +138,14 @@
             <th>Quantity Inspected</th>
             <th>Quantity Rejected</th>
             <th>Additional Information</th>
+            {% if current_user == 'ADMIN' or permissions['aoi'] %}
+            <th>Actions</th>
+            {% endif %}
           </tr>
         </thead>
         <tbody>
           {% for r in records %}
-          <tr>
+          <tr data-id="{{ r['id'] }}">
             <td>{{ r['report_date'] }}</td>
             <td>{{ r['shift'] }}</td>
             <td>{{ r['operator'] }}</td>
@@ -151,6 +154,9 @@
             <td>{{ r['qty_inspected'] }}</td>
             <td>{{ r['qty_rejected'] }}</td>
             <td>{{ r['additional_info'] }}</td>
+            {% if current_user == 'ADMIN' or permissions['aoi'] %}
+            <td class="no-edit"><button type="button" class="delete-row">Delete</button></td>
+            {% endif %}
           </tr>
           {% endfor %}
         </tbody>
