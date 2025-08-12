@@ -10,7 +10,7 @@
   <a href="/">← Home</a>
   <h1>Data Analysis - PPM MOAT</h1>
   {% if not show_moat %}
-    <button onclick="window.location='{{ url_for('analysis') }}?view=moat'">View MOAT</button>
+    <button onclick="window.location='{{ url_for('analysis') }}?view=moat'">View PPM Reports</button>
   {% else %}
     <div class="moat-stats">
       {% if total_rows %}
