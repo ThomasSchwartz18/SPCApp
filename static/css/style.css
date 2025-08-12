@@ -105,6 +105,11 @@ th, td { border:1px solid #ccc; padding:8px; text-align:center; }
   font-size: 1.2em;
 }
 
+.expand-chart {
+  margin-left: 8px;
+  font-size: 0.8em;
+}
+
 .action-card p {
   margin: 0 0 10px;
   color: #555;
