@@ -129,7 +129,7 @@ th, td { border:1px solid #ccc; padding:8px; text-align:center; }
 .action-card input[type="file"],
 .action-card input[type="password"],
 .action-card select {
-  width: 100%;
+  width: 95%;
   padding: 6px;
   margin-top: 4px;
   border: 1px solid #ccc;
@@ -156,6 +156,12 @@ th, td { border:1px solid #ccc; padding:8px; text-align:center; }
   align-items: center;
   text-align: center;
   justify-content: center;
+}
+
+.home-title img {
+    background-color: #121212;
+    padding: 5px;
+    border-radius: 7px;
 }
 
 /* Chart canvas sizing inside modal */
