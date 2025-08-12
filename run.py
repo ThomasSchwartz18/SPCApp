@@ -68,7 +68,7 @@ def init_db():
     conn.execute('''
         CREATE TABLE IF NOT EXISTS aoi_reports (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            report_date TEXT,
+            report_date TEXT NOT NULL,
             shift TEXT,
             operator TEXT,
             customer TEXT,
@@ -377,18 +377,54 @@ def aoi_report():
                         inspected = df.iloc[i,3] if not pd.isna(df.iloc[i,3]) else 0
                         rejected = df.iloc[i,4] if not pd.isna(df.iloc[i,4]) else 0
                         additional = df.iloc[i,5] if df.shape[1] > 5 else ''
-                        records.append((report_date, shift, operator, customer, assembly,
-                                        int(inspected), int(rejected), str(additional) if not pd.isna(additional) else ''))
+                        if not report_date:
+                            date_rows = conn.execute(
+                                'SELECT DISTINCT report_date FROM aoi_reports ORDER BY report_date DESC'
+                            ).fetchall()
+                            available_dates = [r['report_date'] for r in date_rows]
+                            conn.close()
+                            return render_template(
+                                'aoi.html',
+                                upload=True,
+                                available_dates=available_dates,
+                                error='Report date is required.'
+                            )
+                        records.append(
+                            (
+                                report_date,
+                                shift,
+                                operator,
+                                customer,
+                                assembly,
+                                int(inspected),
+                                int(rejected),
+                                str(additional) if not pd.isna(additional) else '',
+                            )
+                        )
                         i += 1
                 else:
                     i += 1
 
             if records:
-                conn.executemany(
-                    'INSERT INTO aoi_reports (report_date, shift, operator, customer, assembly, qty_inspected, qty_rejected, additional_info) VALUES (?,?,?,?,?,?,?,?)',
-                    records
-                )
-                conn.commit()
+                try:
+                    conn.executemany(
+                        'INSERT INTO aoi_reports (report_date, shift, operator, customer, assembly, qty_inspected, qty_rejected, additional_info) VALUES (?,?,?,?,?,?,?,?)',
+                        records
+                    )
+                    conn.commit()
+                except sqlite3.IntegrityError:
+                    conn.rollback()
+                    date_rows = conn.execute(
+                        'SELECT DISTINCT report_date FROM aoi_reports ORDER BY report_date DESC'
+                    ).fetchall()
+                    available_dates = [r['report_date'] for r in date_rows]
+                    conn.close()
+                    return render_template(
+                        'aoi.html',
+                        upload=True,
+                        available_dates=available_dates,
+                        error='Database error: report date is required.'
+                    )
                 try:
                     html_name = f"{first_report_date or os.path.splitext(filename)[0]}.html"
                     html_path = os.path.join(app.config['UPLOAD_FOLDER'], html_name)
@@ -404,7 +440,7 @@ def aoi_report():
             conn.close()
             return redirect(url_for('aoi_report'))
         conn.close()
-        return render_template('aoi.html', upload=True, available_dates=[])
+        return render_template('aoi.html', upload=True, available_dates=[], error=None)
 
     selected_date = request.args.get('date')
     date_rows = conn.execute(
@@ -432,6 +468,7 @@ def aoi_report():
         selected_date=selected_date,
         html_exists=html_exists,
         available_dates=available_dates,
+        error=None,
     )
 
 

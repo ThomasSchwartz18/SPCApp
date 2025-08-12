@@ -3,6 +3,9 @@
 {% block content %}
   <a href="/">← Home</a>
   <h1>AOI Daily Report</h1>
+  {% if error %}
+    <p class="error">{{ error }}</p>
+  {% endif %}
   <p>
     <a href="/aoi">View Reports</a>
     {% if current_user == 'ADMIN' or permissions['aoi'] %}
