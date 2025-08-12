@@ -32,6 +32,70 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function setupLineSelectors(prefix) {
+    const selects = [];
+    const ands = [];
+    for (let i = 1; i <= 4; i++) {
+      selects[i] = document.getElementById(`${prefix}-select-${i}`);
+      if (i > 1) ands[i] = document.getElementById(`${prefix}-and-${i}`);
+    }
+
+    function hideFrom(start) {
+      for (let i = start; i <= 4; i++) {
+        if (selects[i]) {
+          selects[i].style.display = 'none';
+          selects[i].value = '';
+        }
+        if (ands[i]) ands[i].style.display = 'none';
+      }
+    }
+
+    selects[1]?.addEventListener('change', () => {
+      if (selects[1].value && selects[1].value !== 'all') {
+        if (selects[2]) {
+          selects[2].style.display = 'inline';
+          ands[2].style.display = 'inline';
+        }
+      } else {
+        hideFrom(2);
+      }
+    });
+    selects[2]?.addEventListener('change', () => {
+      if (selects[2].value) {
+        if (selects[3]) {
+          selects[3].style.display = 'inline';
+          ands[3].style.display = 'inline';
+        }
+      } else {
+        hideFrom(3);
+      }
+    });
+    selects[3]?.addEventListener('change', () => {
+      if (selects[3].value) {
+        if (selects[4]) {
+          selects[4].style.display = 'inline';
+          ands[4].style.display = 'inline';
+        }
+      } else {
+        hideFrom(4);
+      }
+    });
+  }
+
+  function getSelectedLines(prefix) {
+    const values = [];
+    for (let i = 1; i <= 4; i++) {
+      const sel = document.getElementById(`${prefix}-select-${i}`);
+      if (sel && sel.style.display !== 'none' && sel.value && sel.value !== 'all') {
+        values.push(sel.value === 'offline' ? 'LOffline' : `L${sel.value}`);
+      }
+    }
+    return values.length ? `&lines=${values.join(',')}` : '';
+  }
+
+  setupLineSelectors('line');
+  setupLineSelectors('ng-line');
+
   // Threshold plugin for horizontal lines
   const thresholdPlugin = {
     id: 'thresholdPlugin',
@@ -80,7 +144,8 @@ window.addEventListener('DOMContentLoaded', () => {
       const end = document.getElementById('end-date').value;
       const yMax = parseFloat(document.getElementById('y-max').value) || 1;
       const threshold = parseInt(document.getElementById('min-boards').value) || 0;
-      fetch(`/analysis/chart-data?start=${start}&end=${end}&threshold=${threshold}&metric=fc`)
+      const lineQuery = getSelectedLines('line');
+      fetch(`/analysis/chart-data?start=${start}&end=${end}&threshold=${threshold}&metric=fc${lineQuery}`)
         .then(res => res.json())
         .then(data => {
           const labels = data.map(d => d.model);
@@ -175,7 +240,8 @@ window.addEventListener('DOMContentLoaded', () => {
       const end = document.getElementById('ng-end-date').value;
       const yMax = parseFloat(document.getElementById('ng-y-max').value) || 1;
       const threshold = parseInt(document.getElementById('ng-min-boards').value) || 0;
-      fetch(`/analysis/chart-data?start=${start}&end=${end}&threshold=${threshold}&metric=ng`)
+      const lineQuery = getSelectedLines('ng-line');
+      fetch(`/analysis/chart-data?start=${start}&end=${end}&threshold=${threshold}&metric=ng${lineQuery}`)
         .then(res => res.json())
         .then(data => {
           const labels = data.map(d => d.model);
