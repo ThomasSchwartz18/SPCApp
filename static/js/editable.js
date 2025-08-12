@@ -15,13 +15,29 @@ window.addEventListener('DOMContentLoaded', () => {
       input.focus();
 
       const finish = () => {
+        const row = cell.parentElement;
+        const cells = Array.from(row.querySelectorAll('td'));
+        const originals = cells.map(td => td.textContent);
         const value = input.value.trim();
         cell.removeChild(input);
         cell.textContent = value;
-        const row = cell.parentElement;
-        const cells = Array.from(row.querySelectorAll('td'));
         if (cells.every(td => td.textContent.trim() === '')) {
-          row.remove();
+          const id = row.dataset.id;
+          if (!id) {
+            cells.forEach((td, i) => td.textContent = originals[i]);
+            return;
+          }
+          fetch(`/part-markings/${id}`, { method: 'DELETE' })
+            .then(resp => {
+              if (resp.ok) {
+                row.remove();
+              } else {
+                cells.forEach((td, i) => td.textContent = originals[i]);
+              }
+            })
+            .catch(() => {
+              cells.forEach((td, i) => td.textContent = originals[i]);
+            });
         }
       };
 

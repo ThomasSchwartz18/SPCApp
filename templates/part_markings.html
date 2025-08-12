@@ -69,7 +69,7 @@
         </thead>
         <tbody>
           {% for row in markings %}
-          <tr>
+          <tr data-id="{{ row['id'] }}">
             <td>{{ row['verified_markings'] }}</td>
             <td>{{ row['manufacturer'] }}</td>
             <td>{{ row['mfg_number2'] }}</td>

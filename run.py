@@ -335,6 +335,23 @@ def part_markings():
     conn.close()
     return render_template('part_markings.html', markings=rows)
 
+
+@app.route('/part-markings/<int:marking_id>', methods=['DELETE'])
+@login_required
+def delete_part_marking(marking_id: int):
+    if not has_permission('part_markings'):
+        return jsonify({'error': 'Forbidden'}), 403
+    conn = get_db()
+    cur = conn.execute(
+        'DELETE FROM verified_markings WHERE id = ?', (marking_id,)
+    )
+    conn.commit()
+    deleted = cur.rowcount
+    conn.close()
+    if deleted:
+        return jsonify({'status': 'deleted'})
+    return jsonify({'error': 'Not found'}), 404
+
 @app.route('/aoi', methods=['GET', 'POST'])
 @login_required
 def aoi_report():
