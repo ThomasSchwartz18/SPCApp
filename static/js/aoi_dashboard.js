@@ -1,4 +1,21 @@
 window.addEventListener('DOMContentLoaded', () => {
+  // Divider logic
+  const divider = document.getElementById('divider');
+  const container = document.getElementById('container');
+  if (divider && container) {
+    let isDragging = false;
+    divider.addEventListener('mousedown', () => { isDragging = true; document.body.style.cursor = 'col-resize'; });
+    document.addEventListener('mouseup', () => { isDragging = false; document.body.style.cursor = 'default'; });
+    document.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      const rect = container.getBoundingClientRect();
+      let offset = e.clientX - rect.left;
+      offset = Math.max(100, Math.min(offset, rect.width - 100));
+      const actionsEl = document.getElementById('aoi-actions');
+      if (actionsEl) actionsEl.style.flex = `0 0 ${offset}px`;
+    });
+  }
+
   const getData = id => {
     const el = document.getElementById(id);
     return el ? JSON.parse(el.textContent) : null;
