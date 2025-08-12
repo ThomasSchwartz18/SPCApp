@@ -7,6 +7,7 @@
     <a href="/aoi">View Reports</a>
     {% if current_user == 'ADMIN' or permissions['aoi'] %}
       | <a href="/aoi?view=upload">Upload Report</a>
+      | <a href="{{ url_for('aoi_dashboard') }}">Dashboard</a>
     {% endif %}
   </p>
 
