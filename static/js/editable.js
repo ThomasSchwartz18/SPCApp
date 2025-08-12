@@ -2,10 +2,10 @@ window.addEventListener('DOMContentLoaded', () => {
   const isAdmin = document.body.dataset.admin === 'true';
   if (!isAdmin) return;
 
-  document.querySelectorAll('table').forEach(table => {
+  document.querySelectorAll('table.editable').forEach(table => {
     table.addEventListener('dblclick', e => {
       const cell = e.target.closest('td');
-      if (!cell || cell.querySelector('input')) return;
+      if (!cell || cell.querySelector('input') || cell.classList.contains('no-edit')) return;
       const original = cell.textContent.trim();
       const input = document.createElement('input');
       input.type = 'text';

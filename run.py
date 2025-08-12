@@ -365,6 +365,21 @@ def update_part_marking(row_id):
     except Exception as e:
         return jsonify(error=str(e)), 500
 
+
+@app.route('/part-markings/<int:row_id>', methods=['DELETE'])
+@login_required
+def delete_part_marking(row_id):
+    if not has_permission('part_markings'):
+        return jsonify(error='Forbidden'), 403
+    try:
+        conn = get_db()
+        conn.execute('DELETE FROM verified_markings WHERE id = ?', (row_id,))
+        conn.commit()
+        conn.close()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(error=str(e)), 500
+
 @app.route('/aoi', methods=['GET', 'POST'])
 @login_required
 def aoi_report():
@@ -537,6 +552,21 @@ def aoi_report():
         selected_customer=customer,
         selected_shift=shift_filter,
     )
+
+
+@app.route('/aoi/<int:row_id>', methods=['DELETE'])
+@login_required
+def delete_aoi_record(row_id):
+    if not has_permission('aoi'):
+        return jsonify(error='Forbidden'), 403
+    try:
+        conn = get_db()
+        conn.execute('DELETE FROM aoi_reports WHERE id = ?', (row_id,))
+        conn.commit()
+        conn.close()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(error=str(e)), 500
 
 @app.route('/analysis', methods=['GET', 'POST'])
 @login_required

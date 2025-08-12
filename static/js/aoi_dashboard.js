@@ -109,5 +109,24 @@ window.addEventListener('DOMContentLoaded', () => {
   if (window.jQuery) {
     $('#assemblyTable').DataTable();
   }
+
+  const table = document.querySelector('#aoi-table table');
+  if (table) {
+    table.addEventListener('click', async e => {
+      if (!e.target.classList.contains('delete-row')) return;
+      const row = e.target.closest('tr');
+      const id = row.dataset.id;
+      if (!id || !confirm('Delete this entry?')) return;
+      try {
+        const resp = await fetch(`/aoi/${id}`, { method: 'DELETE' });
+        const data = await resp.json();
+        if (data.success) {
+          row.remove();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  }
 });
 

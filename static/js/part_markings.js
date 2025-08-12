@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('search-part-number');
   const searchBtn = document.getElementById('search-btn');
+  const table = document.querySelector('#markings-table table');
 
   function runSearch() {
     const term = searchInput.value.trim();
@@ -27,4 +28,22 @@ document.addEventListener('DOMContentLoaded', () => {
       runSearch();
     }
   });
+
+  if (table) {
+    table.addEventListener('click', async e => {
+      if (!e.target.classList.contains('delete-row')) return;
+      const row = e.target.closest('tr');
+      const id = row.dataset.id;
+      if (!id || !confirm('Delete this entry?')) return;
+      try {
+        const resp = await fetch(`/part-markings/${id}`, { method: 'DELETE' });
+        const data = await resp.json();
+        if (data.success) {
+          row.remove();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  }
 });

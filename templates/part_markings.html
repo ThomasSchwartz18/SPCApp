@@ -57,7 +57,7 @@
     </div>
     <div id="divider"></div>
     <div id="markings-table">
-      <table>
+      <table class="editable">
         <thead>
           <tr>
             <th>Verified Markings</th>
@@ -65,6 +65,9 @@
             <th>Mfg Number 2</th>
             <th>Mfg Number 1</th>
             <th>Part Number</th>
+            {% if current_user == 'ADMIN' or permissions['part_markings'] %}
+            <th>Actions</th>
+            {% endif %}
           </tr>
         </thead>
         <tbody>
@@ -75,6 +78,9 @@
             <td>{{ row['mfg_number2'] }}</td>
             <td>{{ row['mfg_number1'] }}</td>
             <td>{{ row['part_number'] }}</td>
+            {% if current_user == 'ADMIN' or permissions['part_markings'] %}
+            <td class="no-edit"><button type="button" class="delete-row" title="Delete row">Delete</button></td>
+            {% endif %}
           </tr>
           {% endfor %}
         </tbody>
