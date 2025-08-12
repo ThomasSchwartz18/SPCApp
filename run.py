@@ -418,6 +418,55 @@ def aoi_report():
     conn.close()
     return render_template('aoi.html', upload=False, data=data, selected_date=selected_date, html_exists=html_exists)
 
+
+@app.route('/aoi/dashboard')
+@login_required
+def aoi_dashboard():
+    if not has_permission('aoi'):
+        return redirect(url_for('aoi_report'))
+    conn = get_db()
+    op_rows = conn.execute(
+        'SELECT operator, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
+        'FROM aoi_reports GROUP BY operator ORDER BY inspected DESC'
+    ).fetchall()
+    asm_rows = conn.execute(
+        'SELECT assembly, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
+        'FROM aoi_reports GROUP BY assembly ORDER BY inspected DESC'
+    ).fetchall()
+    conn.close()
+
+    operators = []
+    for r in op_rows:
+        inspected = r['inspected'] or 0
+        rejected = r['rejected'] or 0
+        yield_rate = 1 - (rejected / inspected) if inspected else 0
+        operators.append(
+            {
+                'operator': r['operator'],
+                'inspected': inspected,
+                'rejected': rejected,
+                'yield': yield_rate,
+            }
+        )
+
+    assemblies = []
+    for r in asm_rows:
+        inspected = r['inspected'] or 0
+        rejected = r['rejected'] or 0
+        yield_rate = 1 - (rejected / inspected) if inspected else 0
+        assemblies.append(
+            {
+                'assembly': r['assembly'],
+                'inspected': inspected,
+                'rejected': rejected,
+                'yield': yield_rate,
+            }
+        )
+
+    return render_template(
+        'aoi_dashboard.html', operators=operators, assemblies=assemblies
+    )
+
 @app.route('/analysis', methods=['GET', 'POST'])
 @login_required
 def analysis():
