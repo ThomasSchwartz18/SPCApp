@@ -1,12 +1,8 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>SPCApp Home</title>
-  <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
+{% extends 'base.html' %}
+{% block title %}SPCApp Home{% endblock %}
+{% block content %}
   <h1>Welcome to SPCApp</h1>
+  <button onclick="location.href='{{ url_for('logout') }}'">Logout</button>
   <div class="job-previews">
     <h2>Floor Jobs Preview</h2>
     <div class="job-grid">
@@ -46,5 +42,4 @@
       <p>Statistical Controls</p>
     </div>
   </div>
-</body>
-</html>
+{% endblock %}

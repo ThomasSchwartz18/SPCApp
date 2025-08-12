@@ -1,19 +1,17 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>AOI Daily Report</title>
-  <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
+{% extends 'base.html' %}
+{% block title %}AOI Daily Report{% endblock %}
+{% block content %}
   <a href="/">← Home</a>
   <h1>AOI Daily Report</h1>
   <p>
-    <a href="/aoi">View Reports</a> |
-    <a href="/aoi?view=upload">Upload Report</a>
+    <a href="/aoi">View Reports</a>
+    {% if current_user == 'ADMIN' or permissions['aoi'] %}
+      | <a href="/aoi?view=upload">Upload Report</a>
+    {% endif %}
   </p>
 
   {% if upload %}
+    {% if current_user == 'ADMIN' or permissions['aoi'] %}
     <div class="action-panel">
       <div class="action-card">
         <h2>Upload Daily Report</h2>
@@ -30,6 +28,9 @@
         </form>
       </div>
     </div>
+    {% else %}
+      <p>Not authorized.</p>
+    {% endif %}
   {% else %}
     <div class="action-panel">
       <div class="action-card">
@@ -73,5 +74,4 @@
       {% endif %}
     {% endif %}
   {% endif %}
-</body>
-</html>
+{% endblock %}

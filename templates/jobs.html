@@ -1,12 +1,7 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Jobs Dashboard</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-  <a href="{{ url_for('main_views.home') }}">← Home</a>
+{% extends 'base.html' %}
+{% block title %}Jobs Dashboard{% endblock %}
+{% block content %}
+  <a href="/">← Home</a>
   <h1>Jobs Dashboard</h1>
 
   <form id="add-form">
@@ -34,5 +29,4 @@
   </form>
 
   <script src="{{ url_for('static', filename='js/jobs.js') }}"></script>
-</body>
-</html>
+{% endblock %}

@@ -1,12 +1,9 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Verified Part Markings</title>
-  <link rel="stylesheet" href="/static/css/style.css">
+{% extends 'base.html' %}
+{% block title %}Verified Part Markings{% endblock %}
+{% block head_extra %}
   <script src="/static/js/part_markings.js" defer></script>
-</head>
-<body>
+{% endblock %}
+{% block content %}
   <a href="/">← Home</a>
   <h1>Verified Part Markings</h1>
   <div id="container">
@@ -20,6 +17,7 @@
           <p class="field-desc">Highlight matching part number in the table.</p>
           <button id="search-btn" type="button" title="Highlight matching part number">Search</button>
         </div>
+        {% if current_user == 'ADMIN' or permissions['part_markings'] %}
         <div class="action-card">
           <h2>Add New Entry</h2>
           <p class="desc">Use this form to add a single verified part marking.</p>
@@ -54,6 +52,7 @@
             <button type="submit" title="Upload spreadsheet">Upload</button>
           </form>
         </div>
+        {% endif %}
       </div>
     </div>
     <div id="divider"></div>
@@ -82,5 +81,4 @@
       </table>
     </div>
   </div>
-</body>
-</html>
+{% endblock %}

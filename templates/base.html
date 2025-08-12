@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}SPCApp{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+  <div class="topbar">
+    <span class="user-label">user:{{ current_user }}</span>
+    <a href="{{ url_for('logout') }}">Logout</a>
+    {% if current_user == 'ADMIN' %}
+      <a href="{{ url_for('settings') }}">Settings</a>
+    {% endif %}
+  </div>
+  {% block content %}{% endblock %}
+</body>
+</html>

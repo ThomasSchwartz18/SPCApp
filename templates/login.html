@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <h1>Login</h1>
+  <form method="post">
+    <label>User Type
+      <select name="role">
+        <option value="ADMIN">ADMIN</option>
+        <option value="USER">USER</option>
+      </select>
+    </label><br>
+    <label>Password
+      <input type="password" name="password" required>
+    </label><br>
+    <button type="submit">Login</button>
+    {% if error %}<p style="color:red">{{ error }}</p>{% endif %}
+  </form>
+</body>
+</html>

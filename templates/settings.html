@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+  <h1>Settings</h1>
+  <h2>Permissions</h2>
+  <form method="post">
+    <label><input type="checkbox" name="permissions" value="part_markings" {% if permissions['part_markings'] %}checked{% endif %}> Part Markings Upload/Input</label><br>
+    <label><input type="checkbox" name="permissions" value="aoi" {% if permissions['aoi'] %}checked{% endif %}> AOI Report Upload</label><br>
+    <label><input type="checkbox" name="permissions" value="analysis" {% if permissions['analysis'] %}checked{% endif %}> PPM Report Upload</label><br>
+    <button type="submit">Save</button>
+  </form>
+{% endblock %}
