@@ -150,6 +150,14 @@ th, td { border:1px solid #ccc; padding:8px; text-align:center; }
   background: #0056b3;
 }
 
+.home-title {
+  width: auto;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+}
+
 /* Chart canvas sizing inside modal */
 #chart-modal .modal-content {
   display: flex;
