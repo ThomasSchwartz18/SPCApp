@@ -9,6 +9,7 @@
   <script id="shift-data" type="application/json">{{ shift_totals|tojson }}</script>
   <script id="customer-data" type="application/json">{{ customer_rates|tojson }}</script>
   <script id="yield-data" type="application/json">{{ yield_series|tojson }}</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script src="{{ url_for('static', filename='js/aoi_dashboard.js') }}" defer></script>
 {% endblock %}
 {% block content %}
@@ -161,6 +162,15 @@
           {% endfor %}
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <div id="chart-modal" class="modal">
+    <div class="modal-content">
+      <span id="close-chart-modal" class="close">&times;</span>
+      <h2 id="chart-modal-title"></h2>
+      <canvas id="chart-canvas"></canvas>
+      <button id="download-chart-pdf">Download PDF</button>
     </div>
   </div>
 {% endblock %}
