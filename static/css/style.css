@@ -190,3 +190,5 @@ body.dark-mode .action-card p { color: #ccc; }
 body.dark-mode table { border-color: #555; }
 body.dark-mode th,
 body.dark-mode td { border-color: #555; }
+body.dark-mode .job-preview.warning { background: #b8860b; color: #fff; }
+body.dark-mode .job-preview.danger { background: #8b0000; color: #fff; }
