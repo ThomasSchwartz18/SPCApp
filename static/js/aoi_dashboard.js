@@ -1,9 +1,13 @@
 window.addEventListener('DOMContentLoaded', () => {
-  const dataEl = document.getElementById('operator-data');
-  if (dataEl) {
-    const ops = JSON.parse(dataEl.textContent);
+  const getData = id => {
+    const el = document.getElementById(id);
+    return el ? JSON.parse(el.textContent) : null;
+  };
+
+  const ops = getData('operator-data');
+  if (ops && ops.length) {
     const ctx = document.getElementById('operatorsChart');
-    if (ctx && ops.length) {
+    if (ctx) {
       new Chart(ctx, {
         type: 'bar',
         data: {
@@ -22,6 +26,69 @@ window.addEventListener('DOMContentLoaded', () => {
       });
     }
   }
+
+  const shiftData = getData('shift-data');
+  if (shiftData && shiftData.length) {
+    const ctx = document.getElementById('shiftChart');
+    if (ctx) {
+      const dates = [...new Set(shiftData.map(r => r.report_date))];
+      const shifts = [...new Set(shiftData.map(r => r.shift))];
+      const colors = ['rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(75, 192, 192, 0.7)', 'rgba(255, 205, 86, 0.7)'];
+      const datasets = shifts.map((s, idx) => ({
+        label: s,
+        data: dates.map(d => {
+          const row = shiftData.find(r => r.report_date === d && r.shift === s);
+          return row ? row.inspected : 0;
+        }),
+        backgroundColor: colors[idx % colors.length]
+      }));
+      new Chart(ctx, {
+        type: 'bar',
+        data: { labels: dates, datasets },
+        options: { scales: { y: { beginAtZero: true } } }
+      });
+    }
+  }
+
+  const customerData = getData('customer-data');
+  if (customerData && customerData.length) {
+    const ctx = document.getElementById('customerChart');
+    if (ctx) {
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: customerData.map(c => c.customer),
+          datasets: [{
+            label: 'Reject Rate',
+            data: customerData.map(c => c.rate),
+            backgroundColor: 'rgba(255, 159, 64, 0.7)'
+          }]
+        },
+        options: { scales: { y: { beginAtZero: true } } }
+      });
+    }
+  }
+
+  const yieldData = getData('yield-data');
+  if (yieldData && yieldData.length) {
+    const ctx = document.getElementById('yieldChart');
+    if (ctx) {
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: yieldData.map(y => y.report_date),
+          datasets: [{
+            label: 'Yield',
+            data: yieldData.map(y => y.yield),
+            fill: false,
+            borderColor: 'rgba(75, 192, 192, 1)'
+          }]
+        },
+        options: { scales: { y: { beginAtZero: true, max: 1 } } }
+      });
+    }
+  }
+
   if (window.jQuery) {
     $('#assemblyTable').DataTable();
   }

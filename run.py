@@ -440,15 +440,60 @@ def aoi_report():
 def aoi_dashboard():
     if not has_permission('aoi'):
         return redirect(url_for('aoi_report'))
+
+    start = request.args.get('start')
+    end = request.args.get('end')
+    customer = request.args.get('customer')
+    shift = request.args.get('shift')
+
+    where = 'WHERE 1=1'
+    params = []
+    if start:
+        where += ' AND report_date >= ?'
+        params.append(start)
+    if end:
+        where += ' AND report_date <= ?'
+        params.append(end)
+    if customer:
+        where += ' AND customer = ?'
+        params.append(customer)
+    if shift:
+        where += ' AND shift = ?'
+        params.append(shift)
+
     conn = get_db()
     op_rows = conn.execute(
-        'SELECT operator, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
-        'FROM aoi_reports GROUP BY operator ORDER BY inspected DESC'
+        f'SELECT operator, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
+        f'FROM aoi_reports {where} GROUP BY operator ORDER BY inspected DESC',
+        params,
     ).fetchall()
     asm_rows = conn.execute(
-        'SELECT assembly, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
-        'FROM aoi_reports GROUP BY assembly ORDER BY inspected DESC'
+        f'SELECT assembly, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
+        f'FROM aoi_reports {where} GROUP BY assembly ORDER BY inspected DESC',
+        params,
     ).fetchall()
+    shift_rows = conn.execute(
+        f'SELECT report_date, shift, SUM(qty_inspected) AS inspected, '
+        f'SUM(qty_rejected) AS rejected FROM aoi_reports {where} '
+        f'GROUP BY report_date, shift ORDER BY report_date, shift',
+        params,
+    ).fetchall()
+    cust_rows = conn.execute(
+        f'SELECT customer, SUM(qty_rejected)*1.0/SUM(qty_inspected) AS rate '
+        f'FROM aoi_reports {where} GROUP BY customer ORDER BY customer',
+        params,
+    ).fetchall()
+    yield_rows = conn.execute(
+        f'SELECT report_date, 1 - SUM(qty_rejected)*1.0/SUM(qty_inspected) AS yield '
+        f'FROM aoi_reports {where} GROUP BY report_date ORDER BY report_date',
+        params,
+    ).fetchall()
+    customer_opts = [r['customer'] for r in conn.execute(
+        'SELECT DISTINCT customer FROM aoi_reports ORDER BY customer'
+    ).fetchall()]
+    shift_opts = [r['shift'] for r in conn.execute(
+        'SELECT DISTINCT shift FROM aoi_reports ORDER BY shift'
+    ).fetchall()]
     conn.close()
 
     operators = []
@@ -479,8 +524,45 @@ def aoi_dashboard():
             }
         )
 
+    shift_totals = [
+        {
+            'report_date': r['report_date'],
+            'shift': r['shift'],
+            'inspected': r['inspected'] or 0,
+            'rejected': r['rejected'] or 0,
+        }
+        for r in shift_rows
+    ]
+
+    customer_rates = [
+        {
+            'customer': r['customer'],
+            'rate': r['rate'] or 0,
+        }
+        for r in cust_rows
+    ]
+
+    yield_series = [
+        {
+            'report_date': r['report_date'],
+            'yield': r['yield'] or 0,
+        }
+        for r in yield_rows
+    ]
+
     return render_template(
-        'aoi_dashboard.html', operators=operators, assemblies=assemblies
+        'aoi_dashboard.html',
+        operators=operators,
+        assemblies=assemblies,
+        shift_totals=shift_totals,
+        customer_rates=customer_rates,
+        yield_series=yield_series,
+        customers=customer_opts,
+        shifts=shift_opts,
+        start=start,
+        end=end,
+        selected_customer=customer,
+        selected_shift=shift,
     )
 
 @app.route('/analysis', methods=['GET', 'POST'])
