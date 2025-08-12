@@ -335,6 +335,36 @@ def part_markings():
     conn.close()
     return render_template('part_markings.html', markings=rows)
 
+
+@app.route('/part-markings/<int:row_id>', methods=['PUT'])
+@login_required
+def update_part_marking(row_id):
+    if not has_permission('part_markings'):
+        return jsonify(error='Forbidden'), 403
+    data = request.json or {}
+    field = data.get('field')
+    value = data.get('value', '')
+    allowed = {
+        'part_number',
+        'mfg_number1',
+        'mfg_number2',
+        'manufacturer',
+        'verified_markings',
+    }
+    if field not in allowed:
+        return jsonify(error='Invalid field'), 400
+    try:
+        conn = get_db()
+        conn.execute(
+            f'UPDATE verified_markings SET {field} = ? WHERE id = ?',
+            (value, row_id),
+        )
+        conn.commit()
+        conn.close()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(error=str(e)), 500
+
 @app.route('/aoi', methods=['GET', 'POST'])
 @login_required
 def aoi_report():

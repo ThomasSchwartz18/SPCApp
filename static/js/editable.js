@@ -14,14 +14,32 @@ window.addEventListener('DOMContentLoaded', () => {
       cell.appendChild(input);
       input.focus();
 
-      const finish = () => {
+      const finish = async () => {
         const value = input.value.trim();
         cell.removeChild(input);
         cell.textContent = value;
         const row = cell.parentElement;
-        const cells = Array.from(row.querySelectorAll('td'));
-        if (cells.every(td => td.textContent.trim() === '')) {
-          row.remove();
+        const id = row.dataset.id;
+        const fields = ['verified_markings','manufacturer','mfg_number2','mfg_number1','part_number'];
+        const field = fields[cell.cellIndex];
+        if (!id || !field) {
+          cell.textContent = original;
+          return;
+        }
+        try {
+          const resp = await fetch(`/part-markings/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ field, value })
+          });
+          const data = await resp.json();
+          if (!data.success) throw new Error(data.error || '');
+          const cells = Array.from(row.querySelectorAll('td'));
+          if (cells.every(td => td.textContent.trim() === '')) {
+            row.remove();
+          }
+        } catch (err) {
+          cell.textContent = original;
         }
       };
 
