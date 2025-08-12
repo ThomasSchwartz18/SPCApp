@@ -154,6 +154,15 @@ window.addEventListener('DOMContentLoaded', () => {
     modal.style.display = 'block';
   }
 
+  document.querySelectorAll('.expand-chart').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.chart;
+      const title = btn.dataset.title || '';
+      const chart = charts[key];
+      if (chart) openModal(chart, title);
+    });
+  });
+
   closeModal?.addEventListener('click', () => { modal.style.display = 'none'; });
   window.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
 
