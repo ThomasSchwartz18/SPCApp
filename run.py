@@ -1,4 +1,14 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    jsonify,
+    send_from_directory,
+    session,
+)
+from functools import wraps
 import os
 import sqlite3
 import pandas as pd
@@ -8,6 +18,7 @@ from xlsx2html import xlsx2html
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
+app.secret_key = os.environ.get('SECRET_KEY', 'spc_secret')
 DATABASE = 'spcapp.db'
 
 # Ensure upload folder exists
@@ -67,14 +78,99 @@ def init_db():
             additional_info TEXT
         )
     ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS permissions (
+            feature TEXT PRIMARY KEY,
+            allowed INTEGER DEFAULT 0
+        )
+    ''')
+    for feature in ['part_markings', 'aoi', 'analysis']:
+        conn.execute(
+            'INSERT OR IGNORE INTO permissions (feature, allowed) VALUES (?,0)',
+            (feature,),
+        )
     conn.commit()
     conn.close()
 
 # Initialize database
 init_db()
 
+# --- Auth helpers ---
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('user'):
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated
+
+
+def has_permission(feature: str) -> bool:
+    if session.get('user') == 'ADMIN':
+        return True
+    conn = get_db()
+    row = conn.execute(
+        'SELECT allowed FROM permissions WHERE feature = ?', (feature,)
+    ).fetchone()
+    conn.close()
+    return bool(row and row['allowed'])
+
+
+@app.context_processor
+def inject_globals():
+    conn = get_db()
+    rows = conn.execute('SELECT feature, allowed FROM permissions').fetchall()
+    conn.close()
+    perms = {r['feature']: bool(r['allowed']) for r in rows}
+    return dict(current_user=session.get('user'), permissions=perms)
+
 # --- Routes ---
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    if request.method == 'POST':
+        role = request.form.get('role')
+        password = request.form.get('password', '')
+        if role == 'ADMIN' and password == 'MasterAdmin':
+            session['user'] = 'ADMIN'
+            return redirect(url_for('home'))
+        elif role == 'USER' and password == 'fuji':
+            session['user'] = 'USER'
+            return redirect(url_for('home'))
+        else:
+            error = 'Invalid credentials'
+    return render_template('login.html', error=error)
+
+
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    return redirect(url_for('login'))
+
+
+@app.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    if session.get('user') != 'ADMIN':
+        return redirect(url_for('home'))
+    conn = get_db()
+    features = ['part_markings', 'aoi', 'analysis']
+    if request.method == 'POST':
+        selected = request.form.getlist('permissions')
+        for feat in features:
+            conn.execute(
+                'UPDATE permissions SET allowed = ? WHERE feature = ?',
+                (1 if feat in selected else 0, feat),
+            )
+        conn.commit()
+    rows = conn.execute('SELECT feature, allowed FROM permissions').fetchall()
+    conn.close()
+    perms = {r['feature']: bool(r['allowed']) for r in rows}
+    return render_template('settings.html', permissions=perms)
+
+
 @app.route('/')
+@login_required
 def home():
     # Example placeholder data; replace with SAP integration later
     today = datetime.today()
@@ -158,9 +254,13 @@ def home():
     return render_template('home.html', sample_jobs=jobs)
 
 @app.route('/part-markings', methods=['GET', 'POST'])
+@login_required
 def part_markings():
     conn = get_db()
     if request.method == 'POST':
+        if not has_permission('part_markings'):
+            conn.close()
+            return redirect(url_for('part_markings'))
         # Handle spreadsheet upload
         if 'excel_file' in request.files and request.files['excel_file'].filename:
             file = request.files['excel_file']
@@ -217,9 +317,13 @@ def part_markings():
     return render_template('part_markings.html', markings=rows)
 
 @app.route('/aoi', methods=['GET', 'POST'])
+@login_required
 def aoi_report():
     conn = get_db()
     if request.method == 'POST' and 'excel_file' in request.files:
+        if not has_permission('aoi'):
+            conn.close()
+            return redirect(url_for('aoi_report'))
         file = request.files['excel_file']
         manual_date = request.form.get('report_date')
         if manual_date:
@@ -296,6 +400,9 @@ def aoi_report():
 
     view = request.args.get('view')
     if view == 'upload':
+        if not has_permission('aoi'):
+            conn.close()
+            return redirect(url_for('aoi_report'))
         conn.close()
         return render_template('aoi.html', upload=True)
 
@@ -312,10 +419,13 @@ def aoi_report():
     return render_template('aoi.html', upload=False, data=data, selected_date=selected_date, html_exists=html_exists)
 
 @app.route('/analysis', methods=['GET', 'POST'])
+@login_required
 def analysis():
     show = False
     # Handle upload via POST
     if request.method == 'POST' and 'ppm_report' in request.files:
+        if not has_permission('analysis'):
+            return redirect(url_for('analysis'))
         file = request.files['ppm_report']
         if file:
             filename = file.filename
@@ -370,6 +480,7 @@ def analysis():
     )
 
 @app.route('/analysis/chart-data')
+@login_required
 def chart_data():
     start = request.args.get('start')
     end = request.args.get('end')
@@ -399,7 +510,10 @@ def chart_data():
     return jsonify([{'model': r['model_name'], 'rate': r['rate']} for r in data])
 
 @app.route('/uploads')
+@login_required
 def list_uploads():
+    if not has_permission('analysis'):
+        return jsonify(files=[])
     try:
         conn = get_db()
         files = conn.execute('SELECT DISTINCT filename FROM moat').fetchall()
@@ -410,7 +524,10 @@ def list_uploads():
         return jsonify(files=[], error=str(e)), 500
 
 @app.route('/uploads/delete', methods=['POST'])
+@login_required
 def delete_upload():
+    if not has_permission('analysis'):
+        return jsonify(error='Forbidden'), 403
     data = request.json or {}
     filename = data.get('filename')
     if not filename:
@@ -426,6 +543,7 @@ def delete_upload():
 
 
 @app.route('/aoi/html/<path:filename>')
+@login_required
 def aoi_html(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 

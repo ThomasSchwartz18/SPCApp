@@ -1,13 +1,10 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Control Chart</title>
+{% extends 'base.html' %}
+{% block title %}Control Chart{% endblock %}
+{% block head_extra %}
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
   <script src="/static/js/chart-popup.js" defer></script>
-</head>
-<body>
+{% endblock %}
+{% block content %}
   <h1>Control Chart – Average FalseCall Rate</h1>
   <canvas id="popup-chart" height="200"></canvas>
-</body>
-</html>
+{% endblock %}
