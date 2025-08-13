@@ -19,8 +19,9 @@
     <div id="aoi-actions">
       <div class="action-panel">
         {% if current_user == 'ADMIN' or permissions['aoi'] %}
-        <div class="action-card">
-          <h2>Add New Entry</h2>
+        <div class="action-card collapsible-card">
+          <h2 class="collapsible-header">Add New Entry</h2>
+          <div class="collapsible-content">
           <form method="post">
             <label>Report Date
               <input type="date" name="report_date" required>
@@ -51,9 +52,11 @@
             </label><br>
             <button type="submit">Add</button>
           </form>
+          </div>
         </div>
-        <div class="action-card">
-          <h2>Bulk Upload</h2>
+        <div class="action-card collapsible-card">
+          <h2 class="collapsible-header">Bulk Upload</h2>
+          <div class="collapsible-content">
           <form method="post" enctype="multipart/form-data">
             <label>Report Date
               <input type="date" name="report_date" required>
@@ -69,6 +72,7 @@
             </label><br>
             <button type="submit">Upload</button>
           </form>
+          </div>
         </div>
         {% endif %}
         <div class="action-card">
@@ -95,13 +99,13 @@
             <button type="submit">Apply</button>
           </form>
         </div>
-        <h2>Top Operators by Inspected Quantity</h2>
+        <h2>Top Operators by Inspected Quantity <button class="expand-chart" data-chart="operators">Expand</button></h2>
         <canvas id="operatorsChart"></canvas>
-        <h2>Shift Totals</h2>
+        <h2>Shift Totals <button class="expand-chart" data-chart="shift">Expand</button></h2>
         <canvas id="shiftChart"></canvas>
-        <h2>Operator Reject Rates</h2>
+        <h2>Operator Reject Rates <button class="expand-chart" data-chart="customer">Expand</button></h2>
         <canvas id="customerChart"></canvas>
-        <h2>Overall Yield Over Time</h2>
+        <h2>Overall Yield Over Time <button class="expand-chart" data-chart="yield">Expand</button></h2>
         <canvas id="yieldChart"></canvas>
         <h2>Assembly Performance</h2>
         <table id="assemblyTable">
@@ -161,6 +165,19 @@
           </tr>
           {% endfor %}
         </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Chart Modal -->
+  <div id="chart-modal" class="modal">
+    <div class="modal-content">
+      <span id="close-chart-modal" class="close">&times;</span>
+      <h2 id="modal-chart-title"></h2>
+      <canvas id="modal-chart" height="200"></canvas>
+      <table id="modal-table">
+        <thead></thead>
+        <tbody></tbody>
       </table>
     </div>
   </div>

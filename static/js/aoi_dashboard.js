@@ -161,5 +161,103 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Collapsible cards
+  document.querySelectorAll('.collapsible-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const content = header.nextElementSibling;
+      if (content) {
+        content.style.display = content.style.display === 'none' || content.style.display === '' ? 'block' : 'none';
+      }
+    });
+  });
+
+  // Expand chart modal
+  const chartModal = document.getElementById('chart-modal');
+  const closeChart = document.getElementById('close-chart-modal');
+  const modalTitle = document.getElementById('modal-chart-title');
+  const modalCanvas = document.getElementById('modal-chart');
+  const modalHead = document.querySelector('#modal-table thead');
+  const modalBody = document.querySelector('#modal-table tbody');
+  let modalChart;
+
+  function showModal(title, config, headers, rows) {
+    if (modalChart) modalChart.destroy();
+    modalTitle.textContent = title;
+    modalChart = new Chart(modalCanvas, config);
+    modalHead.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+    modalBody.innerHTML = rows.map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('');
+    chartModal.style.display = 'block';
+  }
+
+  closeChart?.addEventListener('click', () => { chartModal.style.display = 'none'; });
+  window.addEventListener('click', e => { if (e.target === chartModal) chartModal.style.display = 'none'; });
+
+  document.querySelectorAll('.expand-chart').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.dataset.chart;
+      if (type === 'operators' && ops) {
+        const labels = ops.map((o, idx) => isAdmin ? o.operator : `Operator ${idx + 1}`);
+        const config = {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [
+              { label: 'Accepted', data: ops.map(o => o.inspected - o.rejected), backgroundColor: 'rgba(54, 162, 235, 0.7)' },
+              { label: 'Rejected', data: ops.map(o => o.rejected), backgroundColor: 'rgba(255, 99, 132, 0.7)' }
+            ]
+          },
+          options: { scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } } }
+        };
+        const rows = ops.map((o, idx) => [isAdmin ? o.operator : `Operator ${idx + 1}`, o.inspected, o.rejected]);
+        showModal('Top Operators by Inspected Quantity', config, ['Operator','Inspected','Rejected'], rows);
+      } else if (type === 'shift' && shiftData) {
+        const dates = [...new Set(shiftData.map(r => r.report_date))];
+        const shifts = [...new Set(shiftData.map(r => r.shift))];
+        const colors = ['rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(75, 192, 192, 0.7)', 'rgba(255, 205, 86, 0.7)'];
+        const datasets = shifts.map((s, idx) => ({
+          label: s,
+          data: dates.map(d => {
+            const row = shiftData.find(r => r.report_date === d && r.shift === s);
+            return row ? row.inspected : 0;
+          }),
+          backgroundColor: colors[idx % colors.length]
+        }));
+        const config = { type: 'bar', data: { labels: dates, datasets }, options: { scales: { y: { beginAtZero: true } } } };
+        const rows = shiftData.map(r => [r.report_date, r.shift, r.inspected]);
+        showModal('Shift Totals', config, ['Date','Shift','Inspected'], rows);
+      } else if (type === 'customer' && customerData) {
+        const config = {
+          type: 'bar',
+          data: {
+            labels: customerData.map(c => c.customer),
+            datasets: [{ label: 'Reject Rate', data: customerData.map(c => c.rate), backgroundColor: 'rgba(255, 159, 64, 0.7)' }]
+          },
+          options: { scales: { y: { beginAtZero: true } } }
+        };
+        const rows = customerData.map(c => [c.customer, c.rate]);
+        showModal('Operator Reject Rates', config, ['Customer','Reject Rate'], rows);
+      } else if (type === 'yield' && yieldData) {
+        const config = {
+          type: 'line',
+          data: {
+            labels: yieldData.map(y => y.report_date),
+            datasets: [{ label: 'Yield %', data: yieldData.map(y => y.yield * 100), fill: false, borderColor: 'rgba(75, 192, 192, 1)' }]
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100,
+                ticks: { callback: value => `${value}%` }
+              }
+            }
+          }
+        };
+        const rows = yieldData.map(y => [y.report_date, (y.yield * 100).toFixed(2) + '%']);
+        showModal('Overall Yield Over Time', config, ['Date','Yield %'], rows);
+      }
+    });
+  });
+
 });
 
