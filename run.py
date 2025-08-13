@@ -14,6 +14,7 @@ import os
 import sqlite3
 import pandas as pd
 from datetime import datetime, timedelta
+import re
 
 def parse_aoi_rows(path: str):
     """Return rows from an AOI Excel file without headers."""
@@ -528,14 +529,12 @@ def aoi_report():
         return redirect(url_for('aoi_report'))
 
     # GET: fetch rows and analytics
-    rows = conn.execute(
-        'SELECT * FROM aoi_reports ORDER BY report_date DESC, id DESC'
-    ).fetchall()
-
     start = request.args.get('start')
     end = request.args.get('end')
     customer = request.args.get('customer')
     shift_filter = request.args.get('shift')
+    operator_filter = request.args.get('operator')
+    assembly_filter = request.args.get('assembly')
 
     where = 'WHERE 1=1'
     params = []
@@ -551,6 +550,17 @@ def aoi_report():
     if shift_filter:
         where += ' AND shift = ?'
         params.append(shift_filter)
+    if operator_filter:
+        where += ' AND operator = ?'
+        params.append(operator_filter)
+    if assembly_filter:
+        where += ' AND assembly = ?'
+        params.append(assembly_filter)
+
+    rows = conn.execute(
+        f'SELECT * FROM aoi_reports {where} ORDER BY report_date DESC, id DESC',
+        params,
+    ).fetchall()
 
     op_rows = conn.execute(
         f'SELECT operator, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
@@ -580,6 +590,8 @@ def aoi_report():
     ).fetchall()
     customer_opts = [r['customer'] for r in conn.execute('SELECT DISTINCT customer FROM aoi_reports ORDER BY customer').fetchall()]
     shift_opts = [r['shift'] for r in conn.execute('SELECT DISTINCT shift FROM aoi_reports ORDER BY shift').fetchall()]
+    operator_opts = [r['operator'] for r in conn.execute('SELECT DISTINCT operator FROM aoi_reports ORDER BY operator').fetchall()]
+    assembly_opts = [r['assembly'] for r in conn.execute('SELECT DISTINCT assembly FROM aoi_reports ORDER BY assembly').fetchall()]
     conn.close()
 
     operators = []
@@ -642,11 +654,46 @@ def aoi_report():
         yield_series=yield_series,
         customers=customer_opts,
         shifts=shift_opts,
+        operator_opts=operator_opts,
+        assembly_opts=assembly_opts,
         start=start,
         end=end,
         selected_customer=customer,
         selected_shift=shift_filter,
+        selected_operator=operator_filter,
+        selected_assembly=assembly_filter,
     )
+
+
+@app.route('/aoi/sql', methods=['POST'])
+@login_required
+def aoi_sql():
+    if not has_permission('aoi'):
+        return jsonify(error='Forbidden'), 403
+    data = request.get_json() or {}
+    query = data.get('query', '')
+    params = data.get('params', [])
+    if not isinstance(params, list):
+        return jsonify(error='Invalid parameters'), 400
+    statements = [s.strip() for s in query.split(';') if s.strip()]
+    if len(statements) != 1 or not statements[0].lower().startswith('select'):
+        return jsonify(error='Only SELECT statements allowed'), 400
+    lowered = statements[0].lower()
+    allowed_tables = {'aoi_reports'}
+    pattern = re.compile(r'from\s+([a-zA-Z0-9_]+)|join\s+([a-zA-Z0-9_]+)')
+    for m in pattern.finditer(lowered):
+        tbl = m.group(1) or m.group(2)
+        if tbl not in allowed_tables:
+            return jsonify(error='Table not allowed'), 400
+    conn = get_db()
+    try:
+        cur = conn.execute(statements[0], params)
+        rows = [dict(r) for r in cur.fetchall()]
+    except Exception as e:
+        conn.close()
+        return jsonify(error=str(e)), 400
+    conn.close()
+    return jsonify(rows=rows)
 
 
 @app.route('/aoi/<int:row_id>', methods=['DELETE'])

@@ -12,6 +12,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script src="{{ url_for('static', filename='js/aoi_dashboard.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/tabs.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/aoi_sql.js') }}" defer></script>
 {% endblock %}
 {% block content %}
   <a href="/">← Home</a>
@@ -103,6 +104,22 @@
                   {% endfor %}
                 </select>
               </label><br>
+              <label>Operator:
+                <select name="operator">
+                  <option value="">All</option>
+                  {% for o in operator_opts %}
+                  <option value="{{ o }}" {% if o == selected_operator %}selected{% endif %}>{{ o }}</option>
+                  {% endfor %}
+                </select>
+              </label><br>
+              <label>Assembly:
+                <select name="assembly">
+                  <option value="">All</option>
+                  {% for a in assembly_opts %}
+                  <option value="{{ a }}" {% if a == selected_assembly %}selected{% endif %}>{{ a }}</option>
+                  {% endfor %}
+                </select>
+              </label><br>
               <button type="submit">Apply</button>
             </form>
           </div>
@@ -138,7 +155,19 @@
         </div>
       </div>
       <div id="sql" class="tab-content">
-        <div id="sql-content"></div>
+        <div class="action-panel">
+          <div class="action-card">
+            <h2>Run SQL Query</h2>
+            <form id="sql-form">
+              <textarea id="sql-query" rows="5" cols="60"></textarea><br>
+              <button type="submit">Execute</button>
+            </form>
+            <table id="sql-results">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
     <div id="divider"></div>
