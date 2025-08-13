@@ -22,27 +22,47 @@ window.addEventListener('DOMContentLoaded', () => {
   };
 
   const ops = getData('operator-data');
-  const charts = {};
+  const isAdmin = document.body.dataset.admin === 'true';
   if (ops && ops.length) {
     const ctx = document.getElementById('operatorsChart');
     if (ctx) {
-      charts.operators = new Chart(ctx, {
+      const labels = ops.map((o, idx) => isAdmin ? o.operator : `Operator ${idx + 1}`);
+      new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: ops.map(o => o.operator),
-          datasets: [{
-            label: 'Inspected',
-            data: ops.map(o => o.inspected),
-            backgroundColor: 'rgba(54, 162, 235, 0.7)'
-          }]
+          labels,
+          datasets: [
+            {
+              label: 'Accepted',
+              data: ops.map(o => o.inspected - o.rejected),
+              backgroundColor: 'rgba(54, 162, 235, 0.7)'
+            },
+            {
+              label: 'Rejected',
+              data: ops.map(o => o.rejected),
+              backgroundColor: 'rgba(255, 99, 132, 0.7)'
+            }
+          ]
         },
         options: {
           scales: {
-            y: { beginAtZero: true }
+            x: { stacked: true },
+            y: { stacked: true, beginAtZero: true }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: ctx => {
+                  const total = ops[ctx.dataIndex].inspected;
+                  const value = ctx.raw;
+                  const percent = total ? (value / total * 100).toFixed(1) : 0;
+                  return `${ctx.dataset.label}: ${value} (${percent}%)`;
+                }
+              }
+            }
           }
         }
       });
-      ctx.addEventListener('click', () => openModal(charts.operators, 'Top Operators by Inspected Quantity'));
     }
   }
 
@@ -61,12 +81,11 @@ window.addEventListener('DOMContentLoaded', () => {
         }),
         backgroundColor: colors[idx % colors.length]
       }));
-      charts.shift = new Chart(ctx, {
+      new Chart(ctx, {
         type: 'bar',
         data: { labels: dates, datasets },
         options: { scales: { y: { beginAtZero: true } } }
       });
-      ctx.addEventListener('click', () => openModal(charts.shift, 'Shift Totals'));
     }
   }
 
@@ -74,7 +93,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (customerData && customerData.length) {
     const ctx = document.getElementById('customerChart');
     if (ctx) {
-      charts.customer = new Chart(ctx, {
+      new Chart(ctx, {
         type: 'bar',
         data: {
           labels: customerData.map(c => c.customer),
@@ -86,7 +105,6 @@ window.addEventListener('DOMContentLoaded', () => {
         },
         options: { scales: { y: { beginAtZero: true } } }
       });
-      ctx.addEventListener('click', () => openModal(charts.customer, 'Customer Reject Rates'));
     }
   }
 
@@ -94,20 +112,29 @@ window.addEventListener('DOMContentLoaded', () => {
   if (yieldData && yieldData.length) {
     const ctx = document.getElementById('yieldChart');
     if (ctx) {
-      charts.yield = new Chart(ctx, {
+      new Chart(ctx, {
         type: 'line',
         data: {
           labels: yieldData.map(y => y.report_date),
           datasets: [{
-            label: 'Yield',
-            data: yieldData.map(y => y.yield),
+            label: 'Yield %',
+            data: yieldData.map(y => y.yield * 100),
             fill: false,
             borderColor: 'rgba(75, 192, 192, 1)'
           }]
         },
-        options: { scales: { y: { beginAtZero: true, max: 1 } } }
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: {
+                callback: value => `${value}%`
+              }
+            }
+          }
+        }
       });
-      ctx.addEventListener('click', () => openModal(charts.yield, 'Overall Yield Over Time'));
     }
   }
 
@@ -134,61 +161,5 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Modal logic for charts
-  const modal = document.getElementById('chart-modal');
-  const modalCanvas = document.getElementById('chart-canvas');
-  const modalTitle = document.getElementById('chart-modal-title');
-  const closeModal = document.getElementById('close-chart-modal');
-  const downloadBtn = document.getElementById('download-chart-pdf');
-  let modalChart;
-
-  function cloneOptions(obj) {
-    if (obj === null || typeof obj !== 'object') return obj;
-    if (Array.isArray(obj)) return obj.map(cloneOptions);
-    const result = {};
-    for (const key in obj) {
-      result[key] = cloneOptions(obj[key]);
-    }
-    return result;
-  }
-
-  function openModal(chart, title) {
-    if (!modal || !modalCanvas) return;
-    if (modalChart) modalChart.destroy();
-    const dataCopy = JSON.parse(JSON.stringify(chart.data));
-    const optionsCopy = cloneOptions(chart.options);
-    modalChart = new Chart(modalCanvas, {
-      type: chart.config.type,
-      data: dataCopy,
-      options: optionsCopy
-    });
-    if (modalTitle) modalTitle.textContent = title || '';
-    modal.style.display = 'block';
-  }
-
-  document.querySelectorAll('.expand-chart').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const key = btn.dataset.chart;
-      const title = btn.dataset.title || '';
-      const chart = charts[key];
-      if (chart) openModal(chart, title);
-    });
-  });
-
-  closeModal?.addEventListener('click', () => { modal.style.display = 'none'; });
-  window.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
-
-  downloadBtn?.addEventListener('click', () => {
-    if (!modalChart) return;
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ orientation: 'landscape' });
-    if (modalTitle) pdf.text(modalTitle.textContent, 10, 10);
-    const imgData = modalChart.toBase64Image();
-    const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-    pdf.addImage(imgData, 'PNG', 10, 20, pdfWidth, pdfHeight);
-    pdf.save('chart.pdf');
-  });
 });
 
