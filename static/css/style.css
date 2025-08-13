@@ -198,6 +198,34 @@ table thead th {
   justify-content: center;
 }
 
+/* Tab navigation */
+.tab-nav {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tab-nav button {
+  background: var(--color-accent);
+  color: var(--color-white);
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.tab-nav button.active {
+  background: var(--color-black);
+  color: var(--color-white);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
 .home-title img {
     background-color: var(--color-black);
     padding: 5px;
