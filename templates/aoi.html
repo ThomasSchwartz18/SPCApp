@@ -96,6 +96,22 @@
                 {% endfor %}
               </select>
             </label><br>
+            <label>Operator:
+              <select name="operator">
+                <option value="">All</option>
+                {% for o in operator_opts %}
+                <option value="{{ o }}" {% if o == selected_operator %}selected{% endif %}>{{ o }}</option>
+                {% endfor %}
+              </select>
+            </label><br>
+            <label>Assembly:
+              <select name="assembly">
+                <option value="">All</option>
+                {% for a in assembly_opts %}
+                <option value="{{ a }}" {% if a == selected_assembly %}selected{% endif %}>{{ a }}</option>
+                {% endfor %}
+              </select>
+            </label><br>
             <button type="submit">Apply</button>
           </form>
         </div>
