@@ -5,10 +5,11 @@
     <div class="action-card">
       <h1>Login</h1>
       <form method="post">
-        <label>User Type
-          <select name="role">
-            <option value="ADMIN">ADMIN</option>
-            <option value="USER">USER</option>
+        <label>User
+          <select name="username">
+            {% for u in users %}
+            <option value="{{ u }}">{{ u }}</option>
+            {% endfor %}
           </select>
         </label><br>
         <label>Password
@@ -20,3 +21,4 @@
     </div>
   </div>
 {% endblock %}
+
