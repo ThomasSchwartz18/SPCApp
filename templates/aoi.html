@@ -11,10 +11,16 @@
   <script id="yield-data" type="application/json">{{ yield_series|tojson }}</script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script src="{{ url_for('static', filename='js/aoi_dashboard.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/aoi_sql.js') }}" defer></script>
 {% endblock %}
 {% block content %}
   <a href="/">← Home</a>
   <h1>AOI Daily Report</h1>
+  <div class="tabs">
+    <button type="button" class="tab-link active" data-tab="dashboard-tab">Dashboard</button>
+    <button type="button" class="tab-link" data-tab="sql-tab">SQL</button>
+  </div>
+  <div id="dashboard-tab" class="tab-content">
   <div id="container">
     <div id="aoi-actions">
       <div class="action-panel">
@@ -180,6 +186,18 @@
         <tbody></tbody>
       </table>
     </div>
+  </div>
+  </div>
+
+  <div id="sql-tab" class="tab-content" style="display:none;">
+    <form id="sql-form">
+      <textarea id="sql-query" rows="5" cols="60" placeholder="SELECT * FROM aoi_reports LIMIT 5"></textarea><br>
+      <button type="submit">Run</button>
+    </form>
+    <table id="sql-result-table">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
   </div>
 
 {% endblock %}

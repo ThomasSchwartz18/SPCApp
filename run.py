@@ -12,6 +12,7 @@ from flask import (
 from functools import wraps
 import os
 import sqlite3
+import re
 import pandas as pd
 from datetime import datetime, timedelta
 
@@ -662,6 +663,40 @@ def delete_aoi_record(row_id):
         return jsonify(success=True)
     except Exception as e:
         return jsonify(error=str(e)), 500
+
+
+@app.route('/aoi/sql', methods=['POST'])
+@login_required
+def aoi_sql():
+    """Execute a read-only SQL query against the AOI database."""
+    if not has_permission('aoi'):
+        return jsonify(error='Forbidden'), 403
+
+    data = request.get_json(silent=True) or {}
+    query = data.get('query') or ''
+    params = data.get('params') or []
+    if not isinstance(params, (list, tuple)):
+        return jsonify(error='Params must be a list'), 400
+
+    statements = [s.strip() for s in query.split(';') if s.strip()]
+    allowed = ('select', 'with')
+    if not statements or any(not s.lower().startswith(allowed) for s in statements):
+        return jsonify(error='Only SELECT statements are allowed'), 400
+
+    try:
+        conn = get_db()
+        cur = conn.execute(query, params)
+        rows = cur.fetchall()
+        columns = [d[0] for d in cur.description]
+        result = [dict(zip(columns, r)) for r in rows]
+        return jsonify(columns=columns, rows=result)
+    except Exception as e:
+        return jsonify(error=str(e)), 400
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 @app.route('/analysis', methods=['GET', 'POST'])
 @login_required
