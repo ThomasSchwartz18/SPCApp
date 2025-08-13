@@ -142,13 +142,25 @@ window.addEventListener('DOMContentLoaded', () => {
   const downloadBtn = document.getElementById('download-chart-pdf');
   let modalChart;
 
+  function cloneOptions(obj) {
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(cloneOptions);
+    const result = {};
+    for (const key in obj) {
+      result[key] = cloneOptions(obj[key]);
+    }
+    return result;
+  }
+
   function openModal(chart, title) {
     if (!modal || !modalCanvas) return;
     if (modalChart) modalChart.destroy();
+    const dataCopy = JSON.parse(JSON.stringify(chart.data));
+    const optionsCopy = cloneOptions(chart.options);
     modalChart = new Chart(modalCanvas, {
       type: chart.config.type,
-      data: structuredClone(chart.config.data),
-      options: structuredClone(chart.config.options)
+      data: dataCopy,
+      options: optionsCopy
     });
     if (modalTitle) modalTitle.textContent = title || '';
     modal.style.display = 'block';
