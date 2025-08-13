@@ -102,6 +102,12 @@ a { color: var(--color-accent); }
 #moat-table, #markings-table, #aoi-table { flex:1; padding:10px; overflow:auto; }
 table { width:100%; border-collapse:collapse; }
 th, td { border:1px solid var(--color-black); padding:8px; text-align:center; }
+table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--color-white);
+  z-index: 1;
+}
 .highlight { background: yellow; }
 
 /* Action panels */
@@ -121,6 +127,16 @@ th, td { border:1px solid var(--color-black); padding:8px; text-align:center; }
 .action-card h2 {
   margin-top: 0;
   font-size: 1.2em;
+}
+
+/* Collapsible sections */
+.collapsible-header {
+  cursor: pointer;
+}
+
+.collapsible-content {
+  display: none;
+  margin-top: 10px;
 }
 
 .expand-chart {
@@ -221,12 +237,17 @@ body.dark-mode span {
 body.dark-mode a { color: var(--color-accent); }
 body.dark-mode .topbar { color: var(--color-white); }
 body.dark-mode .topbar a { color: var(--color-accent); }
-body.dark-mode .widget { border-color: var(--color-white); }
+body.dark-mode .widget {
+  border-color: var(--color-white);
+  background: var(--color-black);
+  color: var(--color-white);
+}
 body.dark-mode .widget:hover { background: var(--color-accent); color: var(--color-white); }
 body.dark-mode .action-card { background: var(--color-black); border-color: var(--color-white); }
 body.dark-mode .action-card p { color: var(--color-white); }
 body.dark-mode table { border-color: var(--color-white); }
 body.dark-mode th,
 body.dark-mode td { border-color: var(--color-white); }
+body.dark-mode table thead th { background: var(--color-black); }
 body.dark-mode .job-preview.warning { background: #b7b700; border-color: #b7b700; color: #fff; }
 body.dark-mode .job-preview.danger { background: #660000; border-color: #660000; color: #fff; }
