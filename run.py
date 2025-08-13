@@ -97,17 +97,29 @@ def init_db():
             additional_info TEXT
         )
     ''')
+    # Users with per-feature permissions. The ADMIN account is created by
+    # default along with a basic USER account. Additional users can be managed
+    # from the settings page.
     conn.execute('''
-        CREATE TABLE IF NOT EXISTS permissions (
-            feature TEXT PRIMARY KEY,
-            allowed INTEGER DEFAULT 0
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            password TEXT,
+            part_markings INTEGER DEFAULT 0,
+            aoi INTEGER DEFAULT 0,
+            analysis INTEGER DEFAULT 0,
+            dashboard INTEGER DEFAULT 0,
+            is_admin INTEGER DEFAULT 0
         )
     ''')
-    for feature in ['part_markings', 'aoi', 'analysis']:
-        conn.execute(
-            'INSERT OR IGNORE INTO permissions (feature, allowed) VALUES (?,0)',
-            (feature,),
-        )
+    conn.execute(
+        'INSERT OR IGNORE INTO users (username, password, part_markings, aoi, analysis, dashboard, is_admin) VALUES (?,?,?,?,?,?,?)',
+        ('ADMIN', 'MasterAdmin', 1, 1, 1, 1, 1),
+    )
+    conn.execute(
+        'INSERT OR IGNORE INTO users (username, password, part_markings, aoi, analysis, dashboard, is_admin) VALUES (?,?,?,?,?,?,?)',
+        ('USER', 'fuji', 1, 0, 0, 0, 0),
+    )
     conn.commit()
     conn.close()
 
@@ -125,40 +137,61 @@ def login_required(f):
 
 
 def has_permission(feature: str) -> bool:
-    if session.get('user') == 'ADMIN':
-        return True
+    user = session.get('user')
+    if not user:
+        return False
     conn = get_db()
-    row = conn.execute(
-        'SELECT allowed FROM permissions WHERE feature = ?', (feature,)
-    ).fetchone()
-    conn.close()
-    return bool(row and row['allowed'])
+    try:
+        row = conn.execute(
+            f'SELECT is_admin, {feature} as allowed FROM users WHERE username = ?',
+            (user,),
+        ).fetchone()
+    finally:
+        conn.close()
+    if not row:
+        return False
+    if row['is_admin']:
+        return True
+    return bool(row['allowed'])
 
 
 @app.context_processor
 def inject_globals():
-    conn = get_db()
-    rows = conn.execute('SELECT feature, allowed FROM permissions').fetchall()
-    conn.close()
-    perms = {r['feature']: bool(r['allowed']) for r in rows}
-    return dict(current_user=session.get('user'), permissions=perms)
+    user = session.get('user')
+    perms = {}
+    if user:
+        conn = get_db()
+        row = conn.execute(
+            'SELECT part_markings, aoi, analysis, dashboard FROM users WHERE username = ?',
+            (user,),
+        ).fetchone()
+        conn.close()
+        if row:
+            perms = {
+                'part_markings': bool(row['part_markings']),
+                'aoi': bool(row['aoi']),
+                'analysis': bool(row['analysis']),
+                'dashboard': bool(row['dashboard']),
+            }
+    return dict(current_user=user, permissions=perms)
 
 # --- Routes ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
+    conn = get_db()
+    users = conn.execute('SELECT username, password FROM users').fetchall()
     if request.method == 'POST':
-        role = request.form.get('role')
+        username = request.form.get('username')
         password = request.form.get('password', '')
-        if role == 'ADMIN' and password == 'MasterAdmin':
-            session['user'] = 'ADMIN'
+        row = next((u for u in users if u['username'] == username), None)
+        if row and row['password'] == password:
+            session['user'] = username
+            conn.close()
             return redirect(url_for('home'))
-        elif role == 'USER' and password == 'fuji':
-            session['user'] = 'USER'
-            return redirect(url_for('home'))
-        else:
-            error = 'Invalid credentials'
-    return render_template('login.html', error=error)
+        error = 'Invalid credentials'
+    conn.close()
+    return render_template('login.html', users=[u['username'] for u in users], error=error)
 
 
 @app.route('/logout')
@@ -173,19 +206,48 @@ def settings():
     if session.get('user') != 'ADMIN':
         return redirect(url_for('home'))
     conn = get_db()
-    features = ['part_markings', 'aoi', 'analysis']
     if request.method == 'POST':
-        selected = request.form.getlist('permissions')
-        for feat in features:
+        action = request.form.get('action')
+        if action == 'add':
+            username = request.form.get('username')
+            password = request.form.get('password')
+            privs = request.form.getlist('privileges')
             conn.execute(
-                'UPDATE permissions SET allowed = ? WHERE feature = ?',
-                (1 if feat in selected else 0, feat),
+                'INSERT OR IGNORE INTO users (username, password, part_markings, aoi, analysis, dashboard, is_admin) VALUES (?,?,?,?,?,?,0)',
+                (
+                    username,
+                    password,
+                    1 if 'part_markings' in privs else 0,
+                    1 if 'aoi' in privs else 0,
+                    1 if 'analysis' in privs else 0,
+                    1 if 'dashboard' in privs else 0,
+                ),
             )
-        conn.commit()
-    rows = conn.execute('SELECT feature, allowed FROM permissions').fetchall()
+            conn.commit()
+        elif action == 'update':
+            uid = request.form.get('user_id')
+            privs = request.form.getlist('privileges')
+            conn.execute(
+                'UPDATE users SET part_markings=?, aoi=?, analysis=?, dashboard=? WHERE id=?',
+                (
+                    1 if 'part_markings' in privs else 0,
+                    1 if 'aoi' in privs else 0,
+                    1 if 'analysis' in privs else 0,
+                    1 if 'dashboard' in privs else 0,
+                    uid,
+                ),
+            )
+            conn.commit()
+        elif action == 'delete':
+            uid = request.form.get('user_id')
+            conn.execute('DELETE FROM users WHERE id=?', (uid,))
+            conn.commit()
+    users = conn.execute(
+        'SELECT id, username, part_markings, aoi, analysis, dashboard FROM users WHERE username != ?',
+        ('ADMIN',),
+    ).fetchall()
     conn.close()
-    perms = {r['feature']: bool(r['allowed']) for r in rows}
-    return render_template('settings.html', permissions=perms)
+    return render_template('settings.html', users=users)
 
 
 @app.route('/')

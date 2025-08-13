@@ -1,13 +1,56 @@
 {% extends 'base.html' %}
 {% block title %}Settings{% endblock %}
+{% block head_extra %}
+<style>
+  .tab { display: none; }
+  .tab.active { display: block; }
+  .tab-buttons button { margin-right: 5px; }
+  .user-row { margin-bottom: 10px; }
+</style>
+<script>
+function showTab(id){
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+document.addEventListener('DOMContentLoaded', function(){ showTab('users'); });
+function toggleAddUser(){
+  var form = document.getElementById('add-user');
+  form.style.display = form.style.display === 'block' ? 'none' : 'block';
+}
+</script>
+{% endblock %}
 {% block content %}
   <a href="/">← Home</a>
   <h1>Settings</h1>
-  <h2>Permissions</h2>
-  <form method="post">
-    <label><input type="checkbox" name="permissions" value="part_markings" {% if permissions['part_markings'] %}checked{% endif %}> Part Markings Upload/Input</label><br>
-    <label><input type="checkbox" name="permissions" value="aoi" {% if permissions['aoi'] %}checked{% endif %}> AOI Report Upload</label><br>
-    <label><input type="checkbox" name="permissions" value="analysis" {% if permissions['analysis'] %}checked{% endif %}> PPM Report Upload</label><br>
-    <button type="submit">Save</button>
-  </form>
+  <div class="tab-buttons">
+    <button type="button" onclick="showTab('users')">User Management</button>
+  </div>
+  <div id="users" class="tab">
+    <h2>User Management</h2>
+    {% for u in users %}
+    <form method="post" class="user-row">
+      <input type="hidden" name="user_id" value="{{ u['id'] }}">
+      <input type="hidden" name="action" value="update">
+      <strong>{{ u['username'] }}</strong>
+      <label><input type="checkbox" name="privileges" value="part_markings" {% if u['part_markings'] %}checked{% endif %}> Part Markings</label>
+      <label><input type="checkbox" name="privileges" value="aoi" {% if u['aoi'] %}checked{% endif %}> AOI Report</label>
+      <label><input type="checkbox" name="privileges" value="analysis" {% if u['analysis'] %}checked{% endif %}> Data Analysis</label>
+      <label><input type="checkbox" name="privileges" value="dashboard" {% if u['dashboard'] %}checked{% endif %}> SPC Dashboard</label>
+      <button type="submit">Save</button>
+      <button type="submit" name="action" value="delete">Delete</button>
+    </form>
+    {% endfor %}
+    <button type="button" onclick="toggleAddUser()">+</button>
+    <form id="add-user" method="post" style="display:none;margin-top:10px;">
+      <input type="hidden" name="action" value="add">
+      <input type="text" name="username" placeholder="Username" required>
+      <input type="password" name="password" placeholder="Password" required>
+      <label><input type="checkbox" name="privileges" value="part_markings" checked> Part Markings</label>
+      <label><input type="checkbox" name="privileges" value="aoi"> AOI Report</label>
+      <label><input type="checkbox" name="privileges" value="analysis"> Data Analysis</label>
+      <label><input type="checkbox" name="privileges" value="dashboard"> SPC Dashboard</label>
+      <button type="submit">Add</button>
+    </form>
+  </div>
 {% endblock %}
+

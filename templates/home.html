@@ -28,21 +28,29 @@
       <h2>Jobs</h2>
       <p>Manage Floor Jobs (<i>in progress</i>)</p>
     </div>
+    {% if current_user == 'ADMIN' or permissions.get('analysis') %}
     <div class="widget" onclick="location.href='/analysis'">
       <h2>Data Analysis</h2>
       <p>Upload And Data Mine Reports From SPC</p>
     </div>
+    {% endif %}
+    {% if current_user == 'ADMIN' or permissions.get('part_markings') %}
     <div class="widget" onclick="location.href='/part-markings'">
       <h2>Verified Part Markings</h2>
       <p>Lookup Part Numbers To Find Their Verified Part Markings</p>
     </div>
+    {% endif %}
+    {% if current_user == 'ADMIN' or permissions.get('aoi') %}
     <div class="widget" onclick="location.href='/aoi'">
       <h2>AOI Daily Report</h2>
       <p>View and Upload AOI Reports With Data Insights.</p>
     </div>
+    {% endif %}
+    {% if current_user == 'ADMIN' or permissions.get('dashboard') %}
     <div class="widget" onclick="location.href='#'">
       <h2>SPC Dashboard</h2>
       <p>Statistical Controls (<i>in progress</i>)</p>
     </div>
+    {% endif %}
   </div>
 {% endblock %}
