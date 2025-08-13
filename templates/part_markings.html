@@ -17,7 +17,7 @@
           <p class="field-desc">Highlight matching part number in the table.</p>
           <button id="search-btn" type="button" title="Highlight matching part number">Search</button>
         </div>
-        {% if current_user == 'ADMIN' or permissions['part_markings'] %}
+        {% if is_admin or permissions['part_markings'] %}
         <div class="action-card">
           <h2>Add New Entry</h2>
           <p class="desc">Use this form to add a single verified part marking.</p>
@@ -65,7 +65,7 @@
             <th>Mfg Number 2</th>
             <th>Mfg Number 1</th>
             <th>Part Number</th>
-            {% if current_user == 'ADMIN' or permissions['part_markings'] %}
+            {% if is_admin or permissions['part_markings'] %}
             <th>Actions</th>
             {% endif %}
           </tr>
@@ -78,7 +78,7 @@
             <td>{{ row['mfg_number2'] }}</td>
             <td>{{ row['mfg_number1'] }}</td>
             <td>{{ row['part_number'] }}</td>
-            {% if current_user == 'ADMIN' or permissions['part_markings'] %}
+            {% if is_admin or permissions['part_markings'] %}
             <td class="no-edit"><button type="button" class="delete-row" title="Delete row">Delete</button></td>
             {% endif %}
           </tr>

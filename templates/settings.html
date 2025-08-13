@@ -36,6 +36,7 @@ function toggleAddUser(){
       <label><input type="checkbox" name="privileges" value="aoi" {% if u['aoi'] %}checked{% endif %}> AOI Report</label>
       <label><input type="checkbox" name="privileges" value="analysis" {% if u['analysis'] %}checked{% endif %}> Data Analysis</label>
       <label><input type="checkbox" name="privileges" value="dashboard" {% if u['dashboard'] %}checked{% endif %}> SPC Dashboard</label>
+      <label><input type="checkbox" name="privileges" value="c_suite" {% if u['c_suite'] %}checked{% endif %}> C-suite</label>
       <button type="submit">Save</button>
       <button type="submit" name="action" value="delete">Delete</button>
     </form>
@@ -49,6 +50,7 @@ function toggleAddUser(){
       <label><input type="checkbox" name="privileges" value="aoi"> AOI Report</label>
       <label><input type="checkbox" name="privileges" value="analysis"> Data Analysis</label>
       <label><input type="checkbox" name="privileges" value="dashboard"> SPC Dashboard</label>
+      <label><input type="checkbox" name="privileges" value="c_suite"> C-suite</label>
       <button type="submit">Add</button>
     </form>
   </div>
