@@ -18,7 +18,7 @@
   <div id="container">
     <div id="aoi-actions">
       <div class="action-panel">
-        {% if current_user == 'ADMIN' or permissions['aoi'] %}
+        {% if is_admin or permissions['aoi'] %}
         <div class="action-card collapsible-card">
           <h2 class="collapsible-header">Add New Entry</h2>
           <div class="collapsible-content">
@@ -143,7 +143,7 @@
             <th>Quantity Inspected</th>
             <th>Quantity Rejected</th>
             <th>Additional Information</th>
-            {% if current_user == 'ADMIN' or permissions['aoi'] %}
+            {% if is_admin or permissions['aoi'] %}
             <th>Actions</th>
             {% endif %}
           </tr>
@@ -159,7 +159,7 @@
             <td>{{ r['qty_inspected'] }}</td>
             <td>{{ r['qty_rejected'] }}</td>
             <td>{{ r['additional_info'] }}</td>
-            {% if current_user == 'ADMIN' or permissions['aoi'] %}
+            {% if is_admin or permissions['aoi'] %}
             <td class="no-edit"><button type="button" class="delete-row">Delete</button></td>
             {% endif %}
           </tr>

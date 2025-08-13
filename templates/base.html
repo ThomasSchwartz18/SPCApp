@@ -8,13 +8,13 @@
   <script src="/static/js/editable.js" defer></script>
   {% block head_extra %}{% endblock %}
 </head>
-<body data-admin="{{ 'true' if current_user == 'ADMIN' else 'false' }}">
+<body data-admin="{{ 'true' if is_admin else 'false' }}">
   {% if current_user %}
   <div class="topbar">
     <span class="user-label">user:{{ current_user }}</span>
     <a href="{{ url_for('logout') }}">Logout</a>
     <button id="theme-toggle" type="button">Dark Mode</button>
-    {% if current_user == 'ADMIN' %}
+    {% if is_admin %}
       <a href="{{ url_for('settings') }}">Settings</a>
     {% endif %}
   </div>

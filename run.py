@@ -109,17 +109,29 @@ def init_db():
             aoi INTEGER DEFAULT 0,
             analysis INTEGER DEFAULT 0,
             dashboard INTEGER DEFAULT 0,
+            c_suite INTEGER DEFAULT 0,
             is_admin INTEGER DEFAULT 0
         )
     ''')
+
+    # Older database versions may lack the `c_suite` column. Ensure it exists so
+    # privileged users beyond the hard-coded ADMIN account can be granted the
+    # same access rights.
+    existing_cols = [r['name'] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
+    if 'c_suite' not in existing_cols:
+        conn.execute('ALTER TABLE users ADD COLUMN c_suite INTEGER DEFAULT 0')
+
     conn.execute(
-        'INSERT OR IGNORE INTO users (username, password, part_markings, aoi, analysis, dashboard, is_admin) VALUES (?,?,?,?,?,?,?)',
-        ('ADMIN', 'MasterAdmin', 1, 1, 1, 1, 1),
+        'INSERT OR IGNORE INTO users (username, password, part_markings, aoi, analysis, dashboard, c_suite, is_admin) VALUES (?,?,?,?,?,?,?,?)',
+        ('ADMIN', 'MasterAdmin', 1, 1, 1, 1, 1, 1),
     )
     conn.execute(
-        'INSERT OR IGNORE INTO users (username, password, part_markings, aoi, analysis, dashboard, is_admin) VALUES (?,?,?,?,?,?,?)',
-        ('USER', 'fuji', 1, 0, 0, 0, 0),
+        'INSERT OR IGNORE INTO users (username, password, part_markings, aoi, analysis, dashboard, c_suite, is_admin) VALUES (?,?,?,?,?,?,?,?)',
+        ('USER', 'fuji', 1, 0, 0, 0, 0, 0),
     )
+    # Ensure existing ADMIN row gains C-suite privileges if it pre-existed the
+    # column addition.
+    conn.execute("UPDATE users SET c_suite=1 WHERE username='ADMIN'")
     conn.commit()
     conn.close()
 
@@ -143,14 +155,14 @@ def has_permission(feature: str) -> bool:
     conn = get_db()
     try:
         row = conn.execute(
-            f'SELECT is_admin, {feature} as allowed FROM users WHERE username = ?',
+            f'SELECT is_admin, c_suite, {feature} as allowed FROM users WHERE username = ?',
             (user,),
         ).fetchone()
     finally:
         conn.close()
     if not row:
         return False
-    if row['is_admin']:
+    if row['is_admin'] or row['c_suite']:
         return True
     return bool(row['allowed'])
 
@@ -159,21 +171,31 @@ def has_permission(feature: str) -> bool:
 def inject_globals():
     user = session.get('user')
     perms = {}
+    is_admin = False
     if user:
         conn = get_db()
         row = conn.execute(
-            'SELECT part_markings, aoi, analysis, dashboard FROM users WHERE username = ?',
+            'SELECT part_markings, aoi, analysis, dashboard, is_admin, c_suite FROM users WHERE username = ?',
             (user,),
         ).fetchone()
         conn.close()
         if row:
-            perms = {
-                'part_markings': bool(row['part_markings']),
-                'aoi': bool(row['aoi']),
-                'analysis': bool(row['analysis']),
-                'dashboard': bool(row['dashboard']),
-            }
-    return dict(current_user=user, permissions=perms)
+            is_admin = bool(row['is_admin'] or row['c_suite'])
+            if is_admin:
+                perms = {
+                    'part_markings': True,
+                    'aoi': True,
+                    'analysis': True,
+                    'dashboard': True,
+                }
+            else:
+                perms = {
+                    'part_markings': bool(row['part_markings']),
+                    'aoi': bool(row['aoi']),
+                    'analysis': bool(row['analysis']),
+                    'dashboard': bool(row['dashboard']),
+                }
+    return dict(current_user=user, permissions=perms, is_admin=is_admin)
 
 # --- Routes ---
 @app.route('/login', methods=['GET', 'POST'])
@@ -203,9 +225,16 @@ def logout():
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
-    if session.get('user') != 'ADMIN':
-        return redirect(url_for('home'))
     conn = get_db()
+    user = session.get('user')
+    row = conn.execute(
+        'SELECT is_admin, c_suite FROM users WHERE username=?',
+        (user,),
+    ).fetchone()
+    if not row or not (row['is_admin'] or row['c_suite']):
+        conn.close()
+        return redirect(url_for('home'))
+
     if request.method == 'POST':
         action = request.form.get('action')
         if action == 'add':
@@ -213,7 +242,7 @@ def settings():
             password = request.form.get('password')
             privs = request.form.getlist('privileges')
             conn.execute(
-                'INSERT OR IGNORE INTO users (username, password, part_markings, aoi, analysis, dashboard, is_admin) VALUES (?,?,?,?,?,?,0)',
+                'INSERT OR IGNORE INTO users (username, password, part_markings, aoi, analysis, dashboard, c_suite, is_admin) VALUES (?,?,?,?,?,?,?,0)',
                 (
                     username,
                     password,
@@ -221,6 +250,7 @@ def settings():
                     1 if 'aoi' in privs else 0,
                     1 if 'analysis' in privs else 0,
                     1 if 'dashboard' in privs else 0,
+                    1 if 'c_suite' in privs else 0,
                 ),
             )
             conn.commit()
@@ -228,12 +258,13 @@ def settings():
             uid = request.form.get('user_id')
             privs = request.form.getlist('privileges')
             conn.execute(
-                'UPDATE users SET part_markings=?, aoi=?, analysis=?, dashboard=? WHERE id=?',
+                'UPDATE users SET part_markings=?, aoi=?, analysis=?, dashboard=?, c_suite=? WHERE id=?',
                 (
                     1 if 'part_markings' in privs else 0,
                     1 if 'aoi' in privs else 0,
                     1 if 'analysis' in privs else 0,
                     1 if 'dashboard' in privs else 0,
+                    1 if 'c_suite' in privs else 0,
                     uid,
                 ),
             )
@@ -243,7 +274,7 @@ def settings():
             conn.execute('DELETE FROM users WHERE id=?', (uid,))
             conn.commit()
     users = conn.execute(
-        'SELECT id, username, part_markings, aoi, analysis, dashboard FROM users WHERE username != ?',
+        'SELECT id, username, part_markings, aoi, analysis, dashboard, c_suite FROM users WHERE username != ?',
         ('ADMIN',),
     ).fetchall()
     conn.close()

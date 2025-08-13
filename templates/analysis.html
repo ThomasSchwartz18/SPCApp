@@ -15,7 +15,7 @@
     <div class="moat-stats">
       {% if total_rows %}
         Total rows: {{ total_rows }} | Table range: {{ earliest }} - {{ latest }}
-        {% if current_user == 'ADMIN' or permissions['analysis'] %}
+        {% if is_admin or permissions['analysis'] %}
         &nbsp;|&nbsp;
         <button id="show-uploads-btn" title="View or delete previously uploaded reports">Manage Uploads</button>
         {% endif %}
@@ -24,7 +24,7 @@
     <div id="container">
       <div id="analysis-actions">
         <div class="action-panel">
-          {% if current_user == 'ADMIN' or permissions['analysis'] %}
+          {% if is_admin or permissions['analysis'] %}
           <div class="action-card">
             <h2>Upload PPM Report</h2>
             <p class="desc">Import a PPM report (.xls or .xlsx) to analyze false call rates.</p>
