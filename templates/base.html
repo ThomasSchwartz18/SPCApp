@@ -12,6 +12,7 @@
   {% if current_user %}
   <div class="topbar">
     <span class="user-label">user:{{ current_user }}</span>
+    <a href="{{ url_for('docs') }}">Docs</a>
     <a href="{{ url_for('logout') }}">Logout</a>
     <button id="theme-toggle" type="button">Dark Mode</button>
     {% if is_admin %}
