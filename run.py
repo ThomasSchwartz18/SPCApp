@@ -15,7 +15,7 @@ import sqlite3
 import pandas as pd
 from datetime import datetime, timedelta
 import re
-from sap import create_sap_service
+from sap_client import create_sap_service
 
 def parse_aoi_rows(path: str):
     """Return rows from an AOI Excel file without headers."""
