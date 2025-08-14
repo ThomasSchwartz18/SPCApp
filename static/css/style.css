@@ -273,14 +273,15 @@ body.dark-mode .widget {
   color: var(--color-white);
 }
 body.dark-mode .widget:hover { background: var(--color-accent); color: var(--color-white); }
+body.dark-mode .widget:hover p { color: var(--color-white); }
 body.dark-mode .action-card { background: var(--color-black); border-color: var(--color-white); }
 body.dark-mode .action-card p { color: var(--color-white); }
 body.dark-mode table { border-color: var(--color-white); }
 body.dark-mode th,
 body.dark-mode td { border-color: var(--color-white); }
 body.dark-mode table thead th { background: var(--color-black); }
-body.dark-mode .job-preview.warning { background: #b7b700; border-color: #b7b700; color: #fff; }
-body.dark-mode .job-preview.danger { background: #660000; border-color: #660000; color: #fff; }
+body.dark-mode .job-preview.warning { background: #bdbd3a; border-color: #b7b700; color: #fff; }
+body.dark-mode .job-preview.danger { background: #a72828; border-color: #660000; color: #fff; }
 
 /* SQL popup windows */
 .sql-popup {
