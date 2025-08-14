@@ -53,6 +53,9 @@
               <label>Min Boards
                 <input type="number" id="min-boards" value="7" title="Minimum boards required">
               </label><br>
+              <label>Model Names
+                <input type="text" id="model-names" placeholder="ModelA,ModelB" title="Comma-separated model names">
+              </label><br>
               <label>Lines
                 <select id="line-select-1">
                   <option value="all">All Lines</option>
@@ -110,6 +113,9 @@
               </label><br>
               <label>Min Boards
                 <input type="number" id="ng-min-boards" value="7" title="Minimum boards required">
+              </label><br>
+              <label>Model Names
+                <input type="text" id="ng-model-names" placeholder="ModelA,ModelB" title="Comma-separated model names">
               </label><br>
               <label>Lines
                 <select id="ng-line-select-1">
@@ -197,6 +203,7 @@
         <h2>Control Chart - Avg FalseCall Rate</h2>
         <p id="fc-chart-date-range"></p>
         <canvas id="chart-canvas" height="200"></canvas>
+        <table id="fc-data-table"></table>
         <button id="download-fc-pdf">Download PDF</button>
       </div>
     </div>
@@ -207,6 +214,7 @@
         <h2>Control Chart - Avg NG Rate</h2>
         <p id="ng-chart-date-range"></p>
         <canvas id="chart-ng-canvas" height="200"></canvas>
+        <table id="ng-data-table"></table>
         <button id="download-ng-pdf">Download PDF</button>
       </div>
     </div>

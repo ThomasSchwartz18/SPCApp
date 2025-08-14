@@ -788,9 +788,10 @@ def chart_data():
     threshold = request.args.get('threshold', type=int, default=0)
     metric = request.args.get('metric', 'fc')
     lines_param = request.args.get('lines', '')
+    models_param = request.args.get('models', '')
     column = 'falsecall_parts' if metric == 'fc' else 'ng_parts'
     conn = get_db()
-    query = f'SELECT model_name, SUM({column})*1.0/SUM(total_boards) AS rate FROM moat WHERE 1=1'
+    query = f'SELECT model_name, SUM({column})*1.0/SUM(total_boards) AS rate, SUM(total_boards) AS boards FROM moat WHERE 1=1'
     params = []
     if start:
         query += ' AND upload_time >= ?'
@@ -798,6 +799,12 @@ def chart_data():
     if end:
         query += ' AND upload_time <= ?'
         params.append(f'{end}T23:59:59')
+    if models_param:
+        models = [m.strip() for m in models_param.split(',') if m.strip()]
+        if models:
+            placeholders = ','.join('?' for _ in models)
+            query += f' AND model_name IN ({placeholders})'
+            params.extend(models)
     if lines_param:
         lines = [l for l in lines_param.split(',') if l]
         if lines:
@@ -808,7 +815,7 @@ def chart_data():
     params.append(threshold)
     data = conn.execute(query, params).fetchall()
     conn.close()
-    return jsonify([{'model': r['model_name'], 'rate': r['rate']} for r in data])
+    return jsonify([{'model': r['model_name'], 'rate': r['rate'], 'boards': r['boards']} for r in data])
 
 @app.route('/uploads')
 @login_required
