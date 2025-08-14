@@ -15,6 +15,7 @@ import sqlite3
 import pandas as pd
 from datetime import datetime, timedelta
 import re
+from sap import create_sap_service
 
 def parse_aoi_rows(path: str):
     """Return rows from an AOI Excel file without headers."""
@@ -40,6 +41,8 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.secret_key = os.environ.get('SECRET_KEY', 'spc_secret')
 DATABASE = 'spcapp.db'
+USE_SAP = os.environ.get('USE_SAP', 'false').lower() == 'true'
+sap_service = create_sap_service(use_real=USE_SAP)
 
 # Ensure upload folder exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -838,6 +841,18 @@ def delete_upload():
     if os.path.exists(path):
         os.remove(path)
     return jsonify(success=True)
+
+
+@app.route('/sap/material/<material_id>')
+@login_required
+def sap_material(material_id):
+    try:
+        material = sap_service.get_material(material_id)
+        return jsonify({'id': material.id, 'description': material.description})
+    except KeyError:
+        return jsonify(error='Not found'), 404
+    except TimeoutError:
+        return jsonify(error='SAP timeout'), 504
 
 
 @app.route('/aoi/html/<path:filename>')
