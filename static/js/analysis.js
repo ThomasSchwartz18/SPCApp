@@ -316,8 +316,9 @@ window.addEventListener('DOMContentLoaded', () => {
           const totalBoards = data.reduce((sum, r) => sum + r.boards, 0);
           const totalFalseCalls = data.reduce((sum, r) => sum + r.rate * r.boards, 0);
           const avgRate = totalBoards ? totalFalseCalls / totalBoards : 0;
-          const dateText = start && end ? `${start} to ${end}` : start ? `From ${start}` : end ? `Up to ${end}` : 'All dates';
-          document.getElementById('fc-chart-date-range').textContent = `${dateText} | Lines: ${lineText} | Entries: ${entryCount} | Avg FC Rate: ${avgRate.toFixed(2)}`;
+          const rangeText = start && end ? `${start} to ${end}` : start ? `From ${start}` : end ? `Up to ${end}` : 'All dates';
+          const summary = `From ${rangeText} on ${lineText}, ${entryCount} models (${totalBoards} boards) averaged a false call rate of ${avgRate.toFixed(2)}.`;
+          document.getElementById('fc-chart-summary').textContent = summary;
           chartModal.style.display = 'block';
         });
     });
@@ -328,12 +329,13 @@ window.addEventListener('DOMContentLoaded', () => {
   if (downloadFcBtn) {
     downloadFcBtn.addEventListener('click', () => {
       if (!chartInstance) return;
-      const dateText = document.getElementById('fc-chart-date-range').textContent;
+      const summary = document.getElementById('fc-chart-summary').textContent;
       exportChartWithTable(
         chartInstance,
         '#fc-data-table',
-        ['Control Chart - Avg FalseCall Rate', dateText],
-        'fc-control-chart.pdf'
+        ['Control Chart - Avg FalseCall Rate', summary],
+        'fc-control-chart.pdf',
+        'landscape'
       );
     });
   }
@@ -437,8 +439,9 @@ window.addEventListener('DOMContentLoaded', () => {
           const totalBoards = data.reduce((sum, r) => sum + r.boards, 0);
           const totalNg = data.reduce((sum, r) => sum + r.rate * r.boards, 0);
           const avgRate = totalBoards ? totalNg / totalBoards : 0;
-          const dateText = start && end ? `${start} to ${end}` : start ? `From ${start}` : end ? `Up to ${end}` : 'All dates';
-          document.getElementById('ng-chart-date-range').textContent = `${dateText} | Lines: ${lineText} | Entries: ${entryCount} | Avg NG Rate: ${avgRate.toFixed(3)}`;
+          const rangeText = start && end ? `${start} to ${end}` : start ? `From ${start}` : end ? `Up to ${end}` : 'All dates';
+          const summary = `From ${rangeText} on ${lineText}, ${entryCount} models (${totalBoards} boards) averaged an NG rate of ${avgRate.toFixed(3)}.`;
+          document.getElementById('ng-chart-summary').textContent = summary;
           chartNgModal.style.display = 'block';
         });
     });
@@ -449,12 +452,13 @@ window.addEventListener('DOMContentLoaded', () => {
   if (downloadNgBtn) {
     downloadNgBtn.addEventListener('click', () => {
       if (!ngChartInstance) return;
-      const dateText = document.getElementById('ng-chart-date-range').textContent;
+      const summary = document.getElementById('ng-chart-summary').textContent;
       exportChartWithTable(
         ngChartInstance,
         '#ng-data-table',
-        ['Control Chart - Avg NG Rate', dateText],
-        'ng-control-chart.pdf'
+        ['Control Chart - Avg NG Rate', summary],
+        'ng-control-chart.pdf',
+        'landscape'
       );
     });
   }
@@ -499,7 +503,9 @@ window.addEventListener('DOMContentLoaded', () => {
   reportFreqs.forEach(freq => {
     const canvas = document.getElementById(`${freq}-report-canvas`);
     const table = document.getElementById(`${freq}-report-table`);
-    const btn = document.getElementById(`download-${freq}-pdf`);
+    const pdfBtn = document.getElementById(`download-${freq}-pdf`);
+    const xlsxBtn = document.getElementById(`download-${freq}-xlsx`);
+    const summaryEl = document.getElementById(`${freq}-report-summary`);
     if (!canvas) return;
     fetch(`/analysis/report-data?freq=${freq}`)
       .then(res => res.json())
@@ -523,10 +529,16 @@ window.addEventListener('DOMContentLoaded', () => {
             tr.innerHTML = `<td>${r.period}</td><td>${r.boards}</td><td>${r.falsecall_ppm.toFixed(2)}</td><td>${r.ng_ppm.toFixed(2)}</td>`;
             tbody.appendChild(tr);
           });
+          if (summaryEl) {
+            const totalBoards = data.table.reduce((sum, r) => sum + r.boards, 0);
+            const avgFc = data.table.reduce((sum, r) => sum + r.falsecall_ppm, 0) / (data.table.length || 1);
+            const avgNg = data.table.reduce((sum, r) => sum + r.ng_ppm, 0) / (data.table.length || 1);
+            summaryEl.textContent = `Avg FalseCall PPM: ${avgFc.toFixed(2)}, Avg NG PPM: ${avgNg.toFixed(2)} across ${totalBoards} boards.`;
+          }
         }
       });
-    if (btn) {
-      btn.addEventListener('click', () => {
+    if (pdfBtn) {
+      pdfBtn.addEventListener('click', () => {
         const chart = reportCharts[freq];
         if (!chart) return;
         const title = `MOAT Report - ${freq.charAt(0).toUpperCase() + freq.slice(1)}`;
@@ -534,8 +546,14 @@ window.addEventListener('DOMContentLoaded', () => {
           chart,
           `#${freq}-report-table`,
           title,
-          `${freq}-report.pdf`
+          `${freq}-report.pdf`,
+          'portrait'
         );
+      });
+    }
+    if (xlsxBtn) {
+      xlsxBtn.addEventListener('click', () => {
+        exportTableToExcel(`#${freq}-report-table`, `${freq}-report.xlsx`);
       });
     }
   });
