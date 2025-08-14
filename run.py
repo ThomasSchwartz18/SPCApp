@@ -826,6 +826,50 @@ def chart_data():
     conn.close()
     return jsonify([{'model': r['model_name'], 'rate': r['rate'], 'boards': r['boards']} for r in data])
 
+@app.route('/analysis/report-data')
+@login_required
+def analysis_report_data():
+    if not has_permission('analysis'):
+        return jsonify(error='Forbidden'), 403
+    freq = request.args.get('freq', 'daily').lower()
+    if freq == 'daily':
+        group = '%Y-%m-%d'
+    elif freq == 'weekly':
+        group = '%Y-%W'
+    elif freq == 'monthly':
+        group = '%Y-%m'
+    elif freq == 'yearly':
+        group = '%Y'
+    else:
+        return jsonify(error='Invalid frequency'), 400
+    conn = get_db()
+    rows = conn.execute(
+        f"""
+        SELECT strftime('{group}', upload_time) AS period,
+               SUM(total_boards) AS boards,
+               SUM(falsecall_parts)*1000000.0/SUM(total_parts) AS fc_ppm,
+               SUM(ng_parts)*1000000.0/SUM(total_parts) AS ng_ppm
+        FROM moat
+        GROUP BY period
+        ORDER BY period
+        """
+    ).fetchall()
+    conn.close()
+    return jsonify({
+        'labels': [r['period'] for r in rows],
+        'falsecall_ppm': [r['fc_ppm'] for r in rows],
+        'ng_ppm': [r['ng_ppm'] for r in rows],
+        'table': [
+            {
+                'period': r['period'],
+                'boards': r['boards'],
+                'falsecall_ppm': r['fc_ppm'],
+                'ng_ppm': r['ng_ppm'],
+            }
+            for r in rows
+        ]
+    })
+
 @app.route('/uploads')
 @login_required
 def list_uploads():
