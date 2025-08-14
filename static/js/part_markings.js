@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let target = null;
     rows.forEach(row => {
       row.classList.remove('highlight');
-      const cell = row.cells[row.cells.length - 1]; // Part Number column
+      const cell = row.querySelector('.part-number');
       if (cell && cell.textContent.trim() === term) {
         target = row;
       }
