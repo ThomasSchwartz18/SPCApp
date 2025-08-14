@@ -770,6 +770,10 @@ def analysis():
         rows = []
         total_rows = 0
         earliest = latest = ''
+    conn = get_db()
+    model_rows = conn.execute('SELECT DISTINCT model_name FROM moat ORDER BY model_name').fetchall()
+    conn.close()
+    model_names = [r['model_name'] for r in model_rows]
 
     return render_template(
         'analysis.html',
@@ -777,7 +781,8 @@ def analysis():
         show_moat=show,
         total_rows=total_rows,
         earliest=earliest,
-        latest=latest
+        latest=latest,
+        model_names=model_names
     )
 
 @app.route('/analysis/chart-data')
