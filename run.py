@@ -789,6 +789,7 @@ def chart_data():
     metric = request.args.get('metric', 'fc')
     lines_param = request.args.get('lines', '')
     models_param = request.args.get('models', '')
+    model_filter = request.args.get('model_filter', '').upper()
     column = 'falsecall_parts' if metric == 'fc' else 'ng_parts'
     conn = get_db()
     query = f'SELECT model_name, SUM({column})*1.0/SUM(total_boards) AS rate, SUM(total_boards) AS boards FROM moat WHERE 1=1'
@@ -811,6 +812,9 @@ def chart_data():
             clause = ' OR '.join('filename LIKE ?' for _ in lines)
             query += f' AND ({clause})'
             params.extend([f'%{line}%' for line in lines])
+    if model_filter in ('SMT', 'TH'):
+        query += ' AND UPPER(model_name) LIKE ?'
+        params.append(f'%{model_filter}%')
     query += ' GROUP BY model_name HAVING SUM(total_boards) >= ?'
     params.append(threshold)
     data = conn.execute(query, params).fetchall()
