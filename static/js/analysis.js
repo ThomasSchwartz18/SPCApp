@@ -328,19 +328,13 @@ window.addEventListener('DOMContentLoaded', () => {
   if (downloadFcBtn) {
     downloadFcBtn.addEventListener('click', () => {
       if (!chartInstance) return;
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({ orientation: 'landscape' });
-      pdf.text('Control Chart - Avg FalseCall Rate', 10, 10);
       const dateText = document.getElementById('fc-chart-date-range').textContent;
-      pdf.text(dateText, 10, 20);
-      const imgData = chartInstance.toBase64Image();
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      pdf.addImage(imgData, 'PNG', 10, 30, pdfWidth, pdfHeight);
-      pdf.addPage('portrait');
-      pdf.autoTable({ html: '#fc-data-table', startY: 10 });
-      pdf.save('fc-control-chart.pdf');
+      exportChartWithTable(
+        chartInstance,
+        '#fc-data-table',
+        ['Control Chart - Avg FalseCall Rate', dateText],
+        'fc-control-chart.pdf'
+      );
     });
   }
 
@@ -455,19 +449,13 @@ window.addEventListener('DOMContentLoaded', () => {
   if (downloadNgBtn) {
     downloadNgBtn.addEventListener('click', () => {
       if (!ngChartInstance) return;
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({ orientation: 'landscape' });
-      pdf.text('Control Chart - Avg NG Rate', 10, 10);
       const dateText = document.getElementById('ng-chart-date-range').textContent;
-      pdf.text(dateText, 10, 20);
-      const imgData = ngChartInstance.toBase64Image();
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      pdf.addImage(imgData, 'PNG', 10, 30, pdfWidth, pdfHeight);
-      pdf.addPage('portrait');
-      pdf.autoTable({ html: '#ng-data-table', startY: 10 });
-      pdf.save('ng-control-chart.pdf');
+      exportChartWithTable(
+        ngChartInstance,
+        '#ng-data-table',
+        ['Control Chart - Avg NG Rate', dateText],
+        'ng-control-chart.pdf'
+      );
     });
   }
 
@@ -541,18 +529,13 @@ window.addEventListener('DOMContentLoaded', () => {
       btn.addEventListener('click', () => {
         const chart = reportCharts[freq];
         if (!chart) return;
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF({ orientation: 'landscape' });
         const title = `MOAT Report - ${freq.charAt(0).toUpperCase() + freq.slice(1)}`;
-        pdf.text(title, 10, 10);
-        const imgData = chart.toBase64Image();
-        const imgProps = pdf.getImageProperties(imgData);
-        const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-        pdf.addImage(imgData, 'PNG', 10, 20, pdfWidth, pdfHeight);
-        pdf.addPage('portrait');
-        pdf.autoTable({ html: `#${freq}-report-table`, startY: 10 });
-        pdf.save(`${freq}-report.pdf`);
+        exportChartWithTable(
+          chart,
+          `#${freq}-report-table`,
+          title,
+          `${freq}-report.pdf`
+        );
       });
     }
   });
