@@ -504,4 +504,56 @@ window.addEventListener('DOMContentLoaded', () => {
     closeUploads.onclick = () => { uploadsModal.style.display = 'none'; };
     window.addEventListener('click', e => { if (e.target === uploadsModal) uploadsModal.style.display = 'none'; });
   }
+
+  // Report sections (Daily, Weekly, Monthly, Yearly)
+  const reportFreqs = ['daily', 'weekly', 'monthly', 'yearly'];
+  const reportCharts = {};
+  reportFreqs.forEach(freq => {
+    const canvas = document.getElementById(`${freq}-report-canvas`);
+    const table = document.getElementById(`${freq}-report-table`);
+    const btn = document.getElementById(`download-${freq}-pdf`);
+    if (!canvas) return;
+    fetch(`/analysis/report-data?freq=${freq}`)
+      .then(res => res.json())
+      .then(data => {
+        reportCharts[freq] = new Chart(canvas, {
+          type: 'line',
+          data: {
+            labels: data.labels,
+            datasets: [
+              { label: 'FalseCall PPM', data: data.falsecall_ppm, borderColor: 'black', fill: false },
+              { label: 'NG PPM', data: data.ng_ppm, borderColor: 'red', fill: false }
+            ]
+          },
+          options: { scales: { y: { beginAtZero: true } } }
+        });
+        if (table) {
+          table.innerHTML = '<thead><tr><th>Period</th><th>Total Boards</th><th>FalseCall PPM</th><th>NG PPM</th></tr></thead><tbody></tbody>';
+          const tbody = table.querySelector('tbody');
+          data.table.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${r.period}</td><td>${r.boards}</td><td>${r.falsecall_ppm.toFixed(2)}</td><td>${r.ng_ppm.toFixed(2)}</td>`;
+            tbody.appendChild(tr);
+          });
+        }
+      });
+    if (btn) {
+      btn.addEventListener('click', () => {
+        const chart = reportCharts[freq];
+        if (!chart) return;
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: 'landscape' });
+        const title = `MOAT Report - ${freq.charAt(0).toUpperCase() + freq.slice(1)}`;
+        pdf.text(title, 10, 10);
+        const imgData = chart.toBase64Image();
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        pdf.addImage(imgData, 'PNG', 10, 20, pdfWidth, pdfHeight);
+        pdf.addPage('portrait');
+        pdf.autoTable({ html: `#${freq}-report-table`, startY: 10 });
+        pdf.save(`${freq}-report.pdf`);
+      });
+    }
+  });
 });

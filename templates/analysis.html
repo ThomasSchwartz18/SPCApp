@@ -5,6 +5,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.25/dist/jspdf.plugin.autotable.min.js" defer></script>
+    <script src="{{ url_for('static', filename='js/tabs.js') }}" defer></script>
     <script src="/static/js/analysis.js" defer></script>
     <script src="{{ url_for('static', filename='js/moat_sql.js') }}" defer></script>
 {% endblock %}
@@ -25,168 +26,200 @@
     </div>
     <div id="container">
       <div id="analysis-actions">
-        <div class="action-panel">
-          {% if is_admin or permissions['analysis'] %}
-          <div class="action-card">
-            <h2>Upload PPM Report</h2>
-            <p class="desc">Import a PPM report (.xls or .xlsx) to analyze false call rates.</p>
-            <form method="post" enctype="multipart/form-data">
-              <label for="ppm_report">Choose file</label>
-              <input id="ppm_report" type="file" name="ppm_report" accept=".xls,.xlsx" required title="PPM report Excel file">
-              <p class="field-desc">Upload the selected report for processing.</p>
-              <button type="submit" title="Upload and analyze the report">Upload Report</button>
-            </form>
-          </div>
-          {% endif %}
-          <div class="action-card">
-            <h2>Control Chart - Avg FCs</h2>
-            <p class="desc">Configure options and generate a false call rate control chart.</p>
-            <button id="control-chart-btn" title="Show or hide chart options">Control Chart Settings</button>
-            <div id="chart-settings" style="display:none; margin-top:10px;">
-              <label>Start Date
-                <input type="date" id="start-date" title="Start date for data range">
-              </label><br>
-              <label>End Date
-                <input type="date" id="end-date" title="End date for data range">
-              </label><br>
-              <label>Y Max
-                <input type="number" id="y-max" value="50" step="0.1" title="Maximum value for Y-axis">
-              </label><br>
-              <label>Min Boards
-                <input type="number" id="min-boards" value="7" title="Minimum boards required">
-              </label><br>
-              <label>Model Name
-                <input list="model-list" id="model-name-1" placeholder="Start typing..." title="Select model name">
-                <span id="model-name-and-2" style="display:none">and</span>
-                <input list="model-list" id="model-name-2" style="display:none" placeholder="Start typing..." title="Select model name">
-                <span id="model-name-and-3" style="display:none">and</span>
-                <input list="model-list" id="model-name-3" style="display:none" placeholder="Start typing..." title="Select model name">
-                <span id="model-name-and-4" style="display:none">and</span>
-                <input list="model-list" id="model-name-4" style="display:none" placeholder="Start typing..." title="Select model name">
-              </label><br>
-              <label>Lines
-                <select id="line-select-1">
-                  <option value="all">All Lines</option>
-                  <option value="offline">Line Offline</option>
-                  <option value="0">Line 0</option>
-                  <option value="1">Line 1</option>
-                  <option value="2">Line 2</option>
-                  <option value="3">Line 3</option>
-                </select>
-                <span id="line-and-2" style="display:none">and</span>
-                <select id="line-select-2" style="display:none">
-                  <option value="">-- Select --</option>
-                  <option value="offline">Line Offline</option>
-                  <option value="0">Line 0</option>
-                  <option value="1">Line 1</option>
-                  <option value="2">Line 2</option>
-                  <option value="3">Line 3</option>
-                </select>
-                <span id="line-and-3" style="display:none">and</span>
-                <select id="line-select-3" style="display:none">
-                  <option value="">-- Select --</option>
-                  <option value="offline">Line Offline</option>
-                  <option value="0">Line 0</option>
-                  <option value="1">Line 1</option>
-                  <option value="2">Line 2</option>
-                  <option value="3">Line 3</option>
-                </select>
-                <span id="line-and-4" style="display:none">and</span>
-                <select id="line-select-4" style="display:none">
-                  <option value="">-- Select --</option>
-                  <option value="offline">Line Offline</option>
-                  <option value="0">Line 0</option>
-                  <option value="1">Line 1</option>
-                  <option value="2">Line 2</option>
-                  <option value="3">Line 3</option>
-                </select>
-              </label><br>
-              <p class="field-desc">Generate the chart using the selected parameters.</p>
-              <button id="run-chart-btn" title="Generate control chart">Run Chart</button>
+        <nav class="tab-nav">
+          <button class="tab-link active" data-tab="actions-tab">Actions</button>
+          <button class="tab-link" data-tab="reports-tab">Reports</button>
+        </nav>
+        <div id="actions-tab" class="tab-content active">
+          <div class="action-panel">
+            {% if is_admin or permissions['analysis'] %}
+            <div class="action-card">
+              <h2>Upload PPM Report</h2>
+              <p class="desc">Import a PPM report (.xls or .xlsx) to analyze false call rates.</p>
+              <form method="post" enctype="multipart/form-data">
+                <label for="ppm_report">Choose file</label>
+                <input id="ppm_report" type="file" name="ppm_report" accept=".xls,.xlsx" required title="PPM report Excel file">
+                <p class="field-desc">Upload the selected report for processing.</p>
+                <button type="submit" title="Upload and analyze the report">Upload Report</button>
+              </form>
             </div>
-          </div>
-          <div class="action-card">
-            <h2>Control Chart - Avg NGs</h2>
-            <p class="desc">Configure options and generate an NG rate control chart.</p>
-            <button id="control-chart-ng-btn" title="Show or hide chart options">Control Chart Settings</button>
-            <div id="chart-ng-settings" style="display:none; margin-top:10px;">
-              <label>Start Date
-                <input type="date" id="ng-start-date" title="Start date for data range">
-              </label><br>
-              <label>End Date
-                <input type="date" id="ng-end-date" title="End date for data range">
-              </label><br>
-              <label>Y Max
-                <input type="number" id="ng-y-max" value="1" step="0.01" title="Maximum value for Y-axis">
-              </label><br>
-              <label>Min Boards
-                <input type="number" id="ng-min-boards" value="7" title="Minimum boards required">
-              </label><br>
-              <label>Model Name
-                <input list="model-list" id="ng-model-name-1" placeholder="Start typing..." title="Select model name">
-                <span id="ng-model-name-and-2" style="display:none">and</span>
-                <input list="model-list" id="ng-model-name-2" style="display:none" placeholder="Start typing..." title="Select model name">
-                <span id="ng-model-name-and-3" style="display:none">and</span>
-                <input list="model-list" id="ng-model-name-3" style="display:none" placeholder="Start typing..." title="Select model name">
-                <span id="ng-model-name-and-4" style="display:none">and</span>
-                <input list="model-list" id="ng-model-name-4" style="display:none" placeholder="Start typing..." title="Select model name">
-              </label><br>
-              <label>Lines
-                <select id="ng-line-select-1">
-                  <option value="all">All Lines</option>
-                  <option value="offline">Line Offline</option>
-                  <option value="0">Line 0</option>
-                  <option value="1">Line 1</option>
-                  <option value="2">Line 2</option>
-                  <option value="3">Line 3</option>
-                </select>
-                <span id="ng-line-and-2" style="display:none">and</span>
-                <select id="ng-line-select-2" style="display:none">
-                  <option value="">-- Select --</option>
-                  <option value="offline">Line Offline</option>
-                  <option value="0">Line 0</option>
-                  <option value="1">Line 1</option>
-                  <option value="2">Line 2</option>
-                  <option value="3">Line 3</option>
-                </select>
-                <span id="ng-line-and-3" style="display:none">and</span>
-                <select id="ng-line-select-3" style="display:none">
-                  <option value="">-- Select --</option>
-                  <option value="offline">Line Offline</option>
-                  <option value="0">Line 0</option>
-                  <option value="1">Line 1</option>
-                  <option value="2">Line 2</option>
-                  <option value="3">Line 3</option>
-                </select>
-                <span id="ng-line-and-4" style="display:none">and</span>
-                <select id="ng-line-select-4" style="display:none">
-                  <option value="">-- Select --</option>
-                  <option value="offline">Line Offline</option>
-                  <option value="0">Line 0</option>
-                  <option value="1">Line 1</option>
-                  <option value="2">Line 2</option>
-                  <option value="3">Line 3</option>
-                </select>
-              </label><br>
-              <p class="field-desc">Generate the chart using the selected parameters.</p>
-              <button id="run-ng-chart-btn" title="Generate NG control chart">Run Chart</button>
-            </div>
-          </div>
-          <div class="action-card">
-            <h2>Run SQL Query</h2>
-            <form id="sql-form">
-              <div class="saved-query-bar">
-                <select id="saved-queries">
-                  <option value="">-- Saved Queries --</option>
-                </select>
+            {% endif %}
+            <div class="action-card">
+              <h2>Control Chart - Avg FCs</h2>
+              <p class="desc">Configure options and generate a false call rate control chart.</p>
+              <button id="control-chart-btn" title="Show or hide chart options">Control Chart Settings</button>
+              <div id="chart-settings" style="display:none; margin-top:10px;">
+                <label>Start Date
+                  <input type="date" id="start-date" title="Start date for data range">
+                </label><br>
+                <label>End Date
+                  <input type="date" id="end-date" title="End date for data range">
+                </label><br>
+                <label>Y Max
+                  <input type="number" id="y-max" value="50" step="0.1" title="Maximum value for Y-axis">
+                </label><br>
+                <label>Min Boards
+                  <input type="number" id="min-boards" value="7" title="Minimum boards required">
+                </label><br>
+                <label>Model Name
+                  <input list="model-list" id="model-name-1" placeholder="Start typing..." title="Select model name">
+                  <span id="model-name-and-2" style="display:none">and</span>
+                  <input list="model-list" id="model-name-2" style="display:none" placeholder="Start typing..." title="Select model name">
+                  <span id="model-name-and-3" style="display:none">and</span>
+                  <input list="model-list" id="model-name-3" style="display:none" placeholder="Start typing..." title="Select model name">
+                  <span id="model-name-and-4" style="display:none">and</span>
+                  <input list="model-list" id="model-name-4" style="display:none" placeholder="Start typing..." title="Select model name">
+                </label><br>
+                <label>Lines
+                  <select id="line-select-1">
+                    <option value="all">All Lines</option>
+                    <option value="offline">Line Offline</option>
+                    <option value="0">Line 0</option>
+                    <option value="1">Line 1</option>
+                    <option value="2">Line 2</option>
+                    <option value="3">Line 3</option>
+                  </select>
+                  <span id="line-and-2" style="display:none">and</span>
+                  <select id="line-select-2" style="display:none">
+                    <option value="">-- Select --</option>
+                    <option value="offline">Line Offline</option>
+                    <option value="0">Line 0</option>
+                    <option value="1">Line 1</option>
+                    <option value="2">Line 2</option>
+                    <option value="3">Line 3</option>
+                  </select>
+                  <span id="line-and-3" style="display:none">and</span>
+                  <select id="line-select-3" style="display:none">
+                    <option value="">-- Select --</option>
+                    <option value="offline">Line Offline</option>
+                    <option value="0">Line 0</option>
+                    <option value="1">Line 1</option>
+                    <option value="2">Line 2</option>
+                    <option value="3">Line 3</option>
+                  </select>
+                  <span id="line-and-4" style="display:none">and</span>
+                  <select id="line-select-4" style="display:none">
+                    <option value="">-- Select --</option>
+                    <option value="offline">Line Offline</option>
+                    <option value="0">Line 0</option>
+                    <option value="1">Line 1</option>
+                    <option value="2">Line 2</option>
+                    <option value="3">Line 3</option>
+                  </select>
+                </label><br>
+                <p class="field-desc">Generate the chart using the selected parameters.</p>
+                <button id="run-chart-btn" title="Generate control chart">Run Chart</button>
               </div>
-              <textarea id="sql-query" rows="5" cols="60"></textarea><br>
-              <button type="submit">Execute</button>
-            </form>
-            <table id="sql-results">
-              <thead></thead>
-              <tbody></tbody>
-            </table>
+            </div>
+            <div class="action-card">
+              <h2>Control Chart - Avg NGs</h2>
+              <p class="desc">Configure options and generate an NG rate control chart.</p>
+              <button id="control-chart-ng-btn" title="Show or hide chart options">Control Chart Settings</button>
+              <div id="chart-ng-settings" style="display:none; margin-top:10px;">
+                <label>Start Date
+                  <input type="date" id="ng-start-date" title="Start date for data range">
+                </label><br>
+                <label>End Date
+                  <input type="date" id="ng-end-date" title="End date for data range">
+                </label><br>
+                <label>Y Max
+                  <input type="number" id="ng-y-max" value="1" step="0.01" title="Maximum value for Y-axis">
+                </label><br>
+                <label>Min Boards
+                  <input type="number" id="ng-min-boards" value="7" title="Minimum boards required">
+                </label><br>
+                <label>Model Name
+                  <input list="model-list" id="ng-model-name-1" placeholder="Start typing..." title="Select model name">
+                  <span id="ng-model-name-and-2" style="display:none">and</span>
+                  <input list="model-list" id="ng-model-name-2" style="display:none" placeholder="Start typing..." title="Select model name">
+                  <span id="ng-model-name-and-3" style="display:none">and</span>
+                  <input list="model-list" id="ng-model-name-3" style="display:none" placeholder="Start typing..." title="Select model name">
+                  <span id="ng-model-name-and-4" style="display:none">and</span>
+                  <input list="model-list" id="ng-model-name-4" style="display:none" placeholder="Start typing..." title="Select model name">
+                </label><br>
+                <label>Lines
+                  <select id="ng-line-select-1">
+                    <option value="all">All Lines</option>
+                    <option value="offline">Line Offline</option>
+                    <option value="0">Line 0</option>
+                    <option value="1">Line 1</option>
+                    <option value="2">Line 2</option>
+                    <option value="3">Line 3</option>
+                  </select>
+                  <span id="ng-line-and-2" style="display:none">and</span>
+                  <select id="ng-line-select-2" style="display:none">
+                    <option value="">-- Select --</option>
+                    <option value="offline">Line Offline</option>
+                    <option value="0">Line 0</option>
+                    <option value="1">Line 1</option>
+                    <option value="2">Line 2</option>
+                    <option value="3">Line 3</option>
+                  </select>
+                  <span id="ng-line-and-3" style="display:none">and</span>
+                  <select id="ng-line-select-3" style="display:none">
+                    <option value="">-- Select --</option>
+                    <option value="offline">Line Offline</option>
+                    <option value="0">Line 0</option>
+                    <option value="1">Line 1</option>
+                    <option value="2">Line 2</option>
+                    <option value="3">Line 3</option>
+                  </select>
+                  <span id="ng-line-and-4" style="display:none">and</span>
+                  <select id="ng-line-select-4" style="display:none">
+                    <option value="">-- Select --</option>
+                    <option value="offline">Line Offline</option>
+                    <option value="0">Line 0</option>
+                    <option value="1">Line 1</option>
+                    <option value="2">Line 2</option>
+                    <option value="3">Line 3</option>
+                  </select>
+                </label><br>
+                <p class="field-desc">Generate the chart using the selected parameters.</p>
+                <button id="run-ng-chart-btn" title="Generate NG control chart">Run Chart</button>
+              </div>
+            </div>
+            <div class="action-card">
+              <h2>Run SQL Query</h2>
+              <form id="sql-form">
+                <div class="saved-query-bar">
+                  <select id="saved-queries">
+                    <option value="">-- Saved Queries --</option>
+                  </select>
+                </div>
+                <textarea id="sql-query" rows="5" cols="60"></textarea><br>
+                <button type="submit">Execute</button>
+              </form>
+              <table id="sql-results">
+                <thead></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div id="reports-tab" class="tab-content">
+          <div class="report-section" id="daily-report">
+            <h2>Daily Report</h2>
+            <canvas id="daily-report-canvas" height="200"></canvas>
+            <table id="daily-report-table"></table>
+            <button id="download-daily-pdf">Download PDF</button>
+          </div>
+          <div class="report-section" id="weekly-report">
+            <h2>Weekly Report</h2>
+            <canvas id="weekly-report-canvas" height="200"></canvas>
+            <table id="weekly-report-table"></table>
+            <button id="download-weekly-pdf">Download PDF</button>
+          </div>
+          <div class="report-section" id="monthly-report">
+            <h2>Monthly Report</h2>
+            <canvas id="monthly-report-canvas" height="200"></canvas>
+            <table id="monthly-report-table"></table>
+            <button id="download-monthly-pdf">Download PDF</button>
+          </div>
+          <div class="report-section" id="yearly-report">
+            <h2>Yearly Report</h2>
+            <canvas id="yearly-report-canvas" height="200"></canvas>
+            <table id="yearly-report-table"></table>
+            <button id="download-yearly-pdf">Download PDF</button>
           </div>
         </div>
       </div>
