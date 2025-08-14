@@ -77,7 +77,7 @@
             <td>{{ row['manufacturer'] }}</td>
             <td>{{ row['mfg_number2'] }}</td>
             <td>{{ row['mfg_number1'] }}</td>
-            <td>{{ row['part_number'] }}</td>
+            <td class="part-number">{{ row['part_number'] }}</td>
             {% if is_admin or permissions['part_markings'] %}
             <td class="no-edit"><button type="button" class="delete-row" title="Delete row">Delete</button></td>
             {% endif %}
