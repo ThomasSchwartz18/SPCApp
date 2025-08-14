@@ -366,6 +366,12 @@ def home():
         })
     return render_template('home.html', sample_jobs=jobs)
 
+
+@app.route('/docs')
+@login_required
+def docs():
+    return render_template('docs.html')
+
 @app.route('/part-markings', methods=['GET', 'POST'])
 @login_required
 def part_markings():
