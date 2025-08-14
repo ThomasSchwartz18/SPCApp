@@ -259,5 +259,136 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Reports sub-tabs
+  const subLinks = document.querySelectorAll('.subtab-link');
+  subLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      const parent = link.closest('#reports');
+      if (!parent) return;
+      parent.querySelectorAll('.subtab-link').forEach(l => l.classList.remove('active'));
+      parent.querySelectorAll('.subtab-content').forEach(c => c.classList.remove('active'));
+      link.classList.add('active');
+      const target = document.getElementById(link.dataset.subtab);
+      target?.classList.add('active');
+    });
+  });
+
+  const reportCharts = {};
+  ['daily','weekly','monthly','yearly'].forEach(freq => {
+    fetch(`/aoi/report-data?freq=${freq}`)
+      .then(res => res.json())
+      .then(data => renderReport(freq, data));
+  });
+
+  function renderReport(freq, data) {
+    const isAdmin = document.body.dataset.admin === 'true';
+    const ops = data.operators || [];
+    if (ops.length) {
+      const ctx = document.getElementById(`${freq}-operators`);
+      if (ctx) {
+        const labels = ops.map((o, idx) => isAdmin ? o.operator : `Operator ${idx + 1}`);
+        reportCharts[`${freq}-operators`] = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [
+              { label: 'Accepted', data: ops.map(o => o.inspected - o.rejected), backgroundColor: 'rgba(54, 162, 235, 0.7)' },
+              { label: 'Rejected', data: ops.map(o => o.rejected), backgroundColor: 'rgba(255, 99, 132, 0.7)' }
+            ]
+          },
+          options: { scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } } }
+        });
+      }
+    }
+
+    const shifts = data.shift_totals || [];
+    if (shifts.length) {
+      const ctx = document.getElementById(`${freq}-shift`);
+      if (ctx) {
+        reportCharts[`${freq}-shift`] = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: shifts.map(s => s.shift),
+            datasets: [{ label: 'Inspected', data: shifts.map(s => s.inspected), backgroundColor: 'rgba(75, 192, 192, 0.7)' }]
+          },
+          options: { scales: { y: { beginAtZero: true } } }
+        });
+      }
+    }
+
+    const cust = data.customer_rates || [];
+    if (cust.length) {
+      const ctx = document.getElementById(`${freq}-reject`);
+      if (ctx) {
+        reportCharts[`${freq}-reject`] = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: cust.map(c => c.customer),
+            datasets: [{ label: 'Reject Rate', data: cust.map(c => c.rate), backgroundColor: 'rgba(255, 159, 64, 0.7)' }]
+          },
+          options: { scales: { y: { beginAtZero: true } } }
+        });
+      }
+    }
+
+    const ySeries = data.yield_series || [];
+    if (ySeries.length) {
+      const ctx = document.getElementById(`${freq}-yield`);
+      if (ctx) {
+        reportCharts[`${freq}-yield`] = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: ySeries.map(y => y.report_date),
+            datasets: [{ label: 'Yield %', data: ySeries.map(y => y.yield * 100), fill: false, borderColor: 'rgba(75, 192, 192, 1)' }]
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100,
+                ticks: { callback: value => `${value}%` }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    const table = document.querySelector(`#${freq}-table tbody`);
+    if (table) {
+      table.innerHTML = '';
+      (data.assemblies || []).forEach(r => {
+        const tr = document.createElement('tr');
+        const yieldPct = r.yield ? (r.yield * 100).toFixed(2) + '%' : '0%';
+        tr.innerHTML = `<td>${r.assembly}</td><td>${r.inspected}</td><td>${r.rejected}</td><td>${yieldPct}</td>`;
+        table.appendChild(tr);
+      });
+    }
+  }
+
+  document.querySelectorAll('.download-report').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const period = btn.dataset.period;
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'landscape' });
+      pdf.text(`${period.charAt(0).toUpperCase()+period.slice(1)} AOI Summary`, 10, 10);
+      let y = 20;
+      ['operators','shift','reject','yield'].forEach(name => {
+        const chart = reportCharts[`${period}-${name}`];
+        if (chart) {
+          const img = chart.toBase64Image();
+          const props = pdf.getImageProperties(img);
+          const width = pdf.internal.pageSize.getWidth() - 20;
+          const height = (props.height * width) / props.width;
+          pdf.addImage(img, 'PNG', 10, y, width, height);
+          y += height + 10;
+          if (y > pdf.internal.pageSize.getHeight() - 20) { pdf.addPage(); y = 20; }
+        }
+      });
+      pdf.addPage('portrait');
+      pdf.autoTable({ html: `#${period}-table`, startY: 10 });
+      pdf.save(`${period}-aoi-summary.pdf`);
+    });
+  });
 });
 

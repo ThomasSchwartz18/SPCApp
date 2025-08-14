@@ -10,6 +10,7 @@
   <script id="customer-data" type="application/json">{{ customer_rates|tojson }}</script>
   <script id="yield-data" type="application/json">{{ yield_series|tojson }}</script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.25/dist/jspdf.plugin.autotable.min.js" defer></script>
   <script src="{{ url_for('static', filename='js/aoi_dashboard.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/tabs.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/aoi_sql.js') }}" defer></script>
@@ -22,6 +23,7 @@
       <nav class="tab-nav">
         <button class="tab-link active" data-tab="add-entry">Add Entry</button>
         <button class="tab-link" data-tab="analysis">AOI Analysis</button>
+        <button class="tab-link" data-tab="reports">Reports</button>
         <button class="tab-link" data-tab="sql">SQL</button>
       </nav>
       <div id="add-entry" class="tab-content active">
@@ -152,6 +154,68 @@
               {% endfor %}
             </tbody>
           </table>
+        </div>
+      </div>
+      <div id="reports" class="tab-content">
+        <div class="action-panel">
+          <nav class="subtab-nav">
+            <button class="subtab-link active" data-subtab="daily">Daily</button>
+            <button class="subtab-link" data-subtab="weekly">Weekly</button>
+            <button class="subtab-link" data-subtab="monthly">Monthly</button>
+            <button class="subtab-link" data-subtab="yearly">Yearly</button>
+          </nav>
+          <div id="daily" class="subtab-content active">
+            <h2>Daily Summary <button class="download-report" data-period="daily">Download PDF</button></h2>
+            <canvas id="daily-operators"></canvas>
+            <canvas id="daily-shift"></canvas>
+            <canvas id="daily-reject"></canvas>
+            <canvas id="daily-yield"></canvas>
+            <table id="daily-table">
+              <thead>
+                <tr><th>Assembly</th><th>Inspected</th><th>Rejected</th><th>Yield</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="weekly" class="subtab-content">
+            <h2>Weekly Summary <button class="download-report" data-period="weekly">Download PDF</button></h2>
+            <canvas id="weekly-operators"></canvas>
+            <canvas id="weekly-shift"></canvas>
+            <canvas id="weekly-reject"></canvas>
+            <canvas id="weekly-yield"></canvas>
+            <table id="weekly-table">
+              <thead>
+                <tr><th>Assembly</th><th>Inspected</th><th>Rejected</th><th>Yield</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="monthly" class="subtab-content">
+            <h2>Monthly Summary <button class="download-report" data-period="monthly">Download PDF</button></h2>
+            <canvas id="monthly-operators"></canvas>
+            <canvas id="monthly-shift"></canvas>
+            <canvas id="monthly-reject"></canvas>
+            <canvas id="monthly-yield"></canvas>
+            <table id="monthly-table">
+              <thead>
+                <tr><th>Assembly</th><th>Inspected</th><th>Rejected</th><th>Yield</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="yearly" class="subtab-content">
+            <h2>Yearly Summary <button class="download-report" data-period="yearly">Download PDF</button></h2>
+            <canvas id="yearly-operators"></canvas>
+            <canvas id="yearly-shift"></canvas>
+            <canvas id="yearly-reject"></canvas>
+            <canvas id="yearly-yield"></canvas>
+            <table id="yearly-table">
+              <thead>
+                <tr><th>Assembly</th><th>Inspected</th><th>Rejected</th><th>Yield</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
       </div>
       <div id="sql" class="tab-content">
