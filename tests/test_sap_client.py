@@ -1,5 +1,9 @@
 import pytest
-from sap import MockSAPClient, SAPService, create_sap_service
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from sap_client import MockSAPClient, SAPService, create_sap_service
 
 
 def test_mock_service_returns_material():
