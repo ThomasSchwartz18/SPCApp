@@ -859,6 +859,37 @@ def delete_upload():
     return jsonify(success=True)
 
 
+@app.route('/moat/sql', methods=['POST'])
+@login_required
+def moat_sql():
+    if not has_permission('analysis'):
+        return jsonify(error='Forbidden'), 403
+    data = request.get_json() or {}
+    query = data.get('query', '')
+    params = data.get('params', [])
+    if not isinstance(params, list):
+        return jsonify(error='Invalid parameters'), 400
+    statements = [s.strip() for s in query.split(';') if s.strip()]
+    if len(statements) != 1 or not statements[0].lower().startswith('select'):
+        return jsonify(error='Only SELECT statements allowed'), 400
+    lowered = statements[0].lower()
+    allowed_tables = {'moat'}
+    pattern = re.compile(r'from\s+([a-zA-Z0-9_]+)|join\s+([a-zA-Z0-9_]+)')
+    for m in pattern.finditer(lowered):
+        tbl = m.group(1) or m.group(2)
+        if tbl not in allowed_tables:
+            return jsonify(error='Table not allowed'), 400
+    conn = get_db()
+    try:
+        cur = conn.execute(statements[0], params)
+        rows = [dict(r) for r in cur.fetchall()]
+    except Exception as e:
+        conn.close()
+        return jsonify(error=str(e)), 400
+    conn.close()
+    return jsonify(rows=rows)
+
+
 @app.route('/sap/material/<material_id>')
 @login_required
 def sap_material(material_id):
