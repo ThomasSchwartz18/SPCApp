@@ -169,8 +169,10 @@ window.addEventListener('DOMContentLoaded', () => {
       const threshold = parseInt(document.getElementById('min-boards').value) || 0;
       const models = document.getElementById('model-names').value.trim();
       const modelQuery = models ? `&models=${encodeURIComponent(models)}` : '';
+      const filter = modelFilter ? modelFilter.value : 'all';
+      const filterQuery = filter !== 'all' ? `&model_filter=${filter}` : '';
       const { query: lineQuery, text: lineText } = getSelectedLines('line');
-      fetch(`/analysis/chart-data?start=${start}&end=${end}&threshold=${threshold}&metric=fc${lineQuery}${modelQuery}`)
+      fetch(`/analysis/chart-data?start=${start}&end=${end}&threshold=${threshold}&metric=fc${lineQuery}${modelQuery}${filterQuery}`)
         .then(res => res.json())
         .then(data => {
           const labels = data.map(d => d.model);
@@ -279,8 +281,10 @@ window.addEventListener('DOMContentLoaded', () => {
       const threshold = parseInt(document.getElementById('ng-min-boards').value) || 0;
       const models = document.getElementById('ng-model-names').value.trim();
       const modelQuery = models ? `&models=${encodeURIComponent(models)}` : '';
+      const filter = modelFilter ? modelFilter.value : 'all';
+      const filterQuery = filter !== 'all' ? `&model_filter=${filter}` : '';
       const { query: lineQuery, text: lineText } = getSelectedLines('ng-line');
-      fetch(`/analysis/chart-data?start=${start}&end=${end}&threshold=${threshold}&metric=ng${lineQuery}${modelQuery}`)
+      fetch(`/analysis/chart-data?start=${start}&end=${end}&threshold=${threshold}&metric=ng${lineQuery}${modelQuery}${filterQuery}`)
         .then(res => res.json())
         .then(data => {
           const labels = data.map(d => d.model);
