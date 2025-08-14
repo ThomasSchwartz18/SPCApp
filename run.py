@@ -674,6 +674,102 @@ def aoi_report():
     )
 
 
+@app.route('/aoi/report-data')
+@login_required
+def aoi_report_data():
+    freq = request.args.get('freq', 'daily').lower()
+    days_map = {'daily': 1, 'weekly': 7, 'monthly': 30, 'yearly': 365}
+    conn = get_db()
+    end_row = conn.execute('SELECT MAX(report_date) AS max_date FROM aoi_reports').fetchone()
+    if not end_row or not end_row['max_date']:
+        conn.close()
+        return jsonify(operators=[], shift_totals=[], customer_rates=[], yield_series=[], assemblies=[])
+    end_date = datetime.strptime(end_row['max_date'], '%Y-%m-%d').date()
+    delta = days_map.get(freq, 1)
+    start_date = end_date - timedelta(days=delta - 1)
+    params = [start_date.isoformat(), end_date.isoformat()]
+
+    op_rows = conn.execute(
+        'SELECT operator, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
+        'FROM aoi_reports WHERE report_date BETWEEN ? AND ? '
+        'GROUP BY operator ORDER BY inspected DESC',
+        params,
+    ).fetchall()
+    asm_rows = conn.execute(
+        'SELECT assembly, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
+        'FROM aoi_reports WHERE report_date BETWEEN ? AND ? '
+        'GROUP BY assembly ORDER BY inspected DESC',
+        params,
+    ).fetchall()
+    shift_rows = conn.execute(
+        'SELECT shift, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
+        'FROM aoi_reports WHERE report_date BETWEEN ? AND ? '
+        'GROUP BY shift ORDER BY shift',
+        params,
+    ).fetchall()
+    cust_rows = conn.execute(
+        'SELECT customer, SUM(qty_rejected)*1.0/SUM(qty_inspected) AS rate '
+        'FROM aoi_reports WHERE report_date BETWEEN ? AND ? '
+        'GROUP BY customer ORDER BY customer',
+        params,
+    ).fetchall()
+    yield_rows = conn.execute(
+        'SELECT report_date, 1 - SUM(qty_rejected)*1.0/SUM(qty_inspected) AS yield '
+        'FROM aoi_reports WHERE report_date BETWEEN ? AND ? '
+        'GROUP BY report_date ORDER BY report_date',
+        params,
+    ).fetchall()
+    conn.close()
+
+    operators = [
+        {
+            'operator': r['operator'],
+            'inspected': r['inspected'] or 0,
+            'rejected': r['rejected'] or 0,
+        }
+        for r in op_rows
+    ]
+    assemblies = [
+        {
+            'assembly': r['assembly'],
+            'inspected': r['inspected'] or 0,
+            'rejected': r['rejected'] or 0,
+            'yield': 1 - (r['rejected'] * 1.0 / r['inspected']) if r['inspected'] else 0,
+        }
+        for r in asm_rows
+    ]
+    shift_totals = [
+        {
+            'shift': r['shift'],
+            'inspected': r['inspected'] or 0,
+            'rejected': r['rejected'] or 0,
+        }
+        for r in shift_rows
+    ]
+    customer_rates = [
+        {
+            'customer': r['customer'],
+            'rate': r['rate'] or 0,
+        }
+        for r in cust_rows
+    ]
+    yield_series = [
+        {
+            'report_date': r['report_date'],
+            'yield': r['yield'] or 0,
+        }
+        for r in yield_rows
+    ]
+
+    return jsonify(
+        operators=operators,
+        shift_totals=shift_totals,
+        customer_rates=customer_rates,
+        yield_series=yield_series,
+        assemblies=assemblies,
+    )
+
+
 @app.route('/aoi/sql', methods=['POST'])
 @login_required
 def aoi_sql():
