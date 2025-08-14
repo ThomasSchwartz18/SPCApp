@@ -119,6 +119,70 @@ window.addEventListener('DOMContentLoaded', () => {
   setupLineSelectors('line');
   setupLineSelectors('ng-line');
 
+  function setupModelInputs(prefix) {
+    const inputs = [];
+    const ands = [];
+    for (let i = 1; i <= 4; i++) {
+      inputs[i] = document.getElementById(`${prefix}-${i}`);
+      if (i > 1) ands[i] = document.getElementById(`${prefix}-and-${i}`);
+    }
+
+    function hideFrom(start) {
+      for (let i = start; i <= 4; i++) {
+        if (inputs[i]) {
+          inputs[i].style.display = 'none';
+          inputs[i].value = '';
+        }
+        if (ands[i]) ands[i].style.display = 'none';
+      }
+    }
+
+    inputs[1]?.addEventListener('input', () => {
+      if (inputs[1].value) {
+        if (inputs[2]) {
+          inputs[2].style.display = 'inline';
+          ands[2].style.display = 'inline';
+        }
+      } else {
+        hideFrom(2);
+      }
+    });
+    inputs[2]?.addEventListener('input', () => {
+      if (inputs[2].value) {
+        if (inputs[3]) {
+          inputs[3].style.display = 'inline';
+          ands[3].style.display = 'inline';
+        }
+      } else {
+        hideFrom(3);
+      }
+    });
+    inputs[3]?.addEventListener('input', () => {
+      if (inputs[3].value) {
+        if (inputs[4]) {
+          inputs[4].style.display = 'inline';
+          ands[4].style.display = 'inline';
+        }
+      } else {
+        hideFrom(4);
+      }
+    });
+  }
+
+  function getSelectedModels(prefix) {
+    const values = [];
+    for (let i = 1; i <= 4; i++) {
+      const inp = document.getElementById(`${prefix}-${i}`);
+      if (inp && inp.style.display !== 'none' && inp.value.trim()) {
+        values.push(inp.value.trim());
+      }
+    }
+    return values;
+  }
+
+  setupModelInputs('model-name');
+  setupModelInputs('ng-model-name');
+
   // Threshold plugin for horizontal lines
   const thresholdPlugin = {
     id: 'thresholdPlugin',
@@ -167,8 +231,8 @@ window.addEventListener('DOMContentLoaded', () => {
       const end = document.getElementById('end-date').value;
       const yMax = parseFloat(document.getElementById('y-max').value) || 1;
       const threshold = parseInt(document.getElementById('min-boards').value) || 0;
-      const models = document.getElementById('model-names').value.trim();
-      const modelQuery = models ? `&models=${encodeURIComponent(models)}` : '';
+      const models = getSelectedModels('model-name');
+      const modelQuery = models.length ? `&models=${encodeURIComponent(models.join(','))}` : '';
       const filter = modelFilter ? modelFilter.value : 'all';
       const filterQuery = filter !== 'all' ? `&model_filter=${filter}` : '';
       const { query: lineQuery, text: lineText } = getSelectedLines('line');
@@ -179,23 +243,32 @@ window.addEventListener('DOMContentLoaded', () => {
           const inRangeValues = data.map(d => (d.rate <= yMax ? d.rate : null));
           const outliers = data.filter(d => d.rate > yMax);
           if (chartInstance) chartInstance.destroy();
+          const chartType = labels.length === 1 ? 'bar' : 'line';
+          const mainDataset = chartType === 'bar' ? {
+            label: 'FalseCall Rate',
+            data: inRangeValues,
+            backgroundColor: 'black',
+            borderColor: 'black',
+            borderWidth: 1
+          } : {
+            label: 'FalseCall Rate',
+            data: inRangeValues,
+            borderColor: 'black',
+            pointBackgroundColor: 'black',
+            pointBorderColor: 'black',
+            fill: false,
+            tension: 0,
+            borderWidth: 1,
+            clip: false
+          };
           chartInstance = new Chart(ctx, {
-            type: 'line',
+            type: chartType,
             data: {
               labels,
               datasets: [
+                mainDataset,
                 {
-                  label: 'FalseCall Rate',
-                  data: inRangeValues,
-                  borderColor: 'black',
-                  pointBackgroundColor: 'black',
-                  pointBorderColor: 'black',
-                  fill: false,
-                  tension: 0,
-                  borderWidth: 1,
-                  clip: false
-                },
-                {
+                  type: 'scatter',
                   label: 'Outliers',
                   data: outliers.map(d => ({ x: d.model, y: yMax, real: d.rate })),
                   borderColor: 'red',
@@ -279,8 +352,8 @@ window.addEventListener('DOMContentLoaded', () => {
       const end = document.getElementById('ng-end-date').value;
       const yMax = parseFloat(document.getElementById('ng-y-max').value) || 1;
       const threshold = parseInt(document.getElementById('ng-min-boards').value) || 0;
-      const models = document.getElementById('ng-model-names').value.trim();
-      const modelQuery = models ? `&models=${encodeURIComponent(models)}` : '';
+      const models = getSelectedModels('ng-model-name');
+      const modelQuery = models.length ? `&models=${encodeURIComponent(models.join(','))}` : '';
       const filter = modelFilter ? modelFilter.value : 'all';
       const filterQuery = filter !== 'all' ? `&model_filter=${filter}` : '';
       const { query: lineQuery, text: lineText } = getSelectedLines('ng-line');
@@ -291,23 +364,32 @@ window.addEventListener('DOMContentLoaded', () => {
           const inRangeValues = data.map(d => (d.rate <= yMax ? d.rate : null));
           const outliers = data.filter(d => d.rate > yMax);
           if (ngChartInstance) ngChartInstance.destroy();
+          const chartType = labels.length === 1 ? 'bar' : 'line';
+          const mainDataset = chartType === 'bar' ? {
+            label: 'NG Rate',
+            data: inRangeValues,
+            backgroundColor: 'black',
+            borderColor: 'black',
+            borderWidth: 1
+          } : {
+            label: 'NG Rate',
+            data: inRangeValues,
+            borderColor: 'black',
+            pointBackgroundColor: 'black',
+            pointBorderColor: 'black',
+            fill: false,
+            tension: 0,
+            borderWidth: 1,
+            clip: false
+          };
           ngChartInstance = new Chart(ngCtx, {
-            type: 'line',
+            type: chartType,
             data: {
               labels,
               datasets: [
+                mainDataset,
                 {
-                  label: 'NG Rate',
-                  data: inRangeValues,
-                  borderColor: 'black',
-                  pointBackgroundColor: 'black',
-                  pointBorderColor: 'black',
-                  fill: false,
-                  tension: 0,
-                  borderWidth: 1,
-                  clip: false
-                },
-                {
+                  type: 'scatter',
                   label: 'Outliers',
                   data: outliers.map(d => ({ x: d.model, y: yMax, real: d.rate })),
                   borderColor: 'red',
