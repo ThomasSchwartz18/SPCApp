@@ -677,15 +677,32 @@ def aoi_report():
 @app.route('/aoi/report-data')
 @login_required
 def aoi_report_data():
+    if not has_permission('aoi'):
+        return jsonify(error='Forbidden'), 403
     freq = request.args.get('freq', 'daily').lower()
-    days_map = {'daily': 1, 'weekly': 7, 'monthly': 30, 'yearly': 365}
+    group_map = {
+        'daily': '%Y-%m-%d',
+        'weekly': '%Y-%W',
+        'monthly': '%Y-%m',
+        'yearly': '%Y',
+    }
+    days_map = {
+        'daily': 1,
+        'weekly': 7,
+        'monthly': 30,
+        'yearly': 365,
+    }
+    group = group_map.get(freq)
+    delta = days_map.get(freq)
+    if not group or not delta:
+        return jsonify(error='Invalid frequency'), 400
+
     conn = get_db()
     end_row = conn.execute('SELECT MAX(report_date) AS max_date FROM aoi_reports').fetchone()
     if not end_row or not end_row['max_date']:
         conn.close()
         return jsonify(operators=[], shift_totals=[], customer_rates=[], yield_series=[], assemblies=[])
     end_date = datetime.strptime(end_row['max_date'], '%Y-%m-%d').date()
-    delta = days_map.get(freq, 1)
     start_date = end_date - timedelta(days=delta - 1)
     params = [start_date.isoformat(), end_date.isoformat()]
 
@@ -714,9 +731,10 @@ def aoi_report_data():
         params,
     ).fetchall()
     yield_rows = conn.execute(
-        'SELECT report_date, 1 - SUM(qty_rejected)*1.0/SUM(qty_inspected) AS yield '
-        'FROM aoi_reports WHERE report_date BETWEEN ? AND ? '
-        'GROUP BY report_date ORDER BY report_date',
+        f"SELECT strftime('{group}', report_date) AS period, "
+        "1 - SUM(qty_rejected)*1.0/SUM(qty_inspected) AS yield "
+        "FROM aoi_reports WHERE report_date BETWEEN ? AND ? "
+        "GROUP BY period ORDER BY period",
         params,
     ).fetchall()
     conn.close()
@@ -755,7 +773,7 @@ def aoi_report_data():
     ]
     yield_series = [
         {
-            'report_date': r['report_date'],
+            'period': r['period'],
             'yield': r['yield'] or 0,
         }
         for r in yield_rows
@@ -928,17 +946,33 @@ def analysis_report_data():
     if not has_permission('analysis'):
         return jsonify(error='Forbidden'), 403
     freq = request.args.get('freq', 'daily').lower()
-    if freq == 'daily':
-        group = '%Y-%m-%d'
-    elif freq == 'weekly':
-        group = '%Y-%W'
-    elif freq == 'monthly':
-        group = '%Y-%m'
-    elif freq == 'yearly':
-        group = '%Y'
-    else:
+    group_map = {
+        'daily': '%Y-%m-%d',
+        'weekly': '%Y-%W',
+        'monthly': '%Y-%m',
+        'yearly': '%Y',
+    }
+    days_map = {
+        'daily': 1,
+        'weekly': 7,
+        'monthly': 30,
+        'yearly': 365,
+    }
+    group = group_map.get(freq)
+    delta = days_map.get(freq)
+    if not group or not delta:
         return jsonify(error='Invalid frequency'), 400
+
     conn = get_db()
+    end_row = conn.execute('SELECT MAX(upload_time) AS max_time FROM moat').fetchone()
+    if not end_row or not end_row['max_time']:
+        conn.close()
+        return jsonify(labels=[], falsecall_ppm=[], ng_ppm=[], table=[])
+
+    end_date = datetime.fromisoformat(end_row['max_time']).date()
+    start_date = end_date - timedelta(days=delta - 1)
+    params = [f'{start_date.isoformat()}T00:00:00', f'{end_date.isoformat()}T23:59:59']
+
     rows = conn.execute(
         f"""
         SELECT strftime('{group}', upload_time) AS period,
@@ -946,9 +980,11 @@ def analysis_report_data():
                SUM(falsecall_parts)*1000000.0/SUM(total_parts) AS fc_ppm,
                SUM(ng_parts)*1000000.0/SUM(total_parts) AS ng_ppm
         FROM moat
+        WHERE upload_time BETWEEN ? AND ?
         GROUP BY period
         ORDER BY period
-        """
+        """,
+        params,
     ).fetchall()
     conn.close()
     return jsonify({
