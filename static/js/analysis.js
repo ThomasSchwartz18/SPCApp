@@ -312,8 +312,12 @@ window.addEventListener('DOMContentLoaded', () => {
               tbody.appendChild(tr);
             });
           }
+          const entryCount = data.length;
+          const totalBoards = data.reduce((sum, r) => sum + r.boards, 0);
+          const totalFalseCalls = data.reduce((sum, r) => sum + r.rate * r.boards, 0);
+          const avgRate = totalBoards ? totalFalseCalls / totalBoards : 0;
           const dateText = start && end ? `${start} to ${end}` : start ? `From ${start}` : end ? `Up to ${end}` : 'All dates';
-          document.getElementById('fc-chart-date-range').textContent = `${dateText} | Lines: ${lineText}`;
+          document.getElementById('fc-chart-date-range').textContent = `${dateText} | Lines: ${lineText} | Entries: ${entryCount} | Avg FC Rate: ${avgRate.toFixed(2)}`;
           chartModal.style.display = 'block';
         });
     });
@@ -334,6 +338,8 @@ window.addEventListener('DOMContentLoaded', () => {
       const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
       pdf.addImage(imgData, 'PNG', 10, 30, pdfWidth, pdfHeight);
+      pdf.addPage('portrait');
+      pdf.autoTable({ html: '#fc-data-table', startY: 10 });
       pdf.save('fc-control-chart.pdf');
     });
   }
@@ -433,8 +439,12 @@ window.addEventListener('DOMContentLoaded', () => {
               tbody.appendChild(tr);
             });
           }
+          const entryCount = data.length;
+          const totalBoards = data.reduce((sum, r) => sum + r.boards, 0);
+          const totalNg = data.reduce((sum, r) => sum + r.rate * r.boards, 0);
+          const avgRate = totalBoards ? totalNg / totalBoards : 0;
           const dateText = start && end ? `${start} to ${end}` : start ? `From ${start}` : end ? `Up to ${end}` : 'All dates';
-          document.getElementById('ng-chart-date-range').textContent = `${dateText} | Lines: ${lineText}`;
+          document.getElementById('ng-chart-date-range').textContent = `${dateText} | Lines: ${lineText} | Entries: ${entryCount} | Avg NG Rate: ${avgRate.toFixed(3)}`;
           chartNgModal.style.display = 'block';
         });
     });
@@ -455,6 +465,8 @@ window.addEventListener('DOMContentLoaded', () => {
       const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
       pdf.addImage(imgData, 'PNG', 10, 30, pdfWidth, pdfHeight);
+      pdf.addPage('portrait');
+      pdf.autoTable({ html: '#ng-data-table', startY: 10 });
       pdf.save('ng-control-chart.pdf');
     });
   }
