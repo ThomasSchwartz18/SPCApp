@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}Docs{% endblock %}
+{% block content %}
+  <a href="/">← Home</a>
+  <h1 id="top">Documentation</h1>
+  <div class="action-panel">
+    <div class="action-card">
+      <h2>Table of Contents</h2>
+      <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#part-markings">Part Markings</a></li>
+        <li><a href="#aoi">AOI</a></li>
+        <li><a href="#analysis">Analysis</a></li>
+        <li><a href="#settings">Settings</a></li>
+        <li><a href="#admin-users">Adding Users</a></li>
+      </ul>
+    </div>
+
+    <div class="action-card">
+      <h2 id="home">Home</h2>
+      <p>Overview of jobs and quick links to major features.</p>
+      <ol>
+        <li>Log in to view the dashboard.</li>
+        <li>Select a widget to navigate to a feature.</li>
+      </ol>
+      <a href="#top">Back to top</a>
+    </div>
+
+    <div class="action-card">
+      <h2 id="part-markings">Part Markings</h2>
+      <p>Maintain the verified part markings database.</p>
+      <ol>
+        <li>Open <strong>Part Markings</strong> from the home page.</li>
+        <li>Upload a spreadsheet or enter a single record.</li>
+        <li>Save changes to update the list.</li>
+      </ol>
+      <a href="#top">Back to top</a>
+    </div>
+
+    <div class="action-card">
+      <h2 id="aoi">AOI</h2>
+      <p>Record Automated Optical Inspection results.</p>
+      <ol>
+        <li>Navigate to the <strong>AOI</strong> page.</li>
+        <li>Enter report details or upload data.</li>
+        <li>Review summaries and analytics.</li>
+      </ol>
+      <a href="#top">Back to top</a>
+    </div>
+
+    <div class="action-card">
+      <h2 id="analysis">Analysis</h2>
+      <p>Analyze MOAT and AOI data for trends.</p>
+      <ol>
+        <li>Go to the <strong>Analysis</strong> page.</li>
+        <li>Filter data or upload files for processing.</li>
+        <li>Inspect tables and charts for insights.</li>
+      </ol>
+      <a href="#top">Back to top</a>
+    </div>
+
+    <div class="action-card">
+      <h2 id="settings">Settings</h2>
+      <p>Configure user permissions and system options.</p>
+      <ol>
+        <li>Click <strong>Settings</strong> in the top bar.</li>
+        <li>Adjust privileges for existing users.</li>
+      </ol>
+      <a href="#top">Back to top</a>
+    </div>
+
+    <div class="action-card">
+      <h2 id="admin-users">Adding Users</h2>
+      <p>Admins can create new users from the Settings page.</p>
+      <ol>
+        <li>Open <strong>Settings</strong>.</li>
+        <li>Select the <strong>+</strong> button to show the add user form.</li>
+        <li>Enter a username and password.</li>
+        <li>Check the desired feature privileges.</li>
+        <li>Submit the form to add the new user.</li>
+      </ol>
+      <a href="#top">Back to top</a>
+    </div>
+  </div>
+{% endblock %}
