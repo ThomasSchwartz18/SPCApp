@@ -281,3 +281,67 @@ body.dark-mode td { border-color: var(--color-white); }
 body.dark-mode table thead th { background: var(--color-black); }
 body.dark-mode .job-preview.warning { background: #b7b700; border-color: #b7b700; color: #fff; }
 body.dark-mode .job-preview.danger { background: #660000; border-color: #660000; color: #fff; }
+
+/* SQL popup windows */
+.sql-popup {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  width: 600px;
+  max-height: 80vh;
+  background: var(--color-white);
+  border: 1px solid var(--color-black);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+}
+
+.sql-popup-header {
+  background: var(--color-accent);
+  color: var(--color-white);
+  padding: 4px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sql-popup-header button {
+  background: none;
+  border: none;
+  color: var(--color-white);
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+.sql-popup-body {
+  padding: 8px;
+  overflow: auto;
+}
+
+.sql-popup pre {
+  background: #eee;
+  padding: 8px;
+  white-space: pre-wrap;
+  margin-top: 0;
+}
+
+.sql-popup table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+.sql-popup th, .sql-popup td {
+  border: 1px solid var(--color-black);
+  padding: 4px;
+  text-align: center;
+}
+
+.sql-popup.collapsed .sql-popup-body {
+  display: none;
+}
+
+.saved-query-bar {
+  margin-bottom: 8px;
+}
