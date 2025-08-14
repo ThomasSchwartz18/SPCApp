@@ -200,27 +200,55 @@
         <div id="reports-tab" class="tab-content">
           <div class="report-section" id="daily-report">
             <h2>Daily Report</h2>
-            <canvas id="daily-report-canvas" height="200"></canvas>
-            <table id="daily-report-table"></table>
-            <button id="download-daily-pdf">Download PDF</button>
+            <canvas id="daily-report-canvas" height="200" style="display:none"></canvas>
+            <table id="daily-report-table" style="display:none"></table>
+            <div class="dropdown">
+              <button>Download</button>
+              <div class="dropdown-content">
+                <a href="#" id="download-daily-pdf">PDF</a>
+                <a href="#" id="download-daily-xlsx">Excel</a>
+              </div>
+            </div>
+            <p id="daily-report-summary" class="chart-summary"></p>
           </div>
           <div class="report-section" id="weekly-report">
             <h2>Weekly Report</h2>
-            <canvas id="weekly-report-canvas" height="200"></canvas>
-            <table id="weekly-report-table"></table>
-            <button id="download-weekly-pdf">Download PDF</button>
+            <canvas id="weekly-report-canvas" height="200" style="display:none"></canvas>
+            <table id="weekly-report-table" style="display:none"></table>
+            <div class="dropdown">
+              <button>Download</button>
+              <div class="dropdown-content">
+                <a href="#" id="download-weekly-pdf">PDF</a>
+                <a href="#" id="download-weekly-xlsx">Excel</a>
+              </div>
+            </div>
+            <p id="weekly-report-summary" class="chart-summary"></p>
           </div>
           <div class="report-section" id="monthly-report">
             <h2>Monthly Report</h2>
-            <canvas id="monthly-report-canvas" height="200"></canvas>
-            <table id="monthly-report-table"></table>
-            <button id="download-monthly-pdf">Download PDF</button>
+            <canvas id="monthly-report-canvas" height="200" style="display:none"></canvas>
+            <table id="monthly-report-table" style="display:none"></table>
+            <div class="dropdown">
+              <button>Download</button>
+              <div class="dropdown-content">
+                <a href="#" id="download-monthly-pdf">PDF</a>
+                <a href="#" id="download-monthly-xlsx">Excel</a>
+              </div>
+            </div>
+            <p id="monthly-report-summary" class="chart-summary"></p>
           </div>
           <div class="report-section" id="yearly-report">
             <h2>Yearly Report</h2>
-            <canvas id="yearly-report-canvas" height="200"></canvas>
-            <table id="yearly-report-table"></table>
-            <button id="download-yearly-pdf">Download PDF</button>
+            <canvas id="yearly-report-canvas" height="200" style="display:none"></canvas>
+            <table id="yearly-report-table" style="display:none"></table>
+            <div class="dropdown">
+              <button>Download</button>
+              <div class="dropdown-content">
+                <a href="#" id="download-yearly-pdf">PDF</a>
+                <a href="#" id="download-yearly-xlsx">Excel</a>
+              </div>
+            </div>
+            <p id="yearly-report-summary" class="chart-summary"></p>
           </div>
         </div>
       </div>
@@ -278,8 +306,8 @@
       <div class="modal-content">
         <span id="close-chart-modal" class="close">&times;</span>
         <h2>Control Chart - Avg FalseCall Rate</h2>
-        <p id="fc-chart-date-range"></p>
         <canvas id="chart-canvas" height="200"></canvas>
+        <p id="fc-chart-summary" class="chart-summary"></p>
         <table id="fc-data-table"></table>
         <button id="download-fc-pdf">Download PDF</button>
       </div>
@@ -289,8 +317,8 @@
       <div class="modal-content">
         <span id="close-chart-ng-modal" class="close">&times;</span>
         <h2>Control Chart - Avg NG Rate</h2>
-        <p id="ng-chart-date-range"></p>
         <canvas id="chart-ng-canvas" height="200"></canvas>
+        <p id="ng-chart-summary" class="chart-summary"></p>
         <table id="ng-data-table"></table>
         <button id="download-ng-pdf">Download PDF</button>
       </div>
