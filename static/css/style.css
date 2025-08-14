@@ -109,6 +109,8 @@ table thead th {
   z-index: 1;
 }
 .highlight { background: yellow; }
+.threshold-red { background: #f8d7da; }
+.threshold-yellow { background: #fff3cd; }
 
 /* Action panels */
 .action-panel {

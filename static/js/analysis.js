@@ -149,8 +149,10 @@ window.addEventListener('DOMContentLoaded', () => {
       const end = document.getElementById('end-date').value;
       const yMax = parseFloat(document.getElementById('y-max').value) || 1;
       const threshold = parseInt(document.getElementById('min-boards').value) || 0;
+      const models = document.getElementById('model-names').value.trim();
+      const modelQuery = models ? `&models=${encodeURIComponent(models)}` : '';
       const { query: lineQuery, text: lineText } = getSelectedLines('line');
-      fetch(`/analysis/chart-data?start=${start}&end=${end}&threshold=${threshold}&metric=fc${lineQuery}`)
+      fetch(`/analysis/chart-data?start=${start}&end=${end}&threshold=${threshold}&metric=fc${lineQuery}${modelQuery}`)
         .then(res => res.json())
         .then(data => {
           const labels = data.map(d => d.model);
@@ -205,6 +207,18 @@ window.addEventListener('DOMContentLoaded', () => {
             },
             plugins: [thresholdPlugin]
           });
+          const fcTable = document.getElementById('fc-data-table');
+          if (fcTable) {
+            fcTable.innerHTML = '<thead><tr><th>Model Name</th><th>Avg FalseCall Rate</th><th>Total Boards</th></tr></thead><tbody></tbody>';
+            const tbody = fcTable.querySelector('tbody');
+            data.forEach(row => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = `<td>${row.model}</td><td>${row.rate.toFixed(2)}</td><td>${row.boards}</td>`;
+              if (row.rate > 20) tr.classList.add('threshold-red');
+              else if (row.rate > 10) tr.classList.add('threshold-yellow');
+              tbody.appendChild(tr);
+            });
+          }
           const dateText = start && end ? `${start} to ${end}` : start ? `From ${start}` : end ? `Up to ${end}` : 'All dates';
           document.getElementById('fc-chart-date-range').textContent = `${dateText} | Lines: ${lineText}`;
           chartModal.style.display = 'block';
@@ -245,8 +259,10 @@ window.addEventListener('DOMContentLoaded', () => {
       const end = document.getElementById('ng-end-date').value;
       const yMax = parseFloat(document.getElementById('ng-y-max').value) || 1;
       const threshold = parseInt(document.getElementById('ng-min-boards').value) || 0;
+      const models = document.getElementById('ng-model-names').value.trim();
+      const modelQuery = models ? `&models=${encodeURIComponent(models)}` : '';
       const { query: lineQuery, text: lineText } = getSelectedLines('ng-line');
-      fetch(`/analysis/chart-data?start=${start}&end=${end}&threshold=${threshold}&metric=ng${lineQuery}`)
+      fetch(`/analysis/chart-data?start=${start}&end=${end}&threshold=${threshold}&metric=ng${lineQuery}${modelQuery}`)
         .then(res => res.json())
         .then(data => {
           const labels = data.map(d => d.model);
@@ -286,7 +302,7 @@ window.addEventListener('DOMContentLoaded', () => {
               layout: { padding: { top: 20 } },
               scales: { y: { beginAtZero: true, max: yMax } },
               plugins: {
-                thresholdPlugin: { red: { value: 0.1, color: 'red' } },
+                thresholdPlugin: { red: { value: 0.1, color: 'red' }, orange: { value: 0.05, color: 'orange' } },
                 tooltip: {
                   callbacks: {
                     label: ctx => {
@@ -301,6 +317,18 @@ window.addEventListener('DOMContentLoaded', () => {
             },
             plugins: [thresholdPlugin]
           });
+          const ngTable = document.getElementById('ng-data-table');
+          if (ngTable) {
+            ngTable.innerHTML = '<thead><tr><th>Model Name</th><th>Avg NG Rate</th><th>Total Boards</th></tr></thead><tbody></tbody>';
+            const tbody = ngTable.querySelector('tbody');
+            data.forEach(row => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = `<td>${row.model}</td><td>${row.rate.toFixed(3)}</td><td>${row.boards}</td>`;
+              if (row.rate > 0.1) tr.classList.add('threshold-red');
+              else if (row.rate > 0.05) tr.classList.add('threshold-yellow');
+              tbody.appendChild(tr);
+            });
+          }
           const dateText = start && end ? `${start} to ${end}` : start ? `From ${start}` : end ? `Up to ${end}` : 'All dates';
           document.getElementById('ng-chart-date-range').textContent = `${dateText} | Lines: ${lineText}`;
           chartNgModal.style.display = 'block';
