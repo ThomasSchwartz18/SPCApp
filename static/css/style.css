@@ -304,6 +304,7 @@ body.dark-mode .job-preview.danger { background: #660000; border-color: #660000;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  cursor: move;
 }
 
 .sql-popup-header button {
