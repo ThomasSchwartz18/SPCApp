@@ -53,8 +53,8 @@
               <label>Min Boards
                 <input type="number" id="min-boards" value="7" title="Minimum boards required">
               </label><br>
-              <label>Model Names
-                <input type="text" id="model-names" placeholder="ModelA,ModelB" title="Comma-separated model names">
+              <label>Model Name
+                <input list="model-list" id="model-names" placeholder="Start typing..." title="Select model name">
               </label><br>
               <label>Lines
                 <select id="line-select-1">
@@ -114,8 +114,8 @@
               <label>Min Boards
                 <input type="number" id="ng-min-boards" value="7" title="Minimum boards required">
               </label><br>
-              <label>Model Names
-                <input type="text" id="ng-model-names" placeholder="ModelA,ModelB" title="Comma-separated model names">
+              <label>Model Name
+                <input list="model-list" id="ng-model-names" placeholder="Start typing..." title="Select model name">
               </label><br>
               <label>Lines
                 <select id="ng-line-select-1">
@@ -160,6 +160,11 @@
           </div>
         </div>
       </div>
+      <datalist id="model-list">
+        {% for name in model_names %}
+        <option value="{{ name }}"></option>
+        {% endfor %}
+      </datalist>
       <div id="divider"></div>
       <div id="moat-table">
         <div id="model-filter-container">
