@@ -32,6 +32,24 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Model filter for MOAT table
+  const modelFilter = document.getElementById('model-filter');
+  if (modelFilter) {
+    modelFilter.addEventListener('change', () => {
+      const value = modelFilter.value;
+      const rows = document.querySelectorAll('#moat-table tbody tr');
+      rows.forEach(row => {
+        const name = row.cells[0].textContent.toUpperCase();
+        const show =
+          value === 'all' ||
+          (value === 'smt' && name.includes('SMT')) ||
+          (value === 'th' && name.includes('TH'));
+        row.style.display = show ? '' : 'none';
+      });
+    });
+    modelFilter.dispatchEvent(new Event('change'));
+  }
+
   function setupLineSelectors(prefix) {
     const selects = [];
     const ands = [];
