@@ -376,14 +376,42 @@ window.addEventListener('DOMContentLoaded', () => {
       ['operators','shift','reject','yield'].forEach(name => {
         const chart = reportCharts[`${period}-${name}`];
         if (chart) {
-          let img = chart.toBase64Image();
-          const validMime = d => typeof d === 'string' && /^data:image\/(png|jpeg);/i.test(d);
-          if (!validMime(img)) {
+          let img;
+          try {
+            img = chart.toBase64Image();
+          } catch (err) {
+            if (err instanceof DOMException && err.name === 'SecurityError') {
+              // fall back to canvas rendering
+            } else {
+              console.error(err);
+            }
+          }
+          const validMime = d => typeof d === 'string' && /^data:image\/(png|jpe?g|webp);/i.test(d);
+          if (!img || !validMime(img)) {
             const canvas = chart.canvas;
             if (canvas && canvas.toDataURL) {
-              img = canvas.toDataURL('image/png');
+              try {
+                img = canvas.toDataURL('image/png');
+              } catch (err) {
+                if (err instanceof DOMException && err.name === 'SecurityError') {
+                  try {
+                    const tmp = document.createElement('canvas');
+                    tmp.width = canvas.width;
+                    tmp.height = canvas.height;
+                    tmp.getContext('2d').drawImage(canvas, 0, 0);
+                    img = tmp.toDataURL('image/png');
+                  } catch (err2) {
+                    console.error('Canvas is tainted and cannot be exported', err2);
+                    alert('Unable to add chart: the canvas has been tainted by cross-origin data.');
+                    return;
+                  }
+                } else {
+                  console.error(err);
+                  return;
+                }
+              }
             }
-            if (!validMime(img)) {
+            if (!img || !validMime(img)) {
               console.error('Unsupported image format for PDF export');
               alert('Unable to add chart: unsupported image format.');
               return;
