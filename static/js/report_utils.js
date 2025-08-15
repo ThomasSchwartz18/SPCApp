@@ -5,6 +5,7 @@ window.exportChartWithTable = function (canvas, tableSelector, title, filename, 
   lines.forEach((line, idx) => pdf.text(line, 10, 10 + idx * 10));
   const validMime = data => typeof data === 'string' && /^data:image\/(png|jpe?g|webp);/i.test(data);
   let imgData;
+  let useHtml = false;
   try {
     imgData = canvas.toBase64Image ? canvas.toBase64Image() : canvas.toDataURL('image/png');
   } catch (err) {
@@ -17,31 +18,41 @@ window.exportChartWithTable = function (canvas, tableSelector, title, filename, 
         imgData = tmp.toDataURL('image/png');
       } catch (err2) {
         console.error('Canvas is tainted and cannot be exported', err2);
-        alert('Unable to export chart: the canvas has been tainted by cross-origin data.');
-        return;
+        useHtml = true;
       }
     } else {
       console.error(err);
-      return;
+      useHtml = true;
     }
   }
-  if (!imgData || !validMime(imgData)) {
+  if (!useHtml && (!imgData || !validMime(imgData))) {
     try {
       imgData = canvas.toDataURL('image/jpeg', 1.0);
     } catch (err) {
       if (err instanceof DOMException && err.name === 'SecurityError') {
         console.error('Canvas is tainted and cannot be exported', err);
-        alert('Unable to export chart: the canvas has been tainted by cross-origin data.');
       } else {
         console.error(err);
       }
-      return;
+      useHtml = true;
     }
-    if (!validMime(imgData)) {
+    if (!useHtml && !validMime(imgData)) {
       console.error('Unsupported image format for export');
-      alert('Unable to export chart: unsupported image format.');
-      return;
+      useHtml = true;
     }
+  }
+  if (useHtml) {
+    const table = document.querySelector(tableSelector);
+    const wrapper = document.createElement('div');
+    lines.forEach(text => {
+      const p = document.createElement('p');
+      p.textContent = text;
+      wrapper.appendChild(p);
+    });
+    wrapper.appendChild(canvas.cloneNode(true));
+    if (table) wrapper.appendChild(table.cloneNode(true));
+    pdf.html(wrapper, { callback: pdf => pdf.save(filename) });
+    return;
   }
   const imgProps = pdf.getImageProperties(imgData);
   const pdfWidth = pdf.internal.pageSize.getWidth() - 20;

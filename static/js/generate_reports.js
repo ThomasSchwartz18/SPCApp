@@ -19,9 +19,12 @@ document.getElementById('generate-report')?.addEventListener('click', async () =
   const container = document.getElementById('report-temp');
   container.innerHTML = '';
 
+  const content = document.createElement('div');
+  container.appendChild(content);
+
   const makeCanvas = () => {
     const c = document.createElement('canvas');
-    container.appendChild(c);
+    content.appendChild(c);
     return c.getContext('2d');
   };
 
@@ -31,7 +34,7 @@ document.getElementById('generate-report')?.addEventListener('click', async () =
   const yieldCtx = makeCanvas();
 
   const table = document.createElement('table');
-  container.appendChild(table);
+  content.appendChild(table);
   const header = document.createElement('tr');
   ['Assembly', 'Inspected', 'Rejected', 'Yield'].forEach(text => {
     const th = document.createElement('th');
@@ -88,72 +91,7 @@ document.getElementById('generate-report')?.addEventListener('click', async () =
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF();
 
-  const addChart = (ctx, title) => {
-    const canvas = ctx.canvas;
-    const validMime = d => typeof d === 'string' && /^data:image\/(png|jpe?g|webp);/i.test(d);
-    let img;
-    try {
-      img = canvas.toDataURL('image/png');
-    } catch (err) {
-      if (err instanceof DOMException && err.name === 'SecurityError') {
-        try {
-          const tmp = document.createElement('canvas');
-          tmp.width = canvas.width;
-          tmp.height = canvas.height;
-          tmp.getContext('2d').drawImage(canvas, 0, 0);
-          img = tmp.toDataURL('image/png');
-        } catch (err2) {
-          console.error('Canvas is tainted and cannot be exported', err2);
-          alert('Unable to add chart: the canvas has been tainted by cross-origin data.');
-          return;
-        }
-      } else {
-        console.error(err);
-        return;
-      }
-    }
-    if (!img || !validMime(img)) {
-      try {
-        img = canvas.toDataURL('image/jpeg', 1.0);
-      } catch (err) {
-        if (err instanceof DOMException && err.name === 'SecurityError') {
-          console.error('Canvas is tainted and cannot be exported', err);
-          alert('Unable to add chart: the canvas has been tainted by cross-origin data.');
-        } else {
-          console.error(err);
-        }
-        return;
-      }
-      if (!validMime(img)) {
-        console.error('Unsupported image format for PDF export');
-        alert('Unable to add chart: unsupported image format.');
-        return;
-      }
-    }
-    let imgProps;
-    try {
-      imgProps = pdf.getImageProperties(img);
-    } catch (err) {
-      console.error(err);
-      alert('Unable to add chart: unsupported image format.');
-      return;
-    }
-    const width = pdf.internal.pageSize.getWidth() - 20;
-    const height = (imgProps.height * width) / imgProps.width;
-    const type = img.startsWith('data:image/png') ? 'PNG' : 'JPEG';
-    pdf.text(title, 10, 10);
-    pdf.addImage(img, type, 10, 20, width, height);
-  };
-
-  addChart(fcCtx, 'False Call Rate');
-  pdf.addPage();
-  addChart(ngCtx, 'NG Rate');
-  pdf.addPage();
-  addChart(opCtx, 'AOI Rejections by Operator');
-  pdf.addPage();
-  addChart(yieldCtx, 'AOI Yield');
-  pdf.addPage();
-  pdf.autoTable({ html: table, startY: 10 });
-
-  pdf.save('report.pdf');
+  pdf.html(content, {
+    callback: pdf => pdf.save('report.pdf'),
+  });
 });
