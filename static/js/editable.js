@@ -3,6 +3,8 @@ window.addEventListener('DOMContentLoaded', () => {
   if (!isAdmin) return;
 
   document.querySelectorAll('table.editable').forEach(table => {
+    const updateUrl = table.dataset.updateUrl;
+    const fields = (table.dataset.fields || '').split(',').map(f => f.trim());
     table.addEventListener('dblclick', e => {
       const cell = e.target.closest('td');
       if (!cell || cell.querySelector('input') || cell.classList.contains('no-edit')) return;
@@ -20,14 +22,13 @@ window.addEventListener('DOMContentLoaded', () => {
         cell.textContent = value;
         const row = cell.parentElement;
         const id = row.dataset.id;
-        const fields = ['verified_markings','manufacturer','mfg_number2','mfg_number1','part_number'];
         const field = fields[cell.cellIndex];
-        if (!id || !field) {
+        if (!id || !field || !updateUrl) {
           cell.textContent = original;
           return;
         }
         try {
-          const resp = await fetch(`/part-markings/${id}`, {
+          const resp = await fetch(`${updateUrl}/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ field, value })

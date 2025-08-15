@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Rework - Stencil Lookup{% endblock %}
+{% block head_extra %}
+  <script src="/static/js/stencil_lookup.js" defer></script>
+{% endblock %}
+{% block content %}
+  <a href="/">← Home</a>
+  <h1>Stencil/Part Number Lookup</h1>
+  <div id="container">
+    <div id="stencil-actions">
+      <div class="action-panel">
+        <div class="action-card">
+          <h2>Search Stencil</h2>
+          <p class="desc">Enter a part number to highlight matching stencils.</p>
+          <label for="search-part-number">Part Number</label>
+          <input type="text" id="search-part-number" placeholder="e.g., 10-1000" aria-label="Part number to search" title="Part number to locate">
+          <p class="field-desc">Highlight matching part number in the table.</p>
+          <button id="search-btn" type="button" title="Highlight matching part number">Search</button>
+        </div>
+        <div class="action-card">
+          <h2>Add New Entry</h2>
+          <p class="desc">Use this form to add a stencil and associated parts.</p>
+          <form method="post">
+            <label>Stencil Number
+              <input type="text" name="stencil_number" required title="Stencil number">
+            </label><br>
+            <label>Part Number(s)
+              <input type="text" name="part_number" required title="Comma separated part numbers">
+            </label><br>
+            <label>Ref
+              <input type="text" name="ref" title="Reference designator">
+            </label><br>
+            <label>Description
+              <input type="text" name="description" title="Description">
+            </label><br>
+            <label>Location Of Stencil
+              <input type="text" name="location_of_stencil" title="Location of stencil">
+            </label><br>
+            <p class="field-desc">Add the stencil to the table.</p>
+            <button type="submit" title="Add new stencil">Add</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div id="divider"></div>
+    <div id="stencil-table">
+      <table class="editable" data-update-url="/rework" data-fields="stencil_number,part_number,ref,description,location_of_stencil">
+        <thead>
+          <tr>
+            <th>Stencil Number</th>
+            <th>Part Number</th>
+            <th>Ref</th>
+            <th>Description</th>
+            <th>Location Of Stencil</th>
+            {% if is_admin %}
+            <th>Actions</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in stencils %}
+          <tr data-id="{{ row['id'] }}">
+            <td>{{ row['stencil_number'] }}</td>
+            <td class="part-number">{{ row['part_number'] }}</td>
+            <td>{{ row['ref'] }}</td>
+            <td>{{ row['description'] }}</td>
+            <td>{{ row['location_of_stencil'] }}</td>
+            {% if is_admin %}
+            <td class="no-edit"><button type="button" class="delete-row" title="Delete row">Delete</button></td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
