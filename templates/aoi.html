@@ -9,6 +9,7 @@
   <script id="shift-data" type="application/json">{{ shift_totals|tojson }}</script>
   <script id="customer-data" type="application/json">{{ customer_rates|tojson }}</script>
   <script id="yield-data" type="application/json">{{ yield_series|tojson }}</script>
+  <script src="{{ url_for('static', filename='js/html2canvas.min.js') }}" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.plugin.png.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.plugin.jpeg.min.js" defer></script>
