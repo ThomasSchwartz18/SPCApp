@@ -55,44 +55,52 @@ document.getElementById('generate-report')?.addEventListener('click', async () =
     table.appendChild(tr);
   });
 
-  new Chart(fcCtx, {
-    type: 'bar',
-    data: {
-      labels: fcData.map(r => r.model),
-      datasets: [{ label: 'FC Rate', data: fcData.map(r => r.rate) }],
-    },
-    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } },
-  });
-
-  new Chart(ngCtx, {
-    type: 'bar',
-    data: {
-      labels: ngData.map(r => r.model),
-      datasets: [{ label: 'NG Rate', data: ngData.map(r => r.rate) }],
-    },
-    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } },
-  });
-
-  new Chart(opCtx, {
-    type: 'bar',
-    data: {
-      labels: aoiData.operators.map(o => o.operator),
-      datasets: [{ label: 'Rejected', data: aoiData.operators.map(o => o.rejected) }],
-    },
-    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } },
-  });
-
-  new Chart(yieldCtx, {
-    type: 'line',
-    data: {
-      labels: aoiData.yield_series.map(y => y.period),
-      datasets: [{ label: 'Yield %', data: aoiData.yield_series.map(y => y.yield * 100) }],
-    },
-    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } },
-  });
+  const charts = [
+    new Chart(fcCtx, {
+      type: 'bar',
+      data: {
+        labels: fcData.map(r => r.model),
+        datasets: [{ label: 'FC Rate', data: fcData.map(r => r.rate) }],
+      },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } },
+    }),
+    new Chart(ngCtx, {
+      type: 'bar',
+      data: {
+        labels: ngData.map(r => r.model),
+        datasets: [{ label: 'NG Rate', data: ngData.map(r => r.rate) }],
+      },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } },
+    }),
+    new Chart(opCtx, {
+      type: 'bar',
+      data: {
+        labels: aoiData.operators.map(o => o.operator),
+        datasets: [{ label: 'Rejected', data: aoiData.operators.map(o => o.rejected) }],
+      },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } },
+    }),
+    new Chart(yieldCtx, {
+      type: 'line',
+      data: {
+        labels: aoiData.yield_series.map(y => y.period),
+        datasets: [{ label: 'Yield %', data: aoiData.yield_series.map(y => y.yield * 100) }],
+      },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } },
+    }),
+  ];
 
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF();
+
+  await Promise.all(
+    charts.map(chart =>
+      new Promise(res => {
+        chart.options.animation.onComplete = res;
+        chart.update();
+      })
+    )
+  );
 
   pdf.html(content, {
     callback: pdf => {
