@@ -90,10 +90,40 @@ document.getElementById('generate-report')?.addEventListener('click', async () =
 
   const addChart = (ctx, title) => {
     const canvas = ctx.canvas;
-    const validMime = d => typeof d === 'string' && /^data:image\/(png|jpe?g);/i.test(d);
-    let img = canvas.toDataURL('image/png');
-    if (!validMime(img)) {
-      img = canvas.toDataURL('image/jpeg', 1.0);
+    const validMime = d => typeof d === 'string' && /^data:image\/(png|jpe?g|webp);/i.test(d);
+    let img;
+    try {
+      img = canvas.toDataURL('image/png');
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'SecurityError') {
+        try {
+          const tmp = document.createElement('canvas');
+          tmp.width = canvas.width;
+          tmp.height = canvas.height;
+          tmp.getContext('2d').drawImage(canvas, 0, 0);
+          img = tmp.toDataURL('image/png');
+        } catch (err2) {
+          console.error('Canvas is tainted and cannot be exported', err2);
+          alert('Unable to add chart: the canvas has been tainted by cross-origin data.');
+          return;
+        }
+      } else {
+        console.error(err);
+        return;
+      }
+    }
+    if (!img || !validMime(img)) {
+      try {
+        img = canvas.toDataURL('image/jpeg', 1.0);
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'SecurityError') {
+          console.error('Canvas is tainted and cannot be exported', err);
+          alert('Unable to add chart: the canvas has been tainted by cross-origin data.');
+        } else {
+          console.error(err);
+        }
+        return;
+      }
       if (!validMime(img)) {
         console.error('Unsupported image format for PDF export');
         alert('Unable to add chart: unsupported image format.');

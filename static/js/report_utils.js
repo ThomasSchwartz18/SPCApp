@@ -3,10 +3,40 @@ window.exportChartWithTable = function (canvas, tableSelector, title, filename, 
   const pdf = new jsPDF({ orientation });
   const lines = Array.isArray(title) ? title : [title];
   lines.forEach((line, idx) => pdf.text(line, 10, 10 + idx * 10));
-  const validMime = data => typeof data === 'string' && /^data:image\/(png|jpeg);/i.test(data);
-  let imgData = canvas.toBase64Image ? canvas.toBase64Image() : canvas.toDataURL('image/png');
-  if (!validMime(imgData)) {
-    imgData = canvas.toDataURL('image/png');
+  const validMime = data => typeof data === 'string' && /^data:image\/(png|jpe?g|webp);/i.test(data);
+  let imgData;
+  try {
+    imgData = canvas.toBase64Image ? canvas.toBase64Image() : canvas.toDataURL('image/png');
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'SecurityError') {
+      try {
+        const tmp = document.createElement('canvas');
+        tmp.width = canvas.width;
+        tmp.height = canvas.height;
+        tmp.getContext('2d').drawImage(canvas, 0, 0);
+        imgData = tmp.toDataURL('image/png');
+      } catch (err2) {
+        console.error('Canvas is tainted and cannot be exported', err2);
+        alert('Unable to export chart: the canvas has been tainted by cross-origin data.');
+        return;
+      }
+    } else {
+      console.error(err);
+      return;
+    }
+  }
+  if (!imgData || !validMime(imgData)) {
+    try {
+      imgData = canvas.toDataURL('image/jpeg', 1.0);
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'SecurityError') {
+        console.error('Canvas is tainted and cannot be exported', err);
+        alert('Unable to export chart: the canvas has been tainted by cross-origin data.');
+      } else {
+        console.error(err);
+      }
+      return;
+    }
     if (!validMime(imgData)) {
       console.error('Unsupported image format for export');
       alert('Unable to export chart: unsupported image format.');
