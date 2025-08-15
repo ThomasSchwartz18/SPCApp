@@ -376,7 +376,19 @@ window.addEventListener('DOMContentLoaded', () => {
       ['operators','shift','reject','yield'].forEach(name => {
         const chart = reportCharts[`${period}-${name}`];
         if (chart) {
-          const img = chart.toBase64Image();
+          let img = chart.toBase64Image();
+          const validMime = d => typeof d === 'string' && /^data:image\/(png|jpeg);/i.test(d);
+          if (!validMime(img)) {
+            const canvas = chart.canvas;
+            if (canvas && canvas.toDataURL) {
+              img = canvas.toDataURL('image/png');
+            }
+            if (!validMime(img)) {
+              console.error('Unsupported image format for PDF export');
+              alert('Unable to add chart: unsupported image format.');
+              return;
+            }
+          }
           const props = pdf.getImageProperties(img);
           const width = pdf.internal.pageSize.getWidth() - 20;
           const height = (props.height * width) / props.width;
