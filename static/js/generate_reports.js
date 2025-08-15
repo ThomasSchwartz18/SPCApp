@@ -90,21 +90,29 @@ document.getElementById('generate-report')?.addEventListener('click', async () =
 
   const addChart = (ctx, title) => {
     const canvas = ctx.canvas;
-    const validMime = d => typeof d === 'string' && /^data:image\/(png|jpeg);/i.test(d);
+    const validMime = d => typeof d === 'string' && /^data:image\/(png|jpe?g);/i.test(d);
     let img = canvas.toDataURL('image/png');
     if (!validMime(img)) {
-      img = canvas.toDataURL('image/png');
+      img = canvas.toDataURL('image/jpeg', 1.0);
       if (!validMime(img)) {
         console.error('Unsupported image format for PDF export');
         alert('Unable to add chart: unsupported image format.');
         return;
       }
     }
-    const imgProps = pdf.getImageProperties(img);
+    let imgProps;
+    try {
+      imgProps = pdf.getImageProperties(img);
+    } catch (err) {
+      console.error(err);
+      alert('Unable to add chart: unsupported image format.');
+      return;
+    }
     const width = pdf.internal.pageSize.getWidth() - 20;
     const height = (imgProps.height * width) / imgProps.width;
+    const type = img.startsWith('data:image/png') ? 'PNG' : 'JPEG';
     pdf.text(title, 10, 10);
-    pdf.addImage(img, 'PNG', 10, 20, width, height);
+    pdf.addImage(img, type, 10, 20, width, height);
   };
 
   addChart(fcCtx, 'False Call Rate');
