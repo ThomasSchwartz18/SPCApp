@@ -768,6 +768,8 @@ def aoi_report_data():
     if not has_permission('aoi'):
         return jsonify(error='Forbidden'), 403
     freq = request.args.get('freq', 'daily').lower()
+    start = request.args.get('start')
+    end = request.args.get('end')
     group_map = {
         'daily': '%Y-%m-%d',
         'weekly': '%Y-%W',
@@ -781,17 +783,29 @@ def aoi_report_data():
         'yearly': 365,
     }
     group = group_map.get(freq)
-    delta = days_map.get(freq)
-    if not group or not delta:
+    if not group:
         return jsonify(error='Invalid frequency'), 400
 
     conn = get_db()
-    end_row = conn.execute('SELECT MAX(report_date) AS max_date FROM aoi_reports').fetchone()
-    if not end_row or not end_row['max_date']:
-        conn.close()
-        return jsonify(operators=[], shift_totals=[], customer_rates=[], yield_series=[], assemblies=[])
-    end_date = datetime.strptime(end_row['max_date'], '%Y-%m-%d').date()
-    start_date = end_date - timedelta(days=delta - 1)
+    if start and end:
+        try:
+            start_date = datetime.strptime(start, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end, '%Y-%m-%d').date()
+        except ValueError:
+            conn.close()
+            return jsonify(error='Invalid date format'), 400
+    else:
+        delta = days_map.get(freq)
+        if not delta:
+            conn.close()
+            return jsonify(error='Invalid frequency'), 400
+        end_row = conn.execute('SELECT MAX(report_date) AS max_date FROM aoi_reports').fetchone()
+        if not end_row or not end_row['max_date']:
+            conn.close()
+            return jsonify(operators=[], shift_totals=[], customer_rates=[], yield_series=[], assemblies=[])
+        end_date = datetime.strptime(end_row['max_date'], '%Y-%m-%d').date()
+        start_date = end_date - timedelta(days=delta - 1)
+
     params = [start_date.isoformat(), end_date.isoformat()]
 
     op_rows = conn.execute(
