@@ -1090,6 +1090,14 @@ def analysis_report_data():
         ]
     })
 
+
+@app.route('/reports')
+@login_required
+def reports():
+    if not has_permission('reports'):
+        return redirect('/')
+    return render_template('reports.html')
+
 @app.route('/uploads')
 @login_required
 def list_uploads():
