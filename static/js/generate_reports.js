@@ -24,8 +24,11 @@ document.getElementById('generate-report')?.addEventListener('click', async () =
 
   const makeCanvas = () => {
     const c = document.createElement('canvas');
+    c.width = 600;
+    c.height = 400;
+    const ctx = c.getContext('2d');
     content.appendChild(c);
-    return c.getContext('2d');
+    return ctx;
   };
 
   const fcCtx = makeCanvas();
@@ -92,6 +95,12 @@ document.getElementById('generate-report')?.addEventListener('click', async () =
   const pdf = new jsPDF();
 
   pdf.html(content, {
-    callback: pdf => pdf.save('report.pdf'),
+    callback: pdf => {
+      pdf.save('report.pdf');
+      container.innerHTML = '';
+      container.style.visibility = 'hidden';
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+    },
   });
 });
