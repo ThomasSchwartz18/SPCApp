@@ -97,9 +97,9 @@ a { color: var(--color-accent); }
 
 /* Analysis split-screen */
 #container { display:flex; height:80vh; margin-top:20px; }
-#analysis-actions, #markings-actions, #aoi-actions { flex:1; padding:20px; overflow:auto; }
+#analysis-actions, #markings-actions, #aoi-actions, #stencil-actions { flex:1; padding:20px; overflow:auto; }
 #divider { width:4px; background:var(--color-accent); cursor:col-resize; }
-#moat-table, #markings-table, #aoi-table { flex:1; padding:10px; overflow:auto; }
+#moat-table, #markings-table, #aoi-table, #stencil-table { flex:1; padding:10px; overflow:auto; }
 table { width:100%; border-collapse:collapse; }
 th, td { border:1px solid var(--color-black); padding:8px; text-align:center; }
 table thead th {

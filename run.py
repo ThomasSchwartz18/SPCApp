@@ -89,6 +89,16 @@ def init_db():
         )
     ''')
     conn.execute('''
+        CREATE TABLE IF NOT EXISTS stencils (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            stencil_number TEXT,
+            part_number TEXT,
+            ref TEXT,
+            description TEXT,
+            location_of_stencil TEXT
+        )
+    ''')
+    conn.execute('''
         CREATE TABLE IF NOT EXISTS aoi_reports (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             report_date TEXT NOT NULL,
@@ -169,6 +179,21 @@ def has_permission(feature: str) -> bool:
     if row['is_admin'] or row['c_suite']:
         return True
     return bool(row['allowed'])
+
+
+def is_admin_user() -> bool:
+    user = session.get('user')
+    if not user:
+        return False
+    conn = get_db()
+    try:
+        row = conn.execute(
+            'SELECT is_admin, c_suite FROM users WHERE username = ?',
+            (user,),
+        ).fetchone()
+    finally:
+        conn.close()
+    return bool(row and (row['is_admin'] or row['c_suite']))
 
 
 @app.context_processor
@@ -482,6 +507,62 @@ def delete_part_marking(row_id):
         return jsonify(success=True)
     except Exception as e:
         return jsonify(error=str(e)), 500
+
+
+@app.route('/rework', methods=['GET', 'POST'])
+@login_required
+def rework():
+    conn = get_db()
+    if request.method == 'POST':
+        stencil_number = request.form.get('stencil_number')
+        part_number = request.form.get('part_number')
+        ref = request.form.get('ref')
+        description = request.form.get('description')
+        location = request.form.get('location_of_stencil')
+        conn.execute(
+            'INSERT INTO stencils (stencil_number, part_number, ref, description, location_of_stencil) VALUES (?,?,?,?,?)',
+            (stencil_number, part_number, ref, description, location),
+        )
+        conn.commit()
+    rows = conn.execute('SELECT * FROM stencils ORDER BY id').fetchall()
+    conn.close()
+    return render_template('rework.html', stencils=rows)
+
+
+@app.route('/rework/<int:row_id>', methods=['PUT'])
+@login_required
+def update_stencil(row_id):
+    if not is_admin_user():
+        return jsonify(error='Forbidden'), 403
+    data = request.json or {}
+    field = data.get('field')
+    value = data.get('value', '')
+    allowed = {
+        'stencil_number',
+        'part_number',
+        'ref',
+        'description',
+        'location_of_stencil',
+    }
+    if field not in allowed:
+        return jsonify(error='Invalid field'), 400
+    conn = get_db()
+    conn.execute(f'UPDATE stencils SET {field} = ? WHERE id = ?', (value, row_id))
+    conn.commit()
+    conn.close()
+    return jsonify(success=True)
+
+
+@app.route('/rework/<int:row_id>', methods=['DELETE'])
+@login_required
+def delete_stencil(row_id):
+    if not is_admin_user():
+        return jsonify(error='Forbidden'), 403
+    conn = get_db()
+    conn.execute('DELETE FROM stencils WHERE id = ?', (row_id,))
+    conn.commit()
+    conn.close()
+    return jsonify(success=True)
 
 @app.route('/aoi', methods=['GET', 'POST'])
 @login_required
