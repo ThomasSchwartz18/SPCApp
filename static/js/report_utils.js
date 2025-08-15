@@ -3,7 +3,16 @@ window.exportChartWithTable = function (canvas, tableSelector, title, filename, 
   const pdf = new jsPDF({ orientation });
   const lines = Array.isArray(title) ? title : [title];
   lines.forEach((line, idx) => pdf.text(line, 10, 10 + idx * 10));
-  const imgData = canvas.toBase64Image ? canvas.toBase64Image() : canvas.toDataURL('image/png');
+  const validMime = data => typeof data === 'string' && /^data:image\/(png|jpeg);/i.test(data);
+  let imgData = canvas.toBase64Image ? canvas.toBase64Image() : canvas.toDataURL('image/png');
+  if (!validMime(imgData)) {
+    imgData = canvas.toDataURL('image/png');
+    if (!validMime(imgData)) {
+      console.error('Unsupported image format for export');
+      alert('Unable to export chart: unsupported image format.');
+      return;
+    }
+  }
   const imgProps = pdf.getImageProperties(imgData);
   const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
   const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;

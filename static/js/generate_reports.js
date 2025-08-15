@@ -90,7 +90,16 @@ document.getElementById('generate-report')?.addEventListener('click', async () =
 
   const addChart = (ctx, title) => {
     const canvas = ctx.canvas;
-    const img = canvas.toDataURL('image/png');
+    const validMime = d => typeof d === 'string' && /^data:image\/(png|jpeg);/i.test(d);
+    let img = canvas.toDataURL('image/png');
+    if (!validMime(img)) {
+      img = canvas.toDataURL('image/png');
+      if (!validMime(img)) {
+        console.error('Unsupported image format for PDF export');
+        alert('Unable to add chart: unsupported image format.');
+        return;
+      }
+    }
     const imgProps = pdf.getImageProperties(img);
     const width = pdf.internal.pageSize.getWidth() - 20;
     const height = (imgProps.height * width) / imgProps.width;
@@ -110,4 +119,3 @@ document.getElementById('generate-report')?.addEventListener('click', async () =
 
   pdf.save('report.pdf');
 });
-
