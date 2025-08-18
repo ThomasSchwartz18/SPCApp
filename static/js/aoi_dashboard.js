@@ -1,4 +1,18 @@
 window.addEventListener('DOMContentLoaded', () => {
+  function insertSendButtonAfter(el) {
+    if (!el) return;
+    const next = el.nextElementSibling;
+    if (next && next.classList && next.classList.contains('send-to-report')) return;
+    const section = el.closest('.report-section') || el.closest('.modal') || el.closest('div[id]') || el;
+    const sectionId = section.id || el.id;
+    const btn = document.createElement('button');
+    btn.textContent = 'Send to Report';
+    btn.className = 'send-to-report';
+    btn.addEventListener('click', () => {
+      if (window.addToReport) window.addToReport(sectionId);
+    });
+    el.insertAdjacentElement('afterend', btn);
+  }
   // Divider logic
   const divider = document.getElementById('divider');
   const container = document.getElementById('container');
@@ -63,6 +77,7 @@ window.addEventListener('DOMContentLoaded', () => {
           }
         }
       });
+      insertSendButtonAfter(ctx);
     }
   }
 
@@ -86,6 +101,7 @@ window.addEventListener('DOMContentLoaded', () => {
         data: { labels: dates, datasets },
         options: { scales: { y: { beginAtZero: true } } }
       });
+      insertSendButtonAfter(ctx);
     }
   }
 
@@ -105,6 +121,7 @@ window.addEventListener('DOMContentLoaded', () => {
         },
         options: { scales: { y: { beginAtZero: true } } }
       });
+      insertSendButtonAfter(ctx);
     }
   }
 
@@ -135,6 +152,7 @@ window.addEventListener('DOMContentLoaded', () => {
           }
         }
       });
+      insertSendButtonAfter(ctx);
     }
   }
 
@@ -144,6 +162,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const table = document.querySelector('#aoi-table table');
   if (table) {
+    insertSendButtonAfter(table);
     table.addEventListener('click', async e => {
       if (!e.target.classList.contains('delete-row')) return;
       const row = e.target.closest('tr');
@@ -184,8 +203,11 @@ window.addEventListener('DOMContentLoaded', () => {
     if (modalChart) modalChart.destroy();
     modalTitle.textContent = title;
     modalChart = new Chart(modalCanvas, config);
+    insertSendButtonAfter(modalCanvas);
     modalHead.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
     modalBody.innerHTML = rows.map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('');
+    const modalTable = document.getElementById('modal-table');
+    if (modalTable) insertSendButtonAfter(modalTable);
     chartModal.style.display = 'block';
   }
 
@@ -298,6 +320,7 @@ window.addEventListener('DOMContentLoaded', () => {
           },
           options: { scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } } }
         });
+        insertSendButtonAfter(ctx);
       }
     }
 
@@ -313,6 +336,7 @@ window.addEventListener('DOMContentLoaded', () => {
           },
           options: { scales: { y: { beginAtZero: true } } }
         });
+        insertSendButtonAfter(ctx);
       }
     }
 
@@ -328,6 +352,7 @@ window.addEventListener('DOMContentLoaded', () => {
           },
           options: { scales: { y: { beginAtZero: true } } }
         });
+        insertSendButtonAfter(ctx);
       }
     }
 
@@ -351,19 +376,21 @@ window.addEventListener('DOMContentLoaded', () => {
             }
           }
         });
+        insertSendButtonAfter(ctx);
       }
     }
-
-    const table = document.querySelector(`#${freq}-table tbody`);
-    if (table) {
-      table.innerHTML = '';
+    const tableEl = document.getElementById(`${freq}-table`);
+    const tbody = tableEl ? tableEl.querySelector('tbody') : null;
+    if (tbody) {
+      tbody.innerHTML = '';
       (data.assemblies || []).forEach(r => {
         const tr = document.createElement('tr');
         const yieldPct = r.yield ? (r.yield * 100).toFixed(2) + '%' : '0%';
         tr.innerHTML = `<td>${r.assembly}</td><td>${r.inspected}</td><td>${r.rejected}</td><td>${yieldPct}</td>`;
-        table.appendChild(tr);
+        tbody.appendChild(tr);
       });
     }
+    if (tableEl) insertSendButtonAfter(tableEl);
   }
 
   document.querySelectorAll('.download-report').forEach(btn => {
