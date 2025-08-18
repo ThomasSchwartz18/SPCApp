@@ -55,7 +55,7 @@
     </div>
     {% endif %}
     {% if is_admin or permissions.get('reports') %}
-    <div class="widget" onclick="location.href='/reports'">
+    <div class="widget" onclick="openReportWindow()">
       <h2>Generate Reports</h2>
       <p>Compile key charts into a single report</p>
     </div>
