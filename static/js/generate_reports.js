@@ -19,13 +19,22 @@ document.getElementById('generate-report')?.addEventListener('click', async () =
   const container = document.getElementById('report-temp');
   container.innerHTML = '';
 
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageWidthPx = (pageWidth / 25.4) * 96; // convert mm to px
+
   const content = document.createElement('div');
+  content.style.width = pageWidthPx + 'px';
   container.appendChild(content);
 
   const makeCanvas = () => {
     const c = document.createElement('canvas');
-    c.width = 600;
-    c.height = 400;
+    const h = pageWidthPx * (2 / 3);
+    c.style.width = pageWidthPx + 'px';
+    c.style.height = h + 'px';
+    c.width = pageWidthPx * 2;
+    c.height = h * 2;
     const ctx = c.getContext('2d');
     content.appendChild(c);
     return ctx;
@@ -90,9 +99,6 @@ document.getElementById('generate-report')?.addEventListener('click', async () =
     }),
   ];
 
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF();
-
   await Promise.all(
     charts.map(chart =>
       new Promise(res => {
@@ -103,6 +109,7 @@ document.getElementById('generate-report')?.addEventListener('click', async () =
   );
 
   pdf.html(content, {
+    html2canvas: { scale: 1 },
     callback: pdf => {
       pdf.save('report.pdf');
       container.innerHTML = '';
