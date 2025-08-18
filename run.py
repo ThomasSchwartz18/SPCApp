@@ -111,6 +111,14 @@ def init_db():
             additional_info TEXT
         )
     ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS saved_reports (
+            id INTEGER PRIMARY KEY,
+            name TEXT,
+            content TEXT,
+            created_at TEXT
+        )
+    ''')
     # Users with per-feature permissions. The ADMIN account is created by
     # default along with a basic USER account. Additional users can be managed
     # from the settings page.
@@ -1092,6 +1100,56 @@ def analysis_report_data():
             for r in rows
         ]
     })
+
+
+@app.route('/reports/save', methods=['POST'])
+@login_required
+def save_report():
+    if not has_permission('reports'):
+        return jsonify(error='Forbidden'), 403
+    data = request.get_json() or {}
+    name = data.get('name')
+    content = data.get('content')
+    if not name or content is None:
+        return jsonify(error='Name and content required'), 400
+    conn = get_db()
+    cur = conn.execute(
+        'INSERT INTO saved_reports (name, content, created_at) VALUES (?, ?, ?)',
+        (name, content, datetime.utcnow().isoformat()),
+    )
+    conn.commit()
+    new_id = cur.lastrowid
+    conn.close()
+    return jsonify(id=new_id)
+
+
+@app.route('/reports/list')
+@login_required
+def list_reports():
+    if not has_permission('reports'):
+        return jsonify([])
+    conn = get_db()
+    rows = conn.execute(
+        'SELECT id, name, created_at FROM saved_reports ORDER BY created_at DESC'
+    ).fetchall()
+    conn.close()
+    return jsonify([dict(r) for r in rows])
+
+
+@app.route('/reports/<int:report_id>')
+@login_required
+def get_report(report_id):
+    if not has_permission('reports'):
+        return jsonify(error='Forbidden'), 403
+    conn = get_db()
+    row = conn.execute(
+        'SELECT id, name, content FROM saved_reports WHERE id = ?',
+        (report_id,),
+    ).fetchone()
+    conn.close()
+    if not row:
+        return jsonify(error='Not found'), 404
+    return jsonify(dict(row))
 
 
 @app.route('/reports')

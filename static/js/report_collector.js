@@ -15,10 +15,19 @@
     });
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    sessionStorage.removeItem(CACHE_KEY);
-    loadCachedSelections();
-  });
+  async function loadSavedReports() {
+    const select = document.getElementById('saved-report-select');
+    if (!select) return;
+    const res = await fetch('/reports/list');
+    const data = await res.json();
+    select.innerHTML = '<option value="">Select saved report</option>';
+    data.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = r.name;
+      select.appendChild(opt);
+    });
+  }
 
   function saveSelection(html) {
     const selections = JSON.parse(sessionStorage.getItem(CACHE_KEY) || '[]');
@@ -60,4 +69,31 @@
   }
 
   window.addToReport = addToReport;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    sessionStorage.removeItem(CACHE_KEY);
+    loadCachedSelections();
+    loadSavedReports();
+
+    document.getElementById('saved-report-select')?.addEventListener('change', async e => {
+      const id = e.target.value;
+      if (!id) return;
+      const data = await fetch(`/reports/${id}`).then(r => r.json());
+      sessionStorage.setItem(CACHE_KEY, data.content || '[]');
+      loadCachedSelections();
+    });
+
+    document.getElementById('save-report')?.addEventListener('click', async () => {
+      const name = prompt('Save report as:');
+      if (!name) return;
+      const content = sessionStorage.getItem(CACHE_KEY) || '[]';
+      await fetch('/reports/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, content })
+      });
+      await loadSavedReports();
+      alert('Report saved');
+    });
+  });
 })();
