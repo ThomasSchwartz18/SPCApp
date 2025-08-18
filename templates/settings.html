@@ -29,7 +29,7 @@ function toggleAddUser(){
     <h2>User Management</h2>
     {% for u in users %}
     <form method="post" class="user-row">
-      {{ csrf_token() }}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="user_id" value="{{ u['id'] }}">
       <input type="hidden" name="action" value="update">
       <strong>{{ u['username'] }}</strong>
@@ -45,7 +45,7 @@ function toggleAddUser(){
     {% endfor %}
     <button type="button" onclick="toggleAddUser()">+</button>
     <form id="add-user" method="post" style="display:none;margin-top:10px;">
-      {{ csrf_token() }}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="action" value="add">
       <input type="text" name="username" placeholder="Username" required>
       <input type="password" name="password" placeholder="Password" required>

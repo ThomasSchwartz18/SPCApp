@@ -21,7 +21,7 @@
           <h2>Add New Entry</h2>
           <p class="desc">Use this form to add a stencil and associated parts.</p>
           <form method="post">
-            {{ csrf_token() }}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label>Stencil Number
               <input type="text" name="stencil_number" required title="Stencil number">
             </label><br>

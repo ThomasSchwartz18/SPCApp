@@ -6,7 +6,7 @@
       <img src="/static/images/company-logo.png" alt="Company Logo" style="display:block;margin:0 auto 20px;">
       <h1>Login</h1>
       <form method="post">
-        {{ csrf_token() }}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label>User
           <select name="username">
             {% for u in users %}
