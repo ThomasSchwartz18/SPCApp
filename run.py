@@ -574,6 +574,29 @@ def delete_stencil(row_id):
 @app.route('/aoi', methods=['GET', 'POST'])
 @login_required
 def aoi_report():
+    if request.method == 'POST' and 'ppm_report' in request.files:
+        if not has_permission('analysis'):
+            return redirect(url_for('aoi_report', tab='ppm'))
+        file = request.files['ppm_report']
+        if file:
+            filename = file.filename
+            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(save_path)
+            ext = os.path.splitext(save_path)[1].lower()
+            engine = 'xlrd' if ext == '.xls' else 'openpyxl'
+            df = pd.read_excel(save_path, engine=engine, header=5, usecols='B:I')
+            df = df[df.iloc[:, 0] != 'Total']
+            df.columns = [
+                'model_name','total_boards','total_parts_per_board','total_parts',
+                'ng_parts','ng_ppm','falsecall_parts','falsecall_ppm'
+            ]
+            df['upload_time'] = datetime.utcnow().isoformat()
+            df['filename'] = filename
+            conn = get_db()
+            df.to_sql('moat', conn, if_exists='append', index=False)
+            conn.close()
+        return redirect(url_for('aoi_report', tab='ppm', view='moat'))
+
     conn = get_db()
     if request.method == 'POST':
         if not has_permission('aoi'):
@@ -610,7 +633,6 @@ def aoi_report():
             conn.close()
             return redirect(url_for('aoi_report'))
 
-        # single record submission
         operator = request.form.get('operator')
         customer = request.form.get('customer')
         assembly = request.form.get('assembly')
@@ -741,6 +763,27 @@ def aoi_report():
         for r in yield_rows
     ]
 
+    show_moat = request.args.get('view') == 'moat'
+    if show_moat:
+        conn = get_db()
+        moat_rows = conn.execute('SELECT * FROM moat ORDER BY id').fetchall()
+        conn.close()
+        total_rows = len(moat_rows)
+        if total_rows:
+            times = [datetime.fromisoformat(r['upload_time']) for r in moat_rows]
+            earliest = min(times).date().isoformat()
+            latest = max(times).date().isoformat()
+        else:
+            earliest = latest = ''
+    else:
+        moat_rows = []
+        total_rows = 0
+        earliest = latest = ''
+    conn = get_db()
+    model_rows = conn.execute('SELECT DISTINCT model_name FROM moat ORDER BY model_name').fetchall()
+    conn.close()
+    model_names = [r['model_name'] for r in model_rows]
+
     return render_template(
         'aoi.html',
         records=rows,
@@ -759,6 +802,13 @@ def aoi_report():
         selected_shift=shift_filter,
         selected_operator=operator_filter,
         selected_assembly=assembly_filter,
+        moat=moat_rows,
+        show_moat=show_moat,
+        total_rows=total_rows,
+        earliest=earliest,
+        latest=latest,
+        model_names=model_names,
+        active_tab=request.args.get('tab', 'daily'),
     )
 
 
@@ -938,68 +988,7 @@ def delete_aoi_record(row_id):
 @app.route('/analysis', methods=['GET', 'POST'])
 @login_required
 def analysis():
-    show = False
-    # Handle upload via POST
-    if request.method == 'POST' and 'ppm_report' in request.files:
-        if not has_permission('analysis'):
-            return redirect(url_for('analysis'))
-        file = request.files['ppm_report']
-        if file:
-            filename = file.filename
-            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(save_path)
-
-            ext = os.path.splitext(save_path)[1].lower()
-            engine = 'xlrd' if ext == '.xls' else 'openpyxl'
-
-            df = pd.read_excel(save_path, engine=engine, header=5, usecols='B:I')
-            df = df[df.iloc[:, 0] != 'Total']
-            df.columns = [
-                'model_name','total_boards','total_parts_per_board','total_parts',
-                'ng_parts','ng_ppm','falsecall_parts','falsecall_ppm'
-            ]
-            df['upload_time'] = datetime.utcnow().isoformat()
-            df['filename'] = filename
-
-            conn = get_db()
-            df.to_sql('moat', conn, if_exists='append', index=False)
-            conn.close()
-
-        return redirect(url_for('analysis', view='moat'))
-
-    # GET: determine if MOAT view
-    args = request.args
-    if args.get('view') == 'moat':
-        show = True
-        conn = get_db()
-        rows = conn.execute('SELECT * FROM moat ORDER BY id').fetchall()
-        conn.close()
-
-        total_rows = len(rows)
-        if total_rows:
-            times = [datetime.fromisoformat(r['upload_time']) for r in rows]
-            earliest = min(times).date().isoformat()
-            latest = max(times).date().isoformat()
-        else:
-            earliest = latest = ''
-    else:
-        rows = []
-        total_rows = 0
-        earliest = latest = ''
-    conn = get_db()
-    model_rows = conn.execute('SELECT DISTINCT model_name FROM moat ORDER BY model_name').fetchall()
-    conn.close()
-    model_names = [r['model_name'] for r in model_rows]
-
-    return render_template(
-        'analysis.html',
-        moat=rows,
-        show_moat=show,
-        total_rows=total_rows,
-        earliest=earliest,
-        latest=latest,
-        model_names=model_names
-    )
+    return redirect(url_for('aoi_report', tab='ppm', **request.args))
 
 @app.route('/analysis/chart-data')
 @login_required
@@ -1110,7 +1099,7 @@ def analysis_report_data():
 def reports():
     if not has_permission('reports'):
         return redirect('/')
-    return render_template('reports.html')
+    return redirect(url_for('aoi_report', tab='reports'))
 
 @app.route('/uploads')
 @login_required

@@ -1,23 +1,6 @@
-{% extends 'base.html' %}
-{% block title %}Data Analysis - PPM MOAT & Control Chart{% endblock %}
-{% block head_extra %}
-  <!-- Chart.js for control chart rendering -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-    <script src="{{ url_for('static', filename='js/html2canvas.min.js') }}" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.plugin.png.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.plugin.jpeg.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.25/dist/jspdf.plugin.autotable.min.js" defer></script>
-    <script src="{{ url_for('static', filename='js/report_utils.js') }}" defer></script>
-    <script src="{{ url_for('static', filename='js/tabs.js') }}" defer></script>
-    <script src="/static/js/analysis.js" defer></script>
-    <script src="{{ url_for('static', filename='js/moat_sql.js') }}" defer></script>
-{% endblock %}
-{% block content %}
-  <a href="/">← Home</a>
-  <h1>Data Analysis - PPM MOAT</h1>
+  <h2>PPM Analysis</h2>
   {% if not show_moat %}
-    <button onclick="window.location='{{ url_for('analysis') }}?view=moat'">View PPM Reports</button>
+    <button onclick="window.location='{{ url_for('aoi_report', tab='ppm', view='moat') }}'">View PPM Reports</button>
   {% else %}
     <div class="moat-stats">
       {% if total_rows %}
@@ -327,4 +310,3 @@
       </div>
     </div>
   {% endif %}
-{% endblock %}
