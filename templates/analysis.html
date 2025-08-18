@@ -41,6 +41,7 @@
               <h2>Upload PPM Report</h2>
               <p class="desc">Import a PPM report (.xls or .xlsx) to analyze false call rates.</p>
               <form method="post" enctype="multipart/form-data">
+                {{ csrf_token() }}
                 <label for="ppm_report">Choose file</label>
                 <input id="ppm_report" type="file" name="ppm_report" accept=".xls,.xlsx" required title="PPM report Excel file">
                 <p class="field-desc">Upload the selected report for processing.</p>
@@ -184,8 +185,9 @@
             </div>
             <div class="action-card">
               <h2>Run SQL Query</h2>
-              <form id="sql-form">
-                <div class="saved-query-bar">
+            <form id="sql-form">
+              {{ csrf_token() }}
+              <div class="saved-query-bar">
                   <select id="saved-queries">
                     <option value="">-- Saved Queries --</option>
                   </select>

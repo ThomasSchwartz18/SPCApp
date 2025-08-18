@@ -3,3 +3,4 @@ pandas
 openpyxl
 xlrd
 xlsx2html
+Flask-WTF
