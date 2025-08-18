@@ -41,7 +41,7 @@
               <h2>Upload PPM Report</h2>
               <p class="desc">Import a PPM report (.xls or .xlsx) to analyze false call rates.</p>
               <form method="post" enctype="multipart/form-data">
-                {{ csrf_token() }}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <label for="ppm_report">Choose file</label>
                 <input id="ppm_report" type="file" name="ppm_report" accept=".xls,.xlsx" required title="PPM report Excel file">
                 <p class="field-desc">Upload the selected report for processing.</p>
@@ -186,7 +186,7 @@
             <div class="action-card">
               <h2>Run SQL Query</h2>
             <form id="sql-form">
-              {{ csrf_token() }}
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <div class="saved-query-bar">
                   <select id="saved-queries">
                     <option value="">-- Saved Queries --</option>
@@ -207,6 +207,14 @@
             <h2>Daily Report</h2>
             <canvas id="daily-report-canvas" height="200" style="display:none"></canvas>
             <table id="daily-report-table" style="display:none"></table>
+            <label>Margin:
+              <select id="daily-margin">
+                <option value="0.25">0.25"</option>
+                <option value="0.5" selected>0.5"</option>
+                <option value="0.75">0.75"</option>
+                <option value="1">1"</option>
+              </select>
+            </label>
             <div class="dropdown">
               <button>Download</button>
               <div class="dropdown-content">
@@ -220,6 +228,14 @@
             <h2>Weekly Report</h2>
             <canvas id="weekly-report-canvas" height="200" style="display:none"></canvas>
             <table id="weekly-report-table" style="display:none"></table>
+            <label>Margin:
+              <select id="weekly-margin">
+                <option value="0.25">0.25"</option>
+                <option value="0.5" selected>0.5"</option>
+                <option value="0.75">0.75"</option>
+                <option value="1">1"</option>
+              </select>
+            </label>
             <div class="dropdown">
               <button>Download</button>
               <div class="dropdown-content">
@@ -233,6 +249,14 @@
             <h2>Monthly Report</h2>
             <canvas id="monthly-report-canvas" height="200" style="display:none"></canvas>
             <table id="monthly-report-table" style="display:none"></table>
+            <label>Margin:
+              <select id="monthly-margin">
+                <option value="0.25">0.25"</option>
+                <option value="0.5" selected>0.5"</option>
+                <option value="0.75">0.75"</option>
+                <option value="1">1"</option>
+              </select>
+            </label>
             <div class="dropdown">
               <button>Download</button>
               <div class="dropdown-content">
@@ -246,6 +270,14 @@
             <h2>Yearly Report</h2>
             <canvas id="yearly-report-canvas" height="200" style="display:none"></canvas>
             <table id="yearly-report-table" style="display:none"></table>
+            <label>Margin:
+              <select id="yearly-margin">
+                <option value="0.25">0.25"</option>
+                <option value="0.5" selected>0.5"</option>
+                <option value="0.75">0.75"</option>
+                <option value="1">1"</option>
+              </select>
+            </label>
             <div class="dropdown">
               <button>Download</button>
               <div class="dropdown-content">
@@ -314,6 +346,14 @@
         <canvas id="chart-canvas" height="200"></canvas>
         <p id="fc-chart-summary" class="chart-summary"></p>
         <table id="fc-data-table"></table>
+        <label>Margin:
+          <select id="fc-margin">
+            <option value="0.25">0.25"</option>
+            <option value="0.5" selected>0.5"</option>
+            <option value="0.75">0.75"</option>
+            <option value="1">1"</option>
+          </select>
+        </label>
         <button id="download-fc-pdf">Download PDF</button>
       </div>
     </div>
@@ -325,6 +365,14 @@
         <canvas id="chart-ng-canvas" height="200"></canvas>
         <p id="ng-chart-summary" class="chart-summary"></p>
         <table id="ng-data-table"></table>
+        <label>Margin:
+          <select id="ng-margin">
+            <option value="0.25">0.25"</option>
+            <option value="0.5" selected>0.5"</option>
+            <option value="0.75">0.75"</option>
+            <option value="1">1"</option>
+          </select>
+        </label>
         <button id="download-ng-pdf">Download PDF</button>
       </div>
     </div>

@@ -22,7 +22,7 @@
           <h2>Add New Entry</h2>
           <p class="desc">Use this form to add a single verified part marking.</p>
           <form method="post">
-            {{ csrf_token() }}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label>Part Number
               <input type="text" name="part_number" required title="Unique part number">
             </label><br>
@@ -46,7 +46,7 @@
           <h2>Bulk Upload</h2>
           <p class="desc">Upload an Excel file to add multiple entries at once.</p>
           <form method="post" enctype="multipart/form-data">
-            {{ csrf_token() }}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label>Excel File
               <input type="file" name="excel_file" accept=".xlsx,.xls" required title="Excel file containing part markings">
             </label><br>

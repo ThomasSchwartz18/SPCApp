@@ -330,12 +330,14 @@ window.addEventListener('DOMContentLoaded', () => {
     downloadFcBtn.addEventListener('click', () => {
       if (!chartInstance) return;
       const summary = document.getElementById('fc-chart-summary').textContent;
+      const margin = parseFloat(document.getElementById('fc-margin').value) || 0.5;
       exportChartWithTable(
         chartInstance,
         '#fc-data-table',
         ['Control Chart - Avg FalseCall Rate', summary],
         'fc-control-chart.pdf',
-        'landscape'
+        'landscape',
+        margin
       );
     });
   }
@@ -453,12 +455,14 @@ window.addEventListener('DOMContentLoaded', () => {
     downloadNgBtn.addEventListener('click', () => {
       if (!ngChartInstance) return;
       const summary = document.getElementById('ng-chart-summary').textContent;
+      const margin = parseFloat(document.getElementById('ng-margin').value) || 0.5;
       exportChartWithTable(
         ngChartInstance,
         '#ng-data-table',
         ['Control Chart - Avg NG Rate', summary],
         'ng-control-chart.pdf',
-        'landscape'
+        'landscape',
+        margin
       );
     });
   }
@@ -542,12 +546,14 @@ window.addEventListener('DOMContentLoaded', () => {
         const chart = reportCharts[freq];
         if (!chart) return;
         const title = `MOAT Report - ${freq.charAt(0).toUpperCase() + freq.slice(1)}`;
+        const margin = parseFloat(document.getElementById(`${freq}-margin`).value) || 0.5;
         exportChartWithTable(
           chart,
           `#${freq}-report-table`,
           title,
           `${freq}-report.pdf`,
-          'portrait'
+          'portrait',
+          margin
         );
       });
     }

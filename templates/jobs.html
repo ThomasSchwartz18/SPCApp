@@ -5,7 +5,7 @@
   <h1>Jobs Dashboard</h1>
 
   <form id="add-form">
-    {{ csrf_token() }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="text" id="name" placeholder="New job name" required>
     <button type="submit">Add Job</button>
   </form>
@@ -18,7 +18,7 @@
   </table>
 
   <form id="update-form">
-    {{ csrf_token() }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="number" id="job_id" placeholder="Job ID" required>
     <select id="status">
       <option>Waiting</option>

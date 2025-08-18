@@ -1,8 +1,16 @@
-window.exportChartWithTable = function (canvas, tableSelector, title, filename, orientation = 'portrait') {
+window.exportChartWithTable = function (
+  canvas,
+  tableSelector,
+  title,
+  filename,
+  orientation = 'portrait',
+  marginInches = 0.5
+) {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ orientation });
+  const margin = marginInches * 25.4;
   const lines = Array.isArray(title) ? title : [title];
-  lines.forEach((line, idx) => pdf.text(line, 10, 10 + idx * 10));
+  lines.forEach((line, idx) => pdf.text(line, margin, margin + idx * 10));
   const validMime = data => typeof data === 'string' && /^data:image\/(png|jpe?g|webp);/i.test(data);
   let imgData;
   let useHtml = false;
@@ -55,12 +63,18 @@ window.exportChartWithTable = function (canvas, tableSelector, title, filename, 
     return;
   }
   const imgProps = pdf.getImageProperties(imgData);
-  const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
-  const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-  const imgY = 20 + (lines.length - 1) * 10;
-  pdf.addImage(imgData, 'PNG', 10, imgY, pdfWidth, pdfHeight);
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  let pdfWidth = pageWidth - margin * 2;
+  let pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+  const imgY = margin + lines.length * 10;
+  if (imgY + pdfHeight > pageHeight - margin) {
+    pdfHeight = pageHeight - margin - imgY;
+    pdfWidth = (imgProps.width * pdfHeight) / imgProps.height;
+  }
+  pdf.addImage(imgData, 'PNG', margin, imgY, pdfWidth, pdfHeight);
   pdf.addPage('portrait');
-  pdf.autoTable({ html: tableSelector, startY: 10 });
+  pdf.autoTable({ html: tableSelector, startY: margin, margin: { left: margin, right: margin, top: margin } });
   pdf.save(filename);
 };
 
