@@ -15,6 +15,7 @@ import sqlite3
 import pandas as pd
 from datetime import datetime, timedelta
 import re
+from werkzeug.security import generate_password_hash, check_password_hash
 from sap_client import create_sap_service
 
 def parse_aoi_rows(path: str):
@@ -140,11 +141,31 @@ def init_db():
 
     conn.execute(
         'INSERT OR IGNORE INTO users (username, password, part_markings, aoi, analysis, dashboard, reports, c_suite, is_admin) VALUES (?,?,?,?,?,?,?,?,?)',
-        ('ADMIN', 'MasterAdmin', 1, 1, 1, 1, 1, 1, 1),
+        (
+            'ADMIN',
+            generate_password_hash('MasterAdmin'),
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+        ),
     )
     conn.execute(
         'INSERT OR IGNORE INTO users (username, password, part_markings, aoi, analysis, dashboard, reports, c_suite, is_admin) VALUES (?,?,?,?,?,?,?,?,?)',
-        ('USER', 'fuji', 1, 0, 0, 0, 0, 0, 0),
+        (
+            'USER',
+            generate_password_hash('fuji'),
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+        ),
     )
     # Ensure existing ADMIN row gains C-suite privileges and report access if
     # they pre-existed the column addition.
@@ -236,12 +257,12 @@ def inject_globals():
 def login():
     error = None
     conn = get_db()
-    users = conn.execute('SELECT username, password FROM users').fetchall()
+    users = conn.execute('SELECT username FROM users').fetchall()
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password', '')
-        row = next((u for u in users if u['username'] == username), None)
-        if row and row['password'] == password:
+        row = conn.execute('SELECT password FROM users WHERE username = ?', (username,)).fetchone()
+        if row and (check_password_hash(row['password'], password) or row['password'] == password):
             session['user'] = username
             conn.close()
             return redirect(url_for('home'))
@@ -279,7 +300,7 @@ def settings():
                 'INSERT OR IGNORE INTO users (username, password, part_markings, aoi, analysis, dashboard, reports, c_suite, is_admin) VALUES (?,?,?,?,?,?,?,?,0)',
                 (
                     username,
-                    password,
+                    generate_password_hash(password),
                     1 if 'part_markings' in privs else 0,
                     1 if 'aoi' in privs else 0,
                     1 if 'analysis' in privs else 0,
