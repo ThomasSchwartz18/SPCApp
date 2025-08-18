@@ -53,17 +53,31 @@
     const win = document.createElement('div');
     win.id = 'report-window';
     win.className = 'report-window';
+    localStorage.setItem('report-window-open', 'true');
 
     const header = document.createElement('div');
     header.className = 'report-window-header';
-    header.innerHTML = '<button id="report-add-text">Add Text</button><button id="report-print">Print</button><button id="report-close" title="Close">\u00d7</button>';
+    header.innerHTML = '<button id="report-add-text">Add Text</button><div class="right"><button id="report-print">Print</button><button id="report-close" title="Close">\u00d7</button></div>';
 
     const body = document.createElement('div');
     body.className = 'report-window-body';
 
+    const saved = localStorage.getItem('report-content');
+    if (saved) {
+      body.innerHTML = saved;
+    } else {
+      const firstPage = document.createElement('div');
+      firstPage.className = 'report-page';
+      body.appendChild(firstPage);
+    }
+
     win.appendChild(header);
     win.appendChild(body);
     document.body.appendChild(win);
+
+    function save() {
+      localStorage.setItem('report-content', body.innerHTML);
+    }
 
     // dragging
     let offsetX = 0, offsetY = 0, dragging = false;
@@ -87,22 +101,38 @@
       document.removeEventListener('mouseup', up);
     }
 
+    function addToPage(node) {
+      let page = body.lastElementChild;
+      page.appendChild(node);
+      if (page.scrollHeight > page.clientHeight) {
+        page.removeChild(node);
+        page = document.createElement('div');
+        page.className = 'report-page';
+        body.appendChild(page);
+        page.appendChild(node);
+      }
+      save();
+    }
+
     header.querySelector('#report-close').addEventListener('click', () => {
       win.remove();
       disableDraggables();
+      localStorage.removeItem('report-window-open');
+      localStorage.removeItem('report-content');
     });
 
     header.querySelector('#report-add-text').addEventListener('click', () => {
       const p = document.createElement('p');
       p.className = 'report-text';
       p.contentEditable = 'true';
-      body.appendChild(p);
+      addToPage(p);
       p.focus();
       p.addEventListener('keydown', e => {
         if (e.key === 'Enter') {
           e.preventDefault();
           p.contentEditable = 'false';
           p.blur();
+          save();
         }
       });
     });
@@ -117,21 +147,26 @@
       const img = document.createElement('img');
       img.src = dataUrl;
       wrapper.appendChild(img);
-      body.appendChild(wrapper);
+      addToPage(wrapper);
     });
 
-    header.querySelector('#report-print').addEventListener('click', () => {
+    header.querySelector('#report-print').addEventListener('click', async () => {
       if (!window.jspdf || !window.html2canvas) return;
       const { jsPDF } = window.jspdf;
-      html2canvas(body).then(canvas => {
+      const pdf = new jsPDF('p', 'pt', 'a4');
+      const pages = body.querySelectorAll('.report-page');
+      for (let i = 0; i < pages.length; i++) {
+        const canvas = await html2canvas(pages[i], { scale: 2 });
         const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'pt', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = canvas.height * pdfWidth / canvas.width;
+        const pdfHeight = pdf.internal.pageSize.getHeight();
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdf.save('report.pdf');
-      });
+        if (i < pages.length - 1) pdf.addPage();
+      }
+      pdf.save('report.pdf');
     });
+
+    window.addEventListener('beforeunload', save);
 
     initDraggables();
   };

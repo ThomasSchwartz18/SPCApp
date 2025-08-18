@@ -54,12 +54,6 @@
       <p>Statistical Controls (<i>in progress</i>)</p>
     </div>
     {% endif %}
-    {% if is_admin or permissions.get('reports') %}
-    <div class="widget" onclick="openReportWindow()">
-      <h2>Generate Reports</h2>
-      <p>Compile key charts into a single report</p>
-    </div>
-    {% endif %}
     <div class="widget" onclick="location.href='/rework'">
       <h2>Rework</h2>
       <p>Stencil and part lookup tools</p>

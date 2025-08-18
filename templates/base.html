@@ -34,6 +34,16 @@
       </ul>
     {% endif %}
   {% endwith %}
+  {% if is_admin or permissions.get('reports') %}
+  <button id="report-button" title="Generate Report" onclick="openReportWindow()">\u270e</button>
+  {% endif %}
   {% block content %}{% endblock %}
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem('report-window-open') === 'true' && typeof openReportWindow === 'function') {
+        openReportWindow();
+      }
+    });
+  </script>
 </body>
 </html>
