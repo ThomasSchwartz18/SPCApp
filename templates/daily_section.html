@@ -1,0 +1,96 @@
+<div id="container">
+  <div id="aoi-actions">
+    <div class="action-panel">
+      {% if is_admin or permissions['aoi'] %}
+      <div class="action-card">
+        <h2>Add New Entry</h2>
+        <form method="post">
+          <label>Report Date
+            <input type="date" name="report_date" required>
+          </label><br>
+          <label>Shift
+            <select name="shift" required>
+              <option value="1st">1st</option>
+              <option value="2nd">2nd</option>
+            </select>
+          </label><br>
+          <label>Operator
+            <input type="text" name="operator" required>
+          </label><br>
+          <label>Customer
+            <input type="text" name="customer">
+          </label><br>
+          <label>Assembly
+            <input type="text" name="assembly">
+          </label><br>
+          <label>Quantity Inspected
+            <input type="number" name="qty_inspected" min="0">
+          </label><br>
+          <label>Quantity Rejected
+            <input type="number" name="qty_rejected" min="0">
+          </label><br>
+          <label>Additional Information
+            <input type="text" name="additional_info">
+          </label><br>
+          <button type="submit">Add</button>
+        </form>
+      </div>
+      <div class="action-card">
+        <h2>Bulk Upload</h2>
+        <form method="post" enctype="multipart/form-data">
+          <label>Report Date
+            <input type="date" name="report_date" required>
+          </label><br>
+          <label>Shift
+            <select name="shift" required>
+              <option value="1st">1st</option>
+              <option value="2nd">2nd</option>
+            </select>
+          </label><br>
+          <label>Excel File
+            <input type="file" name="excel_file" accept=".xls,.xlsx" required>
+          </label><br>
+          <button type="submit">Upload</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  <div id="divider"></div>
+  <div id="aoi-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Shift</th>
+          <th>Operator</th>
+          <th>Customer</th>
+          <th>Assembly</th>
+          <th>Quantity Inspected</th>
+          <th>Quantity Rejected</th>
+          <th>Additional Information</th>
+          {% if is_admin or permissions['aoi'] %}
+          <th>Actions</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+        <tr data-id="{{ r['id'] }}">
+          <td>{{ r['report_date'] }}</td>
+          <td>{{ r['shift'] }}</td>
+          <td>{{ r['operator'] }}</td>
+          <td>{{ r['customer'] }}</td>
+          <td>{{ r['assembly'] }}</td>
+          <td>{{ r['qty_inspected'] }}</td>
+          <td>{{ r['qty_rejected'] }}</td>
+          <td>{{ r['additional_info'] }}</td>
+          {% if is_admin or permissions['aoi'] %}
+          <td class="no-edit"><button type="button" class="delete-row">Delete</button></td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
