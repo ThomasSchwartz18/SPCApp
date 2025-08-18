@@ -40,7 +40,10 @@ def parse_aoi_rows(path: str):
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
-app.secret_key = os.environ.get('SECRET_KEY', 'spc_secret')
+secret_key = os.environ.get('SECRET_KEY')
+if not secret_key:
+    raise RuntimeError("SECRET_KEY environment variable is required")
+app.secret_key = secret_key
 DATABASE = 'spcapp.db'
 USE_SAP = os.environ.get('USE_SAP', 'false').lower() == 'true'
 sap_service = create_sap_service(use_real=USE_SAP)
