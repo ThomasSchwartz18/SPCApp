@@ -278,6 +278,20 @@ table thead th {
   display: block;
 }
 
+.report-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.report-header h1 {
+  margin: 0;
+}
+
+.report-header .report-date-range {
+  margin: 0;
+  font-size: 0.9em;
+}
+
 .action-card label {
   display: block;
   margin-top: 10px;

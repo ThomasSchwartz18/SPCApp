@@ -57,7 +57,7 @@
 
     const header = document.createElement('div');
     header.className = 'report-window-header';
-    header.innerHTML = '<button id="report-add-text">Add Text</button><div class="right"><button id="report-print">Print</button><button id="report-close" title="Close">\u00d7</button></div>';
+    header.innerHTML = '<button id="report-add-text">Add Text</button><button id="report-add-header">Add Title</button><div class="right"><button id="report-print">Print</button><button id="report-close" title="Close">\u00d7</button></div>';
 
     const body = document.createElement('div');
     body.className = 'report-window-body';
@@ -137,6 +137,29 @@
       });
     });
 
+    header.querySelector('#report-add-header').addEventListener('click', () => {
+      const title = prompt('Report title:') || '';
+      const start = prompt('Start date (YYYY-MM-DD):') || '';
+      const end = prompt('End date (YYYY-MM-DD):') || '';
+      if (!title && !start && !end) return;
+      const headerBlock = document.createElement('div');
+      headerBlock.className = 'report-header';
+      if (title) {
+        const h1 = document.createElement('h1');
+        h1.textContent = title;
+        headerBlock.appendChild(h1);
+      }
+      if (start || end) {
+        const p = document.createElement('p');
+        p.className = 'report-date-range';
+        p.textContent = start && end ? `${start} – ${end}` : start || end;
+        headerBlock.appendChild(p);
+      }
+      const firstPage = body.firstElementChild || body;
+      firstPage.insertBefore(headerBlock, firstPage.firstChild);
+      save();
+    });
+
     body.addEventListener('dragover', e => e.preventDefault());
     body.addEventListener('drop', e => {
       e.preventDefault();
@@ -156,7 +179,7 @@
       const pdf = new jsPDF('p', 'pt', 'a4');
       const pages = body.querySelectorAll('.report-page');
       for (let i = 0; i < pages.length; i++) {
-        const canvas = await html2canvas(pages[i], { scale: 2 });
+        const canvas = await html2canvas(pages[i], { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff' });
         const imgData = canvas.toDataURL('image/png');
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
