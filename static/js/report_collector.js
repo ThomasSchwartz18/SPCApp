@@ -1,4 +1,31 @@
-(function(){
+// Handles collecting charts/tables into the report preview
+(function () {
+  const CACHE_KEY = 'report-selections';
+
+  function loadCachedSelections() {
+    const previewContainer = document.getElementById('report-preview');
+    if (!previewContainer) return;
+    previewContainer.innerHTML = '';
+    const selections = JSON.parse(sessionStorage.getItem(CACHE_KEY) || '[]');
+    selections.forEach(html => {
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = html;
+      const item = wrapper.firstElementChild;
+      if (item) previewContainer.appendChild(item);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    sessionStorage.removeItem(CACHE_KEY);
+    loadCachedSelections();
+  });
+
+  function saveSelection(html) {
+    const selections = JSON.parse(sessionStorage.getItem(CACHE_KEY) || '[]');
+    selections.push(html);
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify(selections));
+  }
+
   function addToReport(sectionId) {
     const section = document.getElementById(sectionId);
     const previewContainer = document.getElementById('report-preview');
@@ -29,6 +56,7 @@
     }
 
     previewContainer.appendChild(preview);
+    saveSelection(preview.outerHTML);
   }
 
   window.addToReport = addToReport;
