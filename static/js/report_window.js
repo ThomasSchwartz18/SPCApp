@@ -57,7 +57,7 @@
 
     const header = document.createElement('div');
     header.className = 'report-window-header';
-    header.innerHTML = '<button id="report-add-text">Add Text</button><div class="right"><button id="report-print">Print</button><button id="report-close" title="Close">\u00d7</button></div>';
+    header.innerHTML = '<button id="report-add-text">Add Text</button><button id="report-add-h1">Add Header 1</button><button id="report-add-h2">Add Header 2</button><div class="right"><button id="report-print">Print</button><button id="report-close" title="Close">\u00d7</button></div>';
 
     const body = document.createElement('div');
     body.className = 'report-window-body';
@@ -121,21 +121,25 @@
       localStorage.removeItem('report-content');
     });
 
-    header.querySelector('#report-add-text').addEventListener('click', () => {
-      const p = document.createElement('p');
-      p.className = 'report-text';
-      p.contentEditable = 'true';
-      addToPage(p);
-      p.focus();
-      p.addEventListener('keydown', e => {
+    function addEditable(tag) {
+      const el = document.createElement(tag);
+      el.className = 'report-text';
+      el.contentEditable = 'true';
+      addToPage(el);
+      el.focus();
+      el.addEventListener('keydown', e => {
         if (e.key === 'Enter') {
           e.preventDefault();
-          p.contentEditable = 'false';
-          p.blur();
+          el.contentEditable = 'false';
+          el.blur();
           save();
         }
       });
-    });
+    }
+
+    header.querySelector('#report-add-text').addEventListener('click', () => addEditable('p'));
+    header.querySelector('#report-add-h1').addEventListener('click', () => addEditable('h1'));
+    header.querySelector('#report-add-h2').addEventListener('click', () => addEditable('h2'));
 
     body.addEventListener('dragover', e => e.preventDefault());
     body.addEventListener('drop', e => {
