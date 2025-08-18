@@ -1,4 +1,5 @@
 window.addEventListener('DOMContentLoaded', () => {
+  if (typeof openReportWindow === 'function') openReportWindow();
   // Divider logic
   const divider = document.getElementById('divider');
   const container = document.getElementById('container');

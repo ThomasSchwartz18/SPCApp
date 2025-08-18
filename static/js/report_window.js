@@ -1,5 +1,10 @@
-(function() {
+ (function() {
   function makeCanvasDraggable(canvas) {
+    if (!document.getElementById('report-window')) {
+      canvas.removeAttribute('draggable');
+      delete canvas.dataset.draggableReady;
+      return;
+    }
     if (canvas.dataset.draggableReady) return;
     canvas.dataset.draggableReady = 'true';
     canvas.setAttribute('draggable', 'true');
@@ -15,6 +20,13 @@
 
   function initDraggables(root = document) {
     root.querySelectorAll && root.querySelectorAll('canvas').forEach(makeCanvasDraggable);
+  }
+
+  function disableDraggables(root = document) {
+    root.querySelectorAll && root.querySelectorAll('canvas').forEach(c => {
+      c.removeAttribute('draggable');
+      delete c.dataset.draggableReady;
+    });
   }
 
   const observer = new MutationObserver(mutations => {
@@ -44,7 +56,7 @@
 
     const header = document.createElement('div');
     header.className = 'report-window-header';
-    header.innerHTML = '<input type="text" id="report-caption" placeholder="Chart caption"><button id="report-print">Print</button><button id="report-close" title="Close">\u00d7</button>';
+    header.innerHTML = '<button id="report-add-text">Add Text</button><button id="report-print">Print</button><button id="report-close" title="Close">\u00d7</button>';
 
     const body = document.createElement('div');
     body.className = 'report-window-body';
@@ -56,7 +68,7 @@
     // dragging
     let offsetX = 0, offsetY = 0, dragging = false;
     header.addEventListener('mousedown', e => {
-      if (e.target.tagName === 'INPUT') return;
+      if (e.target.tagName === 'BUTTON') return;
       dragging = true;
       offsetX = e.clientX - win.offsetLeft;
       offsetY = e.clientY - win.offsetTop;
@@ -77,6 +89,22 @@
 
     header.querySelector('#report-close').addEventListener('click', () => {
       win.remove();
+      disableDraggables();
+    });
+
+    header.querySelector('#report-add-text').addEventListener('click', () => {
+      const p = document.createElement('p');
+      p.className = 'report-text';
+      p.contentEditable = 'true';
+      body.appendChild(p);
+      p.focus();
+      p.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          p.contentEditable = 'false';
+          p.blur();
+        }
+      });
     });
 
     body.addEventListener('dragover', e => e.preventDefault());
@@ -86,16 +114,10 @@
       if (!dataUrl) return;
       const wrapper = document.createElement('div');
       wrapper.className = 'report-item';
-      const caption = document.getElementById('report-caption').value;
-      const p = document.createElement('p');
-      p.textContent = caption;
-      p.contentEditable = 'true';
       const img = document.createElement('img');
       img.src = dataUrl;
-      wrapper.appendChild(p);
       wrapper.appendChild(img);
       body.appendChild(wrapper);
-      document.getElementById('report-caption').value = '';
     });
 
     header.querySelector('#report-print').addEventListener('click', () => {
@@ -110,5 +132,7 @@
         pdf.save('report.pdf');
       });
     });
+
+    initDraggables();
   };
 })();
