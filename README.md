@@ -2,6 +2,12 @@
 
 SPCApp is a small web application for process control.
 
+## Deployment
+
+The application requires a secret key for session management. Set the
+`SECRET_KEY` environment variable before starting the server; it is
+mandatory and the app will fail to start if it is missing.
+
 ## SAP Integration
 
 The application can optionally retrieve material data from SAP. This
