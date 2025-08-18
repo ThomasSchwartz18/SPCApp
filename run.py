@@ -16,6 +16,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 import re
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from sap_client import create_sap_service
 
 def parse_aoi_rows(path: str):
@@ -40,6 +41,8 @@ def parse_aoi_rows(path: str):
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
+# Only allow known-safe spreadsheet extensions
+ALLOWED_EXTENSIONS = {'.xls', '.xlsx'}
 secret_key = os.environ.get('SECRET_KEY')
 if not secret_key:
     raise RuntimeError("SECRET_KEY environment variable is required")
@@ -442,11 +445,15 @@ def part_markings():
         # Handle spreadsheet upload
         if 'excel_file' in request.files and request.files['excel_file'].filename:
             file = request.files['excel_file']
-            filename = file.filename
+            filename = secure_filename(file.filename)
+            ext = os.path.splitext(filename)[1].lower()
+            if ext not in ALLOWED_EXTENSIONS:
+                flash('Invalid file type')
+                conn.close()
+                return redirect(url_for('part_markings'))
             save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(save_path)
 
-            ext = os.path.splitext(save_path)[1].lower()
             engine = 'xlrd' if ext == '.xls' else 'openpyxl'
 
             df = pd.read_excel(
@@ -608,7 +615,12 @@ def aoi_report():
         shift = request.form.get('shift')
         if 'excel_file' in request.files and request.files['excel_file'].filename:
             file = request.files['excel_file']
-            filename = file.filename
+            filename = secure_filename(file.filename)
+            ext = os.path.splitext(filename)[1].lower()
+            if ext not in ALLOWED_EXTENSIONS:
+                flash('Invalid file type')
+                conn.close()
+                return redirect(url_for('aoi_report'))
             save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(save_path)
             rows = parse_aoi_rows(save_path)
@@ -969,11 +981,14 @@ def analysis():
             return redirect(url_for('analysis'))
         file = request.files['ppm_report']
         if file:
-            filename = file.filename
+            filename = secure_filename(file.filename)
+            ext = os.path.splitext(filename)[1].lower()
+            if ext not in ALLOWED_EXTENSIONS:
+                flash('Invalid file type')
+                return redirect(url_for('analysis'))
             save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(save_path)
 
-            ext = os.path.splitext(save_path)[1].lower()
             engine = 'xlrd' if ext == '.xls' else 'openpyxl'
 
             df = pd.read_excel(save_path, engine=engine, header=5, usecols='B:I')
