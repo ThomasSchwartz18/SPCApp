@@ -1,4 +1,18 @@
 window.addEventListener('DOMContentLoaded', () => {
+  function insertSendButtonAfter(el) {
+    if (!el) return;
+    const next = el.nextElementSibling;
+    if (next && next.classList && next.classList.contains('send-to-report')) return;
+    const section = el.closest('.report-section') || el.closest('.modal') || el.closest('div[id]') || el;
+    const sectionId = section.id || el.id;
+    const btn = document.createElement('button');
+    btn.textContent = 'Send to Report';
+    btn.className = 'send-to-report';
+    btn.addEventListener('click', () => {
+      if (window.addToReport) window.addToReport(sectionId);
+    });
+    el.insertAdjacentElement('afterend', btn);
+  }
   // Divider logic
   const divider = document.getElementById('divider');
   const container = document.getElementById('container');
@@ -300,6 +314,7 @@ window.addEventListener('DOMContentLoaded', () => {
             },
             plugins: [thresholdPlugin]
           });
+          insertSendButtonAfter(ctx);
           const fcTable = document.getElementById('fc-data-table');
           if (fcTable) {
             fcTable.innerHTML = '<thead><tr><th>Model Name</th><th>Avg FalseCall Rate</th><th>Total Boards</th></tr></thead><tbody></tbody>';
@@ -311,6 +326,7 @@ window.addEventListener('DOMContentLoaded', () => {
               else if (row.rate > 10) tr.classList.add('threshold-yellow');
               tbody.appendChild(tr);
             });
+            insertSendButtonAfter(fcTable);
           }
           const entryCount = data.length;
           const totalBoards = data.reduce((sum, r) => sum + r.boards, 0);
@@ -423,6 +439,7 @@ window.addEventListener('DOMContentLoaded', () => {
             },
             plugins: [thresholdPlugin]
           });
+          insertSendButtonAfter(ngCtx);
           const ngTable = document.getElementById('ng-data-table');
           if (ngTable) {
             ngTable.innerHTML = '<thead><tr><th>Model Name</th><th>Avg NG Rate</th><th>Total Boards</th></tr></thead><tbody></tbody>';
@@ -434,6 +451,7 @@ window.addEventListener('DOMContentLoaded', () => {
               else if (row.rate > 0.05) tr.classList.add('threshold-yellow');
               tbody.appendChild(tr);
             });
+            insertSendButtonAfter(ngTable);
           }
           const entryCount = data.length;
           const totalBoards = data.reduce((sum, r) => sum + r.boards, 0);
@@ -521,6 +539,7 @@ window.addEventListener('DOMContentLoaded', () => {
           },
           options: { scales: { y: { beginAtZero: true } } }
         });
+        insertSendButtonAfter(canvas);
         if (table) {
           table.innerHTML = '<thead><tr><th>Period</th><th>Total Boards</th><th>FalseCall PPM</th><th>NG PPM</th></tr></thead><tbody></tbody>';
           const tbody = table.querySelector('tbody');
@@ -535,6 +554,7 @@ window.addEventListener('DOMContentLoaded', () => {
             const avgNg = data.table.reduce((sum, r) => sum + r.ng_ppm, 0) / (data.table.length || 1);
             summaryEl.textContent = `Avg FalseCall PPM: ${avgFc.toFixed(2)}, Avg NG PPM: ${avgNg.toFixed(2)} across ${totalBoards} boards.`;
           }
+          insertSendButtonAfter(table);
         }
       });
     if (pdfBtn) {
