@@ -9,6 +9,7 @@ from flask import (
     session,
     flash,
 )
+from flask_wtf import CSRFProtect
 from functools import wraps
 import os
 import sqlite3
@@ -40,6 +41,7 @@ def parse_aoi_rows(path: str):
     return df.to_dict(orient='records')
 
 app = Flask(__name__)
+csrf = CSRFProtect(app)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 # Only allow known-safe spreadsheet extensions
 ALLOWED_EXTENSIONS = {'.xls', '.xlsx'}
@@ -1186,6 +1188,7 @@ def delete_upload():
 
 @app.route('/moat/sql', methods=['POST'])
 @login_required
+@csrf.exempt
 def moat_sql():
     if not has_permission('analysis'):
         return jsonify(error='Forbidden'), 403
