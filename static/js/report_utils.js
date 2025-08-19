@@ -3,7 +3,7 @@ window.exportChartWithTable = function (
   tableSelector,
   title,
   filename,
-  orientation = 'portrait',
+  orientation = 'landscape',
   marginInches = 0.5
 ) {
   const { jsPDF } = window.jspdf;
@@ -73,7 +73,7 @@ window.exportChartWithTable = function (
     pdfWidth = (imgProps.width * pdfHeight) / imgProps.height;
   }
   pdf.addImage(imgData, 'PNG', margin, imgY, pdfWidth, pdfHeight);
-  pdf.addPage('portrait');
+  pdf.addPage('landscape');
   pdf.autoTable({ html: tableSelector, startY: margin, margin: { left: margin, right: margin, top: margin } });
   pdf.save(filename);
 };

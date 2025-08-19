@@ -552,7 +552,7 @@ window.addEventListener('DOMContentLoaded', () => {
           `#${freq}-report-table`,
           title,
           `${freq}-report.pdf`,
-          'portrait',
+          'landscape',
           margin
         );
       });
