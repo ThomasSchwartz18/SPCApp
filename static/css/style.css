@@ -255,8 +255,8 @@ table thead th {
 }
 
 .report-page {
-  width: 794px;
-  min-height: 1123px;
+  width: 1123px;
+  min-height: 794px;
   margin: 0 auto 20px;
   border: 1px solid var(--color-black);
   background: var(--color-white);
@@ -271,6 +271,8 @@ table thead th {
 .report-item img {
   width: 100%;
   height: auto;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .report-text {

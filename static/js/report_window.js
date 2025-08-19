@@ -57,7 +57,17 @@
 
     const header = document.createElement('div');
     header.className = 'report-window-header';
-    header.innerHTML = '<button id="report-add-text">Add Text</button><button id="report-add-h1">Add Header 1</button><button id="report-add-h2">Add Header 2</button><div class="right"><button id="report-print">Print</button><button id="report-close" title="Close">\u00d7</button></div>';
+    header.innerHTML = '<button id="report-add-text">Add Text</button>' +
+      '<button id="report-add-h1">Add Header 1</button>' +
+      '<button id="report-add-h2">Add Header 2</button>' +
+      '<label>Margin:<select id="report-margin">' +
+      '<option value="0.25">0.25\"</option>' +
+      '<option value="0.5" selected>0.5\"</option>' +
+      '<option value="0.75">0.75\"</option>' +
+      '<option value="1">1\"</option>' +
+      '</select></label>' +
+      '<div class="right"><button id="report-print">Print</button>' +
+      '<button id="report-close" title="Close">\u00d7</button></div>';
 
     const body = document.createElement('div');
     body.className = 'report-window-body';
@@ -82,7 +92,7 @@
     // dragging
     let offsetX = 0, offsetY = 0, dragging = false;
     header.addEventListener('mousedown', e => {
-      if (e.target.tagName === 'BUTTON') return;
+      if (['BUTTON', 'SELECT', 'OPTION', 'LABEL'].includes(e.target.tagName)) return;
       dragging = true;
       offsetX = e.clientX - win.offsetLeft;
       offsetY = e.clientY - win.offsetTop;
@@ -157,15 +167,22 @@
     header.querySelector('#report-print').addEventListener('click', async () => {
       if (!window.jspdf || !window.html2canvas) return;
       const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF('p', 'pt', 'a4');
+      const marginInches = parseFloat(document.getElementById('report-margin').value) || 0.5;
+      const margin = marginInches * 72; // pts
+      const pdf = new jsPDF('l', 'pt', 'a4');
       const pages = body.querySelectorAll('.report-page');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const contentWidth = pageWidth - margin * 2;
+      const contentHeight = pageHeight - margin * 2;
       for (let i = 0; i < pages.length; i++) {
         const canvas = await html2canvas(pages[i], { scale: 2 });
         const imgData = canvas.toDataURL('image/png');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        if (i < pages.length - 1) pdf.addPage();
+        const ratio = Math.min(contentWidth / canvas.width, contentHeight / canvas.height);
+        const imgWidth = canvas.width * ratio;
+        const imgHeight = canvas.height * ratio;
+        pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
+        if (i < pages.length - 1) pdf.addPage('l');
       }
       pdf.save('report.pdf');
     });
