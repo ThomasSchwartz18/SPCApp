@@ -268,6 +268,8 @@
 
     header.querySelector('#report-print').addEventListener('click', async () => {
       if (!window.jspdf || !window.html2canvas) return;
+      const reportItems = body.querySelectorAll('.report-item');
+      reportItems.forEach(item => item.classList.add('no-border'));
       const { jsPDF } = window.jspdf;
       const pxToPt = 72 / 96; // convert CSS pixels to PDF points
       const pdf = new jsPDF('l', 'pt', 'a4');
@@ -287,6 +289,7 @@
         if (i < pages.length - 1) pdf.addPage('l');
       }
       pdf.save('report.pdf');
+      reportItems.forEach(item => item.classList.remove('no-border'));
     });
 
     window.addEventListener('beforeunload', save);
