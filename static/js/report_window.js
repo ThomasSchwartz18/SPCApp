@@ -169,6 +169,7 @@
       const { jsPDF } = window.jspdf;
       const marginInches = parseFloat(document.getElementById('report-margin').value) || 0.5;
       const margin = marginInches * 72; // pts
+      const pxToPt = 72 / 96; // convert CSS pixels to PDF points
       const pdf = new jsPDF('l', 'pt', 'a4');
       const pages = body.querySelectorAll('.report-page');
       const pageWidth = pdf.internal.pageSize.getWidth();
@@ -178,9 +179,12 @@
       for (let i = 0; i < pages.length; i++) {
         const canvas = await html2canvas(pages[i], { scale: 2 });
         const imgData = canvas.toDataURL('image/png');
-        const ratio = Math.min(contentWidth / canvas.width, contentHeight / canvas.height);
-        const imgWidth = canvas.width * ratio;
-        const imgHeight = canvas.height * ratio;
+        const ratio = Math.min(
+          contentWidth / (canvas.width * pxToPt),
+          contentHeight / (canvas.height * pxToPt)
+        );
+        const imgWidth = canvas.width * pxToPt * ratio;
+        const imgHeight = canvas.height * pxToPt * ratio;
         pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
         if (i < pages.length - 1) pdf.addPage('l');
       }
