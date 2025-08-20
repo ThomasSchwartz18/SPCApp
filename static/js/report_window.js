@@ -134,8 +134,10 @@
       let page = body.lastElementChild;
       page.appendChild(node);
       const style = getComputedStyle(page);
-      const limit = page.clientHeight - parseFloat(style.paddingBottom || 0);
-      if (node.offsetTop + node.offsetHeight > limit) {
+      const padTop = parseFloat(style.paddingTop || 0);
+      const padBottom = parseFloat(style.paddingBottom || 0);
+      const usable = page.clientHeight - padTop - padBottom;
+      if (node.offsetTop + node.offsetHeight - padTop > usable) {
         page.removeChild(node);
         page = createPage();
         body.appendChild(page);
