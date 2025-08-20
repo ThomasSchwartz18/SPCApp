@@ -79,6 +79,7 @@
       page.className = 'report-page';
       const marginPx = (parseFloat(marginSelect.value) || 0) * 96;
       page.style.padding = marginPx + 'px';
+      makePageDroppable(page);
       return page;
     }
 
@@ -107,6 +108,38 @@
       save();
     }
 
+    function makeReportItemDraggable(item) {
+      item.setAttribute('draggable', 'true');
+      item.addEventListener('dragstart', () => {
+        draggedItem = item;
+      });
+      item.addEventListener('dragend', () => {
+        draggedItem = null;
+      });
+    }
+
+    function makePageDroppable(page) {
+      page.addEventListener('dragover', e => e.preventDefault());
+      page.addEventListener('drop', e => {
+        if (!draggedItem) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const target = e.target.closest('.report-item');
+        if (target && target !== draggedItem) {
+          const rect = target.getBoundingClientRect();
+          if (e.clientY < rect.top + rect.height / 2) {
+            target.parentNode.insertBefore(draggedItem, target);
+          } else {
+            target.parentNode.insertBefore(draggedItem, target.nextSibling);
+          }
+        } else {
+          page.appendChild(draggedItem);
+        }
+        reflowPages();
+        save();
+      });
+    }
+
     function makeReportItemResizable(wrapper) {
       wrapper.addEventListener('mouseup', () => {
         wrapper.style.width = wrapper.offsetWidth + 'px';
@@ -116,7 +149,11 @@
       });
     }
 
-    body.querySelectorAll('.report-item').forEach(makeReportItemResizable);
+    body.querySelectorAll('.report-item').forEach(item => {
+      makeReportItemResizable(item);
+      makeReportItemDraggable(item);
+    });
+    body.querySelectorAll('.report-page').forEach(makePageDroppable);
 
     // dragging
     let offsetX = 0, offsetY = 0, dragging = false;
@@ -141,6 +178,7 @@
     }
 
     let suppressSave = false;
+    let draggedItem = null;
     function addToPage(node) {
       let page = body.lastElementChild;
       page.appendChild(node);
@@ -180,6 +218,7 @@
       el.contentEditable = 'true';
       wrapper.appendChild(el);
       makeReportItemResizable(wrapper);
+      makeReportItemDraggable(wrapper);
       addToPage(wrapper);
       el.focus();
       el.addEventListener('keydown', e => {
@@ -223,6 +262,7 @@
       });
       wrapper.appendChild(img);
       makeReportItemResizable(wrapper);
+      makeReportItemDraggable(wrapper);
       addToPage(wrapper);
     });
 
