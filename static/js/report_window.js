@@ -200,9 +200,19 @@
       const img = document.createElement('img');
       img.src = dataUrl;
       img.addEventListener('load', () => {
-        wrapper.style.width = img.naturalWidth + 'px';
-        wrapper.style.height = img.naturalHeight + 'px';
+        const page = wrapper.closest('.report-page');
+        const style = getComputedStyle(page);
+        const availableWidth = page.clientWidth -
+          parseFloat(style.paddingLeft || 0) -
+          parseFloat(style.paddingRight || 0);
+        const scale = Math.min(1, availableWidth / img.naturalWidth);
+        const scaledWidth = img.naturalWidth * scale;
+        const scaledHeight = img.naturalHeight * scale;
+        wrapper.style.width = scaledWidth + 'px';
+        wrapper.style.height = scaledHeight + 'px';
         wrapper.style.aspectRatio = img.naturalWidth + '/' + img.naturalHeight;
+        img.style.width = '100%';
+        img.style.height = 'auto';
         save();
       });
       wrapper.appendChild(img);
