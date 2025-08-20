@@ -72,13 +72,21 @@
     const body = document.createElement('div');
     body.className = 'report-window-body';
 
+    const marginSelect = header.querySelector('#report-margin');
+
+    function createPage() {
+      const page = document.createElement('div');
+      page.className = 'report-page';
+      const marginPx = (parseFloat(marginSelect.value) || 0) * 96;
+      page.style.padding = marginPx + 'px';
+      return page;
+    }
+
     const saved = localStorage.getItem('report-content');
     if (saved) {
       body.innerHTML = saved;
     } else {
-      const firstPage = document.createElement('div');
-      firstPage.className = 'report-page';
-      body.appendChild(firstPage);
+      body.appendChild(createPage());
     }
 
     win.appendChild(header);
@@ -111,18 +119,37 @@
       document.removeEventListener('mouseup', up);
     }
 
+    let suppressSave = false;
     function addToPage(node) {
       let page = body.lastElementChild;
       page.appendChild(node);
-      if (page.scrollHeight > page.clientHeight) {
+      const style = getComputedStyle(page);
+      const limit = page.clientHeight - parseFloat(style.paddingBottom || 0);
+      if (node.offsetTop + node.offsetHeight > limit) {
         page.removeChild(node);
-        page = document.createElement('div');
-        page.className = 'report-page';
+        page = createPage();
         body.appendChild(page);
         page.appendChild(node);
       }
-      save();
+      if (!suppressSave) save();
     }
+
+    function applyMargin(reflow = false) {
+      const marginPx = (parseFloat(marginSelect.value) || 0) * 96;
+      body.querySelectorAll('.report-page').forEach(p => p.style.padding = marginPx + 'px');
+      if (reflow) {
+        const items = Array.from(body.querySelectorAll('.report-page > *'));
+        suppressSave = true;
+        body.innerHTML = '';
+        body.appendChild(createPage());
+        items.forEach(item => addToPage(item));
+        suppressSave = false;
+        save();
+      }
+    }
+
+    marginSelect.addEventListener('change', () => applyMargin(true));
+    applyMargin(true);
 
     header.querySelector('#report-close').addEventListener('click', () => {
       win.remove();
@@ -167,25 +194,21 @@
     header.querySelector('#report-print').addEventListener('click', async () => {
       if (!window.jspdf || !window.html2canvas) return;
       const { jsPDF } = window.jspdf;
-      const marginInches = parseFloat(document.getElementById('report-margin').value) || 0.5;
-      const margin = marginInches * 72; // pts
       const pxToPt = 72 / 96; // convert CSS pixels to PDF points
       const pdf = new jsPDF('l', 'pt', 'a4');
       const pages = body.querySelectorAll('.report-page');
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const contentWidth = pageWidth - margin * 2;
-      const contentHeight = pageHeight - margin * 2;
       for (let i = 0; i < pages.length; i++) {
         const canvas = await html2canvas(pages[i], { scale: 2 });
         const imgData = canvas.toDataURL('image/png');
         const ratio = Math.min(
-          contentWidth / (canvas.width * pxToPt),
-          contentHeight / (canvas.height * pxToPt)
+          pageWidth / (canvas.width * pxToPt),
+          pageHeight / (canvas.height * pxToPt)
         );
         const imgWidth = canvas.width * pxToPt * ratio;
         const imgHeight = canvas.height * pxToPt * ratio;
-        pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
         if (i < pages.length - 1) pdf.addPage('l');
       }
       pdf.save('report.pdf');
