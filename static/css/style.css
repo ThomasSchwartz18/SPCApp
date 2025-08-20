@@ -270,10 +270,17 @@ table thead th {
 }
 
 .report-item {
+  display: inline-block;
+  vertical-align: top;
+  border: 1px solid #ccc;
   resize: both;
   overflow: hidden;
   max-width: 100%;
   max-height: 100%;
+}
+
+.no-border {
+  border: none;
 }
 
 .report-item img {
