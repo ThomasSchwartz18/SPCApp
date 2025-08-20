@@ -418,11 +418,17 @@ window.addEventListener('DOMContentLoaded', () => {
             }
           }
           const props = pdf.getImageProperties(img);
-          const width = pdf.internal.pageSize.getWidth() - 20;
-          const height = (props.height * width) / props.width;
-          pdf.addImage(img, 'PNG', 10, y, width, height);
-          y += height + 10;
-          if (y > pdf.internal.pageSize.getHeight() - 20) { pdf.addPage(); y = 20; }
+          const pageWidth = pdf.internal.pageSize.getWidth();
+          const pageHeight = pdf.internal.pageSize.getHeight();
+          const margin = 10;
+          const maxWidth = pageWidth - margin * 2;
+          const maxHeight = pageHeight - margin * 2;
+          const scale = Math.min(maxWidth / props.width, maxHeight / props.height);
+          const imgWidth = props.width * scale;
+          const imgHeight = props.height * scale;
+          if (y + imgHeight > pageHeight - margin) { pdf.addPage(); y = margin; }
+          pdf.addImage(img, 'PNG', margin, y, imgWidth, imgHeight);
+          y += imgHeight + 10;
         }
       });
       pdf.addPage('portrait');
