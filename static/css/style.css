@@ -283,8 +283,8 @@ table thead th {
 }
 
 .report-text {
-  width: 100%;
-  display: block;
+  display: inline-block;
+  width: auto;
 }
 
 .action-card label {

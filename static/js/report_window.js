@@ -174,10 +174,13 @@
     });
 
     function addEditable(tag) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'report-item report-text';
       const el = document.createElement(tag);
-      el.className = 'report-text';
       el.contentEditable = 'true';
-      addToPage(el);
+      wrapper.appendChild(el);
+      makeReportItemResizable(wrapper);
+      addToPage(wrapper);
       el.focus();
       el.addEventListener('keydown', e => {
         if (e.key === 'Enter') {
