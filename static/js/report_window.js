@@ -272,7 +272,7 @@
       reportItems.forEach(item => item.classList.add('no-border'));
       const { jsPDF } = window.jspdf;
       const pxToPt = 72 / 96; // convert CSS pixels to PDF points
-      const pdf = new jsPDF('l', 'pt', 'a4');
+      const pdf = new jsPDF('p', 'pt', 'a4');
       const pages = body.querySelectorAll('.report-page');
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
@@ -286,7 +286,7 @@
         const imgWidth = canvas.width * pxToPt * ratio;
         const imgHeight = canvas.height * pxToPt * ratio;
         pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-        if (i < pages.length - 1) pdf.addPage('l');
+        if (i < pages.length - 1) pdf.addPage('p');
       }
       pdf.save('report.pdf');
       reportItems.forEach(item => item.classList.remove('no-border'));
