@@ -97,6 +97,16 @@
       localStorage.setItem('report-content', body.innerHTML);
     }
 
+    function makeReportItemResizable(wrapper) {
+      wrapper.addEventListener('mouseup', () => {
+        wrapper.style.width = wrapper.offsetWidth + 'px';
+        wrapper.style.height = wrapper.offsetHeight + 'px';
+        save();
+      });
+    }
+
+    body.querySelectorAll('.report-item').forEach(makeReportItemResizable);
+
     // dragging
     let offsetX = 0, offsetY = 0, dragging = false;
     header.addEventListener('mousedown', e => {
@@ -187,7 +197,14 @@
       wrapper.className = 'report-item';
       const img = document.createElement('img');
       img.src = dataUrl;
+      img.addEventListener('load', () => {
+        wrapper.style.width = img.naturalWidth + 'px';
+        wrapper.style.height = img.naturalHeight + 'px';
+        wrapper.style.aspectRatio = img.naturalWidth + '/' + img.naturalHeight;
+        save();
+      });
       wrapper.appendChild(img);
+      makeReportItemResizable(wrapper);
       addToPage(wrapper);
     });
 
