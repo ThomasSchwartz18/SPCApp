@@ -97,11 +97,22 @@
       localStorage.setItem('report-content', body.innerHTML);
     }
 
+    function reflowPages() {
+      const items = Array.from(body.querySelectorAll('.report-page > *'));
+      suppressSave = true;
+      body.innerHTML = '';
+      body.appendChild(createPage());
+      items.forEach(item => addToPage(item));
+      suppressSave = false;
+      save();
+    }
+
     function makeReportItemResizable(wrapper) {
       wrapper.addEventListener('mouseup', () => {
         wrapper.style.width = wrapper.offsetWidth + 'px';
         wrapper.style.height = wrapper.offsetHeight + 'px';
         save();
+        reflowPages();
       });
     }
 
@@ -149,15 +160,7 @@
     function applyMargin(reflow = false) {
       const marginPx = (parseFloat(marginSelect.value) || 0) * 96;
       body.querySelectorAll('.report-page').forEach(p => p.style.padding = marginPx + 'px');
-      if (reflow) {
-        const items = Array.from(body.querySelectorAll('.report-page > *'));
-        suppressSave = true;
-        body.innerHTML = '';
-        body.appendChild(createPage());
-        items.forEach(item => addToPage(item));
-        suppressSave = false;
-        save();
-      }
+      if (reflow) reflowPages();
     }
 
     marginSelect.addEventListener('change', () => applyMargin(true));
