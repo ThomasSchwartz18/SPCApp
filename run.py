@@ -28,11 +28,13 @@ def parse_aoi_rows(path: str):
         path,
         engine=engine,
         header=None,
-        usecols='A:F',
+        usecols='A:H',
         names=[
             'operator',
             'customer',
             'assembly',
+            'rev',
+            'job_number',
             'qty_inspected',
             'qty_rejected',
             'additional_info',
@@ -115,6 +117,8 @@ def init_db():
             operator TEXT,
             customer TEXT,
             assembly TEXT,
+            rev TEXT,
+            job_number TEXT,
             qty_inspected INTEGER,
             qty_rejected INTEGER,
             additional_info TEXT
@@ -146,6 +150,13 @@ def init_db():
         conn.execute('ALTER TABLE users ADD COLUMN c_suite INTEGER DEFAULT 0')
     if 'reports' not in existing_cols:
         conn.execute('ALTER TABLE users ADD COLUMN reports INTEGER DEFAULT 0')
+
+    # Ensure new columns exist for older AOI report tables
+    aoi_cols = [r['name'] for r in conn.execute("PRAGMA table_info(aoi_reports)").fetchall()]
+    if 'rev' not in aoi_cols:
+        conn.execute('ALTER TABLE aoi_reports ADD COLUMN rev TEXT')
+    if 'job_number' not in aoi_cols:
+        conn.execute('ALTER TABLE aoi_reports ADD COLUMN job_number TEXT')
 
     conn.execute(
         'INSERT OR IGNORE INTO users (username, password, part_markings, aoi, analysis, dashboard, reports, c_suite, is_admin) VALUES (?,?,?,?,?,?,?,?,?)',
@@ -633,6 +644,8 @@ def aoi_report():
                     r['operator'],
                     r['customer'],
                     r['assembly'],
+                    r.get('rev'),
+                    r.get('job_number'),
                     int(r['qty_inspected'] or 0),
                     int(r['qty_rejected'] or 0),
                     r.get('additional_info', ''),
@@ -641,7 +654,7 @@ def aoi_report():
             ]
             if records:
                 conn.executemany(
-                    'INSERT INTO aoi_reports (report_date, shift, operator, customer, assembly, qty_inspected, qty_rejected, additional_info) VALUES (?,?,?,?,?,?,?,?)',
+                    'INSERT INTO aoi_reports (report_date, shift, operator, customer, assembly, rev, job_number, qty_inspected, qty_rejected, additional_info) VALUES (?,?,?,?,?,?,?,?,?,?)',
                     records,
                 )
                 conn.commit()
@@ -652,12 +665,14 @@ def aoi_report():
         operator = request.form.get('operator')
         customer = request.form.get('customer')
         assembly = request.form.get('assembly')
+        rev = request.form.get('rev')
+        job_number = request.form.get('job_number')
         inspected = request.form.get('qty_inspected') or 0
         rejected = request.form.get('qty_rejected') or 0
         additional = request.form.get('additional_info') or ''
         conn.execute(
-            'INSERT INTO aoi_reports (report_date, shift, operator, customer, assembly, qty_inspected, qty_rejected, additional_info) VALUES (?,?,?,?,?,?,?,?)',
-            (report_date, shift, operator, customer, assembly, inspected, rejected, additional),
+            'INSERT INTO aoi_reports (report_date, shift, operator, customer, assembly, rev, job_number, qty_inspected, qty_rejected, additional_info) VALUES (?,?,?,?,?,?,?,?,?,?)',
+            (report_date, shift, operator, customer, assembly, rev, job_number, inspected, rejected, additional),
         )
         conn.commit()
         conn.close()
@@ -1083,6 +1098,51 @@ def chart_data():
     conn.close()
     return jsonify([{'model': r['model_name'], 'rate': r['rate'], 'boards': r['boards']} for r in data])
 
+@app.route('/analysis/stddev-data')
+@login_required
+def stddev_data():
+    start = request.args.get('start')
+    end = request.args.get('end')
+    threshold = request.args.get('threshold', type=int, default=0)
+    lines_param = request.args.get('lines', '')
+    models_param = request.args.get('models', '')
+    model_filter = request.args.get('model_filter', '').upper()
+    conn = get_db()
+    query = 'SELECT model_name, SUM(falsecall_parts)*1.0/SUM(total_boards) AS rate, SUM(total_boards) AS boards FROM moat WHERE 1=1'
+    params = []
+    if start:
+        query += ' AND upload_time >= ?'
+        params.append(f'{start}T00:00:00')
+    if end:
+        query += ' AND upload_time <= ?'
+        params.append(f'{end}T23:59:59')
+    if models_param:
+        models = [m.strip() for m in models_param.split(',') if m.strip()]
+        if models:
+            placeholders = ','.join('?' for _ in models)
+            query += f' AND model_name IN ({placeholders})'
+            params.extend(models)
+    if lines_param:
+        lines = [l for l in lines_param.split(',') if l]
+        if lines:
+            clause = ' OR '.join('filename LIKE ?' for _ in lines)
+            query += f' AND ({clause})'
+            params.extend([f'%{line}%' for line in lines])
+    if model_filter in ('SMT', 'TH'):
+        query += ' AND UPPER(model_name) LIKE ?'
+        params.append(f'%{model_filter}%')
+    query += ' GROUP BY model_name HAVING SUM(total_boards) >= ?'
+    params.append(threshold)
+    rows = conn.execute(query, params).fetchall()
+    conn.close()
+    rates = [r['rate'] for r in rows]
+    if rates:
+        mean = sum(rates) / len(rates)
+        variance = sum((x - mean) ** 2 for x in rates) / len(rates)
+        stdev = variance ** 0.5
+    else:
+        mean = stdev = 0
+    return jsonify({'mean': mean, 'stdev': stdev, 'rates': [{'model': r['model_name'], 'rate': r['rate']} for r in rows]})
 @app.route('/analysis/report-data')
 @login_required
 def analysis_report_data():

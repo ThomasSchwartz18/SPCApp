@@ -55,6 +55,12 @@
               <label>Assembly
                 <input type="text" name="assembly">
               </label><br>
+              <label>Rev
+                <input type="text" name="rev">
+              </label><br>
+              <label>Job Number
+                <input type="text" name="job_number">
+              </label><br>
               <label>Quantity Inspected
                 <input type="number" name="qty_inspected" min="0">
               </label><br>
@@ -257,6 +263,8 @@
             <th>Operator</th>
             <th>Customer</th>
             <th>Assembly</th>
+            <th>Rev</th>
+            <th>Job Number</th>
             <th>Quantity Inspected</th>
             <th>Quantity Rejected</th>
             <th>Additional Information</th>
@@ -273,6 +281,8 @@
             <td>{{ r['operator'] }}</td>
             <td>{{ r['customer'] }}</td>
             <td>{{ r['assembly'] }}</td>
+            <td>{{ r['rev'] }}</td>
+            <td>{{ r['job_number'] }}</td>
             <td>{{ r['qty_inspected'] }}</td>
             <td>{{ r['qty_rejected'] }}</td>
             <td>{{ r['additional_info'] }}</td>

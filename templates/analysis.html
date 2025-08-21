@@ -184,6 +184,73 @@
               </div>
             </div>
             <div class="action-card">
+              <h2>Std Dev - Avg FC per Assembly</h2>
+              <p class="desc">Analyze false call rate distribution per assembly.</p>
+              <button id="stddev-chart-btn" title="Show or hide chart options">Chart Settings</button>
+              <div id="stddev-chart-settings" style="display:none; margin-top:10px;">
+                <label>Start Date
+                  <input type="date" id="std-start-date" title="Start date for data range">
+                </label><br>
+                <label>End Date
+                  <input type="date" id="std-end-date" title="End date for data range">
+                </label><br>
+                <label>Y Max
+                  <input type="number" id="std-y-max" value="50" step="0.1" title="Maximum value for Y-axis">
+                </label><br>
+                <label>Min Boards
+                  <input type="number" id="std-min-boards" value="7" title="Minimum boards required">
+                </label><br>
+                <label>Model Name
+                  <input list="model-list" id="std-model-name-1" placeholder="Start typing..." title="Select model name">
+                  <span id="std-model-name-and-2" style="display:none">and</span>
+                  <input list="model-list" id="std-model-name-2" style="display:none" placeholder="Start typing..." title="Select model name">
+                  <span id="std-model-name-and-3" style="display:none">and</span>
+                  <input list="model-list" id="std-model-name-3" style="display:none" placeholder="Start typing..." title="Select model name">
+                  <span id="std-model-name-and-4" style="display:none">and</span>
+                  <input list="model-list" id="std-model-name-4" style="display:none" placeholder="Start typing..." title="Select model name">
+                </label><br>
+                <label>Lines
+                  <select id="std-line-select-1">
+                    <option value="all">All Lines</option>
+                    <option value="offline">Line Offline</option>
+                    <option value="0">Line 0</option>
+                    <option value="1">Line 1</option>
+                    <option value="2">Line 2</option>
+                    <option value="3">Line 3</option>
+                  </select>
+                  <span id="std-line-and-2" style="display:none">and</span>
+                  <select id="std-line-select-2" style="display:none">
+                    <option value="">-- Select --</option>
+                    <option value="offline">Line Offline</option>
+                    <option value="0">Line 0</option>
+                    <option value="1">Line 1</option>
+                    <option value="2">Line 2</option>
+                    <option value="3">Line 3</option>
+                  </select>
+                  <span id="std-line-and-3" style="display:none">and</span>
+                  <select id="std-line-select-3" style="display:none">
+                    <option value="">-- Select --</option>
+                    <option value="offline">Line Offline</option>
+                    <option value="0">Line 0</option>
+                    <option value="1">Line 1</option>
+                    <option value="2">Line 2</option>
+                    <option value="3">Line 3</option>
+                  </select>
+                  <span id="std-line-and-4" style="display:none">and</span>
+                  <select id="std-line-select-4" style="display:none">
+                    <option value="">-- Select --</option>
+                    <option value="offline">Line Offline</option>
+                    <option value="0">Line 0</option>
+                    <option value="1">Line 1</option>
+                    <option value="2">Line 2</option>
+                    <option value="3">Line 3</option>
+                  </select>
+                </label><br>
+                <p class="field-desc">Generate the chart using the selected parameters.</p>
+                <button id="run-std-chart-btn" title="Generate standard deviation chart">Run Chart</button>
+              </div>
+            </div>
+            <div class="action-card">
               <h2>Run SQL Query</h2>
             <form id="sql-form">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -374,6 +441,14 @@
           </select>
         </label>
         <button id="download-ng-pdf">Download PDF</button>
+      </div>
+    </div>
+    <div id="chart-stddev-modal" class="modal">
+      <div class="modal-content">
+        <span id="close-chart-stddev-modal" class="close">&times;</span>
+        <h2>Std Dev - Avg FC per Assembly</h2>
+        <canvas id="chart-stddev-canvas" height="200"></canvas>
+        <p id="stddev-chart-summary" class="chart-summary"></p>
       </div>
     </div>
   {% endif %}
