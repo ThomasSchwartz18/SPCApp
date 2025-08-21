@@ -29,95 +29,6 @@ window.addEventListener('DOMContentLoaded', () => {
     return el ? JSON.parse(el.textContent) : null;
   };
 
-  const verticalLinePlugin = {
-    id: 'verticalLines',
-    afterDraw(chart, args, opts) {
-      const {ctx, chartArea: {top, bottom}, scales: {x}} = chart;
-      (opts.lines || []).forEach(line => {
-        const xPos = x.getPixelForValue(line.value);
-        ctx.save();
-        ctx.strokeStyle = line.color || 'black';
-        ctx.beginPath();
-        ctx.moveTo(xPos, top);
-        ctx.lineTo(xPos, bottom);
-        ctx.stroke();
-        if (line.label) {
-          ctx.fillStyle = line.color || 'black';
-          ctx.textBaseline = 'top';
-          ctx.fillText(line.label, xPos + 4, top + 12);
-        }
-        ctx.restore();
-      });
-    }
-  };
-
-  function createStdConfig(data) {
-    const rates = data.map(c => c.rate);
-    const yMax = Math.max(...rates, 1);
-    const bins = 20;
-    const binWidth = yMax / bins;
-    const counts = Array(bins).fill(0);
-    rates.forEach(r => {
-      const idx = Math.min(Math.floor(r / binWidth), bins - 1);
-      counts[idx]++;
-    });
-    const decimals = binWidth < 1 ? 2 : 1;
-    const labels = counts.map((_, i) => `${(i * binWidth).toFixed(decimals)}-${((i + 1) * binWidth).toFixed(decimals)}`);
-    const total = rates.length;
-    const avg = rates.reduce((a, b) => a + b, 0) / total;
-    const mean = avg;
-    const variance = rates.reduce((a, b) => a + (b - mean) ** 2, 0) / total;
-    const stdev = Math.sqrt(variance);
-    const xVals = counts.map((_, i) => i * binWidth + binWidth / 2);
-    const norm = xVals.map(x => (1 / (stdev * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * ((x - mean) ** 2) / (stdev ** 2)) * total * binWidth);
-    const lines = [
-      { value: avg, color: 'green', label: `Avg = ${avg.toFixed(2)}` },
-      { value: mean, color: 'blue', label: `Mean = ${mean.toFixed(2)}` },
-      { value: mean + stdev, color: 'red', label: '1σ' },
-      { value: mean + 2 * stdev, color: 'red', label: '2σ' },
-      { value: mean + 3 * stdev, color: 'red', label: '3σ' },
-      { value: mean - stdev, color: 'red', label: '-1σ' },
-      { value: mean - 2 * stdev, color: 'red', label: '-2σ' },
-      { value: mean - 3 * stdev, color: 'red', label: '-3σ' }
-    ];
-    const xMax = Math.max(...rates, mean + 3 * stdev);
-    const config = {
-      type: 'bar',
-      data: {
-        datasets: [
-          {
-            label: 'Frequency',
-            data: xVals.map((x, i) => ({ x, y: counts[i] })),
-            backgroundColor: 'rgba(54, 162, 235, 0.7)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            parsing: false
-          },
-          {
-            type: 'line',
-            label: 'Normal Dist',
-            data: xVals.map((x, i) => ({ x, y: norm[i] })),
-            borderColor: 'rgba(255, 99, 132, 1)',
-            fill: false,
-            tension: 0.4,
-            pointRadius: 0,
-            parsing: false
-          }
-        ]
-      },
-      options: {
-        scales: {
-          x: { type: 'linear', min: 0, max: xMax },
-          y: { beginAtZero: true }
-        },
-        plugins: { verticalLines: { lines } }
-      },
-      plugins: [verticalLinePlugin]
-    };
-    const rows = counts.map((c, i) => [labels[i], c]);
-    const summary = `Mean rate ${mean.toFixed(2)} with std dev ${stdev.toFixed(2)}.`;
-    return { config, rows, summary };
-  }
-
   const ops = getData('operator-data');
   const isAdmin = document.body.dataset.admin === 'true';
   if (ops && ops.length) {
@@ -205,10 +116,15 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     const stdCtx = document.getElementById('customerStdChart');
     if (stdCtx) {
-      const { config, summary } = createStdConfig(customerData);
+      const rates = customerData.map(c => c.rate);
+      const mean = rates.reduce((a, b) => a + b, 0) / rates.length;
+      const variance = rates.reduce((a, b) => a + (b - mean) ** 2, 0) / rates.length;
+      const stdev = Math.sqrt(variance);
+      const yMax = Math.max(...rates, mean + 3 * stdev, 1);
+      const { config } = createStdChartConfig(rates, mean, stdev, yMax);
       new Chart(stdCtx, config);
       const summaryEl = document.getElementById('customerStdChartSummary');
-      if (summaryEl) summaryEl.textContent = summary;
+      if (summaryEl) summaryEl.textContent = `Avg rate ${mean.toFixed(2)} with std dev ${stdev.toFixed(2)}.`;
     }
   }
 
@@ -341,7 +257,12 @@ window.addEventListener('DOMContentLoaded', () => {
         const rows = customerData.map(c => [c.customer, c.rate]);
         showModal('Operator Reject Rates', config, ['Customer','Reject Rate'], rows);
       } else if (type === 'customer-std' && customerData) {
-        const { config, rows } = createStdConfig(customerData);
+        const rates = customerData.map(c => c.rate);
+        const mean = rates.reduce((a, b) => a + b, 0) / rates.length;
+        const variance = rates.reduce((a, b) => a + (b - mean) ** 2, 0) / rates.length;
+        const stdev = Math.sqrt(variance);
+        const yMax = Math.max(...rates, mean + 3 * stdev, 1);
+        const { config, rows } = createStdChartConfig(rates, mean, stdev, yMax);
         showModal('Std Dev of Reject Rates per Customer', config, ['Range','Frequency'], rows);
       } else if (type === 'yield' && yieldData) {
         const config = {
