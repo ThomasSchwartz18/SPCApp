@@ -114,6 +114,52 @@ window.addEventListener('DOMContentLoaded', () => {
         options: { scales: { y: { beginAtZero: true } } }
       });
     }
+
+    const stdCtx = document.getElementById('customerStdChart');
+    if (stdCtx) {
+      const rates = customerData.map(c => c.rate);
+      const yMax = Math.max(...rates, 1);
+      const bins = 10;
+      const binWidth = yMax / bins;
+      const counts = Array(bins).fill(0);
+      rates.forEach(r => {
+        const idx = Math.min(Math.floor(r / binWidth), bins - 1);
+        counts[idx]++;
+      });
+      const labels = counts.map((_, i) => `${(i * binWidth).toFixed(1)}-${((i + 1) * binWidth).toFixed(1)}`);
+      const mean = rates.reduce((a, b) => a + b, 0) / rates.length;
+      const variance = rates.reduce((a, b) => a + (b - mean) ** 2, 0) / rates.length;
+      const stdev = Math.sqrt(variance);
+      const total = rates.length;
+      const xVals = counts.map((_, i) => i * binWidth + binWidth / 2);
+      const norm = xVals.map(x => (1 / (stdev * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * ((x - mean) ** 2) / (stdev ** 2)) * total * binWidth);
+      new Chart(stdCtx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Frequency',
+              data: counts,
+              backgroundColor: 'rgba(54, 162, 235, 0.7)',
+              borderColor: 'rgba(54, 162, 235, 1)'
+            },
+            {
+              type: 'line',
+              label: 'Normal Dist',
+              data: norm,
+              borderColor: 'rgba(255, 99, 132, 1)',
+              fill: false,
+              tension: 0.4,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: { scales: { y: { beginAtZero: true } } }
+      });
+      const summaryEl = document.getElementById('customerStdChartSummary');
+      if (summaryEl) summaryEl.textContent = `Mean rate ${mean.toFixed(2)} with std dev ${stdev.toFixed(2)}.`;
+    }
   }
 
   const yieldData = getData('yield-data');

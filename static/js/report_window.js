@@ -57,21 +57,25 @@
 
     const header = document.createElement('div');
     header.className = 'report-window-header';
-    header.innerHTML = '<button id="report-add-text">Add Text</button>' +
-      '<button id="report-add-h1">Add Header 1</button>' +
-      '<button id="report-add-h2">Add Header 2</button>' +
+    header.innerHTML =
+      '<button id="report-add-text" title="Add Text">📝</button>' +
+      '<button id="report-add-h1" title="Add Header 1">H1</button>' +
+      '<button id="report-add-h2" title="Add Header 2">H2</button>' +
+      '<button id="report-undo" title="Undo Last">↩</button>' +
+      '<button id="report-clear" title="Clear All">🗑</button>' +
       '<label>Margin:<select id="report-margin">' +
-      '<option value="0.25">0.25\"</option>' +
-      '<option value="0.5" selected>0.5\"</option>' +
-      '<option value="0.75">0.75\"</option>' +
-      '<option value="1">1\"</option>' +
+      '<option value="0.25">0.25"</option>' +
+      '<option value="0.5" selected>0.5"</option>' +
+      '<option value="0.75">0.75"</option>' +
+      '<option value="1">1"</option>' +
       '</select></label>' +
-      '<div class="right"><button id="report-print">Print</button>' +
+      '<div class="right"><button id="report-print" title="Print">🖨</button>' +
       '<button id="report-close" title="Close">\u00d7</button></div>';
 
     const body = document.createElement('div');
     body.className = 'report-window-body';
 
+    const history = [];
     const marginSelect = header.querySelector('#report-margin');
 
     function createPage() {
@@ -204,6 +208,22 @@
     marginSelect.addEventListener('change', () => applyMargin(true));
     applyMargin(true);
 
+    header.querySelector('#report-undo').addEventListener('click', () => {
+      const last = history.pop();
+      if (last && last.parentNode) {
+        last.remove();
+        reflowPages();
+        save();
+      }
+    });
+
+    header.querySelector('#report-clear').addEventListener('click', () => {
+      body.innerHTML = '';
+      body.appendChild(createPage());
+      history.length = 0;
+      save();
+    });
+
     header.querySelector('#report-close').addEventListener('click', () => {
       win.remove();
       disableDraggables();
@@ -220,6 +240,7 @@
       makeReportItemResizable(wrapper);
       makeReportItemDraggable(wrapper);
       addToPage(wrapper);
+      history.push(wrapper);
       el.focus();
       el.addEventListener('keydown', e => {
         if (e.key === 'Enter') {
@@ -264,6 +285,7 @@
       makeReportItemResizable(wrapper);
       makeReportItemDraggable(wrapper);
       addToPage(wrapper);
+      history.push(wrapper);
     });
 
     header.querySelector('#report-print').addEventListener('click', async () => {
