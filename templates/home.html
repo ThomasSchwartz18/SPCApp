@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
 {% block title %}SPCApp Home{% endblock %}
+{% block head_extra %}
+  <script src="{{ url_for('static', filename='js/tabs.js') }}" defer></script>
+{% endblock %}
 {% block content %}
   <div class="home-title">
     <img src="/static/images/image.png" alt="Spectra Tech Logo">
@@ -26,58 +29,69 @@
   #}
   <p>Select a section below:</p>
 
+  <nav class="tab-nav">
+    {% if is_admin or permissions.get('analysis') or permissions.get('aoi') %}
+    <button class="tab-link active" data-tab="analysis-tab" data-desc="Upload and explore reports for data insights.">Analysis</button>
+    {% endif %}
+    <button class="tab-link{% if not (is_admin or permissions.get('analysis') or permissions.get('aoi')) %} active{% endif %}" data-tab="tools-tab" data-desc="Utilities such as rework lookup and verified part markings.">Tools</button>
+    <button class="tab-link" data-tab="production-tab" data-desc="Dashboards and job management features.">Production</button>
+  </nav>
+
   {% if is_admin or permissions.get('analysis') or permissions.get('aoi') %}
-  <div class="home-row">
-    <h2>Analysis</h2>
-    <div class="widget-row">
-      {% if is_admin or permissions.get('analysis') %}
-      <div class="widget" onclick="location.href='/analysis'">
-        <h2>Data Analysis</h2>
-        <p>Upload And Data Mine Reports From SPC</p>
+  <div id="analysis-tab" class="tab-content active">
+    <div class="home-row">
+      <div class="widget-row">
+        {% if is_admin or permissions.get('analysis') %}
+        <div class="widget" onclick="location.href='/analysis'">
+          <h2>Data Analysis</h2>
+          <p>Upload And Data Mine Reports From SPC</p>
+        </div>
+        {% endif %}
+        {% if is_admin or permissions.get('aoi') %}
+        <div class="widget" onclick="location.href='/aoi'">
+          <h2>AOI Daily Report</h2>
+          <p>View and Upload AOI Reports With Data Insights.</p>
+        </div>
+        <div class="widget" onclick="location.href='/final-inspect'">
+          <h2>Final Inspect Daily Report</h2>
+          <p>View and Upload Final Inspection Reports With Data Insights.</p>
+        </div>
+        {% endif %}
       </div>
-      {% endif %}
-      {% if is_admin or permissions.get('aoi') %}
-      <div class="widget" onclick="location.href='/aoi'">
-        <h2>AOI Daily Report</h2>
-        <p>View and Upload AOI Reports With Data Insights.</p>
-      </div>
-      <div class="widget" onclick="location.href='/final-inspect'">
-        <h2>Final Inspect Daily Report</h2>
-        <p>View and Upload Final Inspection Reports With Data Insights.</p>
-      </div>
-      {% endif %}
     </div>
   </div>
   {% endif %}
 
-  <div class="home-row">
-    <h2>Tools</h2>
-    <div class="widget-row">
-      <div class="widget" onclick="location.href='/rework'">
-        <h2>Rework</h2>
-        <p>Stencil and part lookup tools</p>
+  <div id="tools-tab" class="tab-content{% if not (is_admin or permissions.get('analysis') or permissions.get('aoi')) %} active{% endif %}">
+    <div class="home-row">
+      <div class="widget-row">
+        <div class="widget" onclick="location.href='/rework'">
+          <h2>Rework</h2>
+          <p>Stencil and part lookup tools</p>
+        </div>
+        {% if is_admin or permissions.get('part_markings') %}
+        <div class="widget" onclick="location.href='/part-markings'">
+          <h2>Verified Part Markings</h2>
+          <p>Lookup Part Numbers To Find Their Verified Part Markings</p>
+        </div>
+        {% endif %}
       </div>
-      {% if is_admin or permissions.get('part_markings') %}
-      <div class="widget" onclick="location.href='/part-markings'">
-        <h2>Verified Part Markings</h2>
-        <p>Lookup Part Numbers To Find Their Verified Part Markings</p>
-      </div>
-      {% endif %}
     </div>
   </div>
 
-  <div class="home-row">
-    <h2>Production</h2>
-    <div class="widget-row">
-      {% if is_admin or permissions.get('dashboard') %}
-      <div class="widget" onclick="location.href='#'">
-        <h2>SPC Dashboard</h2>
-        <p>Statistical Controls (<i>in progress</i>)</p>
-      </div>
-      {% endif %}
-      <div class="widget" onclick="location.href='/jobs'">
-        <h2>Jobs</h2>
-        <p>Manage Floor Jobs (<i>in progress</i>)</p>
+  <div id="production-tab" class="tab-content">
+    <div class="home-row">
+      <div class="widget-row">
+        {% if is_admin or permissions.get('dashboard') %}
+        <div class="widget" onclick="location.href='#'">
+          <h2>SPC Dashboard</h2>
+          <p>Statistical Controls (<i>in progress</i>)</p>
+        </div>
+        {% endif %}
+        <div class="widget" onclick="location.href='/jobs'">
+          <h2>Jobs</h2>
+          <p>Manage Floor Jobs (<i>in progress</i>)</p>
+        </div>
       </div>
     </div>
   </div>
