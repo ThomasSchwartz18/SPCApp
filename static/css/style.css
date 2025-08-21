@@ -246,6 +246,15 @@ table thead th {
   color: var(--color-white);
   margin-left: 5px;
   cursor: pointer;
+  width: 30px;
+  height: 30px;
+  font-size: 16px;
+  border-radius: 4px;
+}
+
+.report-window-header button:hover {
+  background: var(--color-white);
+  color: var(--color-accent);
 }
 
 .report-window-body {
