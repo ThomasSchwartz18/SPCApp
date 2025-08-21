@@ -372,16 +372,23 @@ table thead th {
 }
 
 .tab-nav button {
+  flex: 1;
   background: var(--color-accent);
   color: var(--color-white);
   border: none;
-  padding: 8px 12px;
+  padding: 10px;
   cursor: pointer;
+  text-align: center;
+  transition: background 0.3s ease;
 }
 
 .tab-nav button.active {
   background: var(--color-black);
   color: var(--color-white);
+}
+
+.tab-nav button:hover {
+  background: var(--color-black);
 }
 
 .tab-content {
@@ -390,6 +397,24 @@ table thead th {
 
 .tab-content.active {
   display: block;
+}
+
+.tab-hover-info {
+  background: var(--color-accent);
+  color: var(--color-white);
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  padding: 0 10px;
+}
+
+.tab-hover-info.show {
+  max-height: 200px;
+  padding: 10px;
+}
+
+.tab-hover-info details {
+  margin-top: 5px;
 }
 
 .home-title img {
