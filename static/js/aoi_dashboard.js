@@ -1,5 +1,17 @@
 window.addEventListener('DOMContentLoaded', () => {
   const basePath = document.body.dataset.basePath || 'aoi';
+
+  function getFilterSuffix() {
+    const form = document.getElementById('aoi-filter-form');
+    if (!form) return '';
+    const start = form.querySelector('input[name="start"])?.value || '';
+    const end = form.querySelector('input[name="end"])?.value || '';
+    let range = 'All Dates';
+    if (start && end) range = `${start} to ${end}`;
+    else if (start) range = `From ${start}`;
+    else if (end) range = `Up to ${end}`;
+    return ` [${range}]`;
+  }
   // Divider logic
   const divider = document.getElementById('divider');
   const container = document.getElementById('container');
@@ -122,7 +134,7 @@ window.addEventListener('DOMContentLoaded', () => {
       const variance = rates.reduce((a, b) => a + (b - mean) ** 2, 0) / rates.length;
       const stdev = Math.sqrt(variance);
       const yMax = Math.max(...rates, mean + 3 * stdev, 1);
-      const { config } = createStdChartConfig(rates, mean, stdev, yMax);
+      const { config } = createStdChartConfig(rates, mean, stdev, yMax, { bins: 40 });
       new Chart(stdCtx, config);
       const summaryEl = document.getElementById('customerStdChartSummary');
       if (summaryEl) summaryEl.textContent = `Avg rate ${mean.toFixed(2)} with std dev ${stdev.toFixed(2)}.`;
@@ -266,19 +278,22 @@ window.addEventListener('DOMContentLoaded', () => {
         const variance = rates.reduce((a, b) => a + (b - mean) ** 2, 0) / rates.length;
         const stdev = Math.sqrt(variance);
         const yMax = Math.max(...rates, mean + 3 * stdev, 1);
-        const { config, rows } = createStdChartConfig(rates, mean, stdev, yMax);
+        const { config, rows } = createStdChartConfig(rates, mean, stdev, yMax, { bins: 40 });
         showModal('Std Dev of Reject Rates per Customer', config, ['Range','Frequency'], rows);
       } else if (type === 'yield' && yieldData) {
+        const values = yieldData.map(y => y.yield * 100);
+        const minVal = Math.min(...values);
+        const yMin = minVal < 80 ? minVal : 80;
         const config = {
           type: 'line',
           data: {
             labels: yieldData.map(y => y.report_date),
-            datasets: [{ label: 'Yield %', data: yieldData.map(y => y.yield * 100), fill: false, borderColor: 'rgba(75, 192, 192, 1)' }]
+            datasets: [{ label: 'Yield %', data: values, fill: false, borderColor: 'rgba(75, 192, 192, 1)' }]
           },
           options: {
             scales: {
               y: {
-                beginAtZero: true,
+                min: yMin,
                 max: 100,
                 ticks: { callback: value => `${value}%` }
               }
@@ -466,6 +481,18 @@ window.addEventListener('DOMContentLoaded', () => {
       pdf.addPage('portrait');
       pdf.autoTable({ html: `#${period}-table`, startY: 10 });
       pdf.save(`${period}-aoi-summary.pdf`);
+    });
+  });
+
+  document.querySelectorAll('h2').forEach(h2 => {
+    if (!h2.querySelector('.expand-chart')) return;
+    const canvas = h2.nextElementSibling;
+    if (!canvas || canvas.tagName !== 'CANVAS') return;
+    h2.setAttribute('draggable', 'true');
+    h2.addEventListener('dragstart', () => {
+      const title = h2.childNodes[0].textContent.trim();
+      const suffix = getFilterSuffix();
+      window.createChartPopup && window.createChartPopup(`${title}${suffix}`, canvas);
     });
   });
 });

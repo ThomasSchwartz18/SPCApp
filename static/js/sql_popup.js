@@ -120,6 +120,58 @@
     createPopup(data);
   };
 
+  window.createChartPopup = function(title, canvas) {
+    const offset = document.querySelectorAll('.sql-popup').length * 30;
+    const popup = document.createElement('div');
+    popup.className = 'sql-popup';
+    popup.style.top = (20 + offset) + 'px';
+    popup.style.left = (20 + offset) + 'px';
+
+    const header = document.createElement('div');
+    header.className = 'sql-popup-header';
+    header.innerHTML = `<span>${title}</span><div><button class="min-btn" title="Minimize">_</button><button class="close-btn" title="Close">×</button></div>`;
+
+    const body = document.createElement('div');
+    body.className = 'sql-popup-body';
+    const img = document.createElement('img');
+    try {
+      img.src = canvas.toDataURL('image/png');
+    } catch (err) {
+      console.error('Failed to export canvas', err);
+    }
+    img.style.maxWidth = '100%';
+    body.appendChild(img);
+
+    popup.appendChild(header);
+    popup.appendChild(body);
+    document.body.appendChild(popup);
+
+    let offsetX = 0, offsetY = 0, dragging = false;
+    header.addEventListener('mousedown', e => {
+      dragging = true;
+      offsetX = e.clientX - popup.offsetLeft;
+      offsetY = e.clientY - popup.offsetTop;
+      document.addEventListener('mousemove', move);
+      document.addEventListener('mouseup', up);
+    });
+
+    function move(e) {
+      if (!dragging) return;
+      popup.style.left = (e.clientX - offsetX) + 'px';
+      popup.style.top = (e.clientY - offsetY) + 'px';
+    }
+
+    function up() {
+      if (!dragging) return;
+      dragging = false;
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', up);
+    }
+
+    header.querySelector('.close-btn').addEventListener('click', () => popup.remove());
+    header.querySelector('.min-btn').addEventListener('click', () => popup.classList.toggle('collapsed'));
+  };
+
   document.addEventListener('DOMContentLoaded', () => {
     popups.forEach(createPopup);
   });
