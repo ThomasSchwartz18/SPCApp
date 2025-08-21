@@ -475,6 +475,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const chartStdModal = document.getElementById('chart-stddev-modal');
   const closeStdChart = document.getElementById('close-chart-stddev-modal');
   const stdCtx = document.getElementById('chart-stddev-canvas');
+  const downloadStdBtn = document.getElementById('download-std-pdf');
   let stdChartInstance;
   if (runStdBtn && chartStdModal && closeStdChart && stdCtx) {
     runStdBtn.addEventListener('click', () => {
@@ -498,45 +499,22 @@ window.addEventListener('DOMContentLoaded', () => {
             chartStdModal.style.display = 'block';
             return;
           }
-          const bins = 20; // more bins for clearer distribution
-          const binWidth = yMax / bins;
-          const counts = Array(bins).fill(0);
-          rates.forEach(rate => {
-            const idx = Math.min(Math.floor(rate / binWidth), bins - 1);
-            counts[idx]++;
-          });
-          const labels = counts.map((_, i) => `${(i * binWidth).toFixed(1)}-${((i + 1) * binWidth).toFixed(1)}`);
-          const total = rates.length;
           const mean = data.mean;
           const stdev = data.stdev;
-          const xVals = counts.map((_, i) => i * binWidth + binWidth / 2);
-          const norm = xVals.map(x => (1 / (stdev * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * ((x - mean) ** 2) / (stdev ** 2)) * total * binWidth);
-          stdChartInstance = new Chart(stdCtx, {
-            type: 'bar',
-            data: {
-              labels,
-              datasets: [
-                {
-                  label: 'Frequency',
-                  data: counts,
-                  backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                  borderColor: 'rgba(54, 162, 235, 1)'
-                },
-                {
-                  type: 'line',
-                  label: 'Normal Dist',
-                  data: norm,
-                  borderColor: 'rgba(255, 99, 132, 1)',
-                  fill: false,
-                  tension: 0.4,
-                  pointRadius: 0
-                }
-              ]
-            },
-            options: { scales: { y: { beginAtZero: true } } }
-          });
+          const { config, rows } = createStdChartConfig(rates, mean, stdev, yMax);
+          stdChartInstance = new Chart(stdCtx, config);
+          const stdTable = document.getElementById('std-data-table');
+          if (stdTable) {
+            stdTable.innerHTML = '<thead><tr><th>Range</th><th>Count</th></tr></thead><tbody></tbody>';
+            const tbody = stdTable.querySelector('tbody');
+            rows.forEach(([range, count]) => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = `<td>${range}</td><td>${count}</td>`;
+              tbody.appendChild(tr);
+            });
+          }
           const rangeText = start && end ? `${start} to ${end}` : start ? `From ${start}` : end ? `Up to ${end}` : 'All dates';
-          document.getElementById('stddev-chart-summary').textContent = `From ${rangeText} on ${lineText}, mean FC rate ${mean.toFixed(2)} with std dev ${stdev.toFixed(2)}.`;
+          document.getElementById('stddev-chart-summary').textContent = `From ${rangeText} on ${lineText}, Avg FC rate ${mean.toFixed(2)} with std dev ${stdev.toFixed(2)}.`;
           chartStdModal.style.display = 'block';
         });
     });
@@ -548,6 +526,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const chartNgStdModal = document.getElementById('chart-ng-stddev-modal');
   const closeNgStdChart = document.getElementById('close-chart-ng-stddev-modal');
   const ngStdCtx = document.getElementById('chart-ng-stddev-canvas');
+  const downloadNgStdBtn = document.getElementById('download-ng-std-pdf');
   let ngStdChartInstance;
   if (runNgStdBtn && chartNgStdModal && closeNgStdChart && ngStdCtx) {
     runNgStdBtn.addEventListener('click', () => {
@@ -571,50 +550,64 @@ window.addEventListener('DOMContentLoaded', () => {
             chartNgStdModal.style.display = 'block';
             return;
           }
-          const bins = 20; // more bins for clearer distribution
-          const binWidth = yMax / bins;
-          const counts = Array(bins).fill(0);
-          rates.forEach(rate => {
-            const idx = Math.min(Math.floor(rate / binWidth), bins - 1);
-            counts[idx]++;
-          });
-          const labels = counts.map((_, i) => `${(i * binWidth).toFixed(3)}-${((i + 1) * binWidth).toFixed(3)}`);
-          const total = rates.length;
           const mean = data.mean;
           const stdev = data.stdev;
-          const xVals = counts.map((_, i) => i * binWidth + binWidth / 2);
-          const norm = xVals.map(x => (1 / (stdev * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * ((x - mean) ** 2) / (stdev ** 2)) * total * binWidth);
-          ngStdChartInstance = new Chart(ngStdCtx, {
-            type: 'bar',
-            data: {
-              labels,
-              datasets: [
-                {
-                  label: 'Frequency',
-                  data: counts,
-                  backgroundColor: 'rgba(60, 179, 113, 0.7)',
-                  borderColor: 'rgba(60, 179, 113, 1)'
-                },
-                {
-                  type: 'line',
-                  label: 'Normal Dist',
-                  data: norm,
-                  borderColor: 'rgba(153, 102, 255, 1)',
-                  fill: false,
-                  tension: 0.4,
-                  pointRadius: 0
-                }
-              ]
-            },
-            options: { scales: { y: { beginAtZero: true } } }
+          const { config, rows } = createStdChartConfig(rates, mean, stdev, yMax, {
+            barColor: 'rgba(60, 179, 113, 0.7)',
+            barBorderColor: 'rgba(60, 179, 113, 1)',
+            lineColor: 'rgba(153, 102, 255, 1)',
+            decimals: 3
           });
+          ngStdChartInstance = new Chart(ngStdCtx, config);
+          const ngStdTable = document.getElementById('ng-std-data-table');
+          if (ngStdTable) {
+            ngStdTable.innerHTML = '<thead><tr><th>Range</th><th>Count</th></tr></thead><tbody></tbody>';
+            const tbody = ngStdTable.querySelector('tbody');
+            rows.forEach(([range, count]) => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = `<td>${range}</td><td>${count}</td>`;
+              tbody.appendChild(tr);
+            });
+          }
           const rangeText = start && end ? `${start} to ${end}` : start ? `From ${start}` : end ? `Up to ${end}` : 'All dates';
-          document.getElementById('ng-stddev-chart-summary').textContent = `From ${rangeText} on ${lineText}, mean NG rate ${mean.toFixed(3)} with std dev ${stdev.toFixed(3)}.`;
+          document.getElementById('ng-stddev-chart-summary').textContent = `From ${rangeText} on ${lineText}, Avg NG rate ${mean.toFixed(3)} with std dev ${stdev.toFixed(3)}.`;
           chartNgStdModal.style.display = 'block';
         });
     });
     closeNgStdChart.addEventListener('click', () => { chartNgStdModal.style.display = 'none'; });
     window.addEventListener('click', e => { if (e.target === chartNgStdModal) chartNgStdModal.style.display = 'none'; });
+  }
+
+  if (downloadStdBtn) {
+    downloadStdBtn.addEventListener('click', () => {
+      if (!stdChartInstance) return;
+      const summary = document.getElementById('stddev-chart-summary').textContent;
+      const margin = parseFloat(document.getElementById('std-margin').value) || 0.5;
+      exportChartWithTable(
+        stdChartInstance,
+        '#std-data-table',
+        ['Std Dev - Avg FC per Assembly', summary],
+        'stddev-chart.pdf',
+        'landscape',
+        margin
+      );
+    });
+  }
+
+  if (downloadNgStdBtn) {
+    downloadNgStdBtn.addEventListener('click', () => {
+      if (!ngStdChartInstance) return;
+      const summary = document.getElementById('ng-stddev-chart-summary').textContent;
+      const margin = parseFloat(document.getElementById('ng-std-margin').value) || 0.5;
+      exportChartWithTable(
+        ngStdChartInstance,
+        '#ng-std-data-table',
+        ['Std Dev - Avg NG per Assembly', summary],
+        'ng-stddev-chart.pdf',
+        'landscape',
+        margin
+      );
+    });
   }
 
   if (downloadNgBtn) {
