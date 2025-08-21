@@ -31,6 +31,13 @@ window.addEventListener('DOMContentLoaded', () => {
       ngSettings.style.display = ngSettings.style.display === 'none' ? 'block' : 'none';
     });
   }
+  const stdBtn = document.getElementById('stddev-chart-btn');
+  const stdSettings = document.getElementById('stddev-chart-settings');
+  if (stdBtn && stdSettings) {
+    stdBtn.addEventListener('click', () => {
+      stdSettings.style.display = stdSettings.style.display === 'none' ? 'block' : 'none';
+    });
+  }
 
   // Model filter for MOAT table
   const modelFilter = document.getElementById('model-filter');
@@ -118,6 +125,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   setupLineSelectors('line');
   setupLineSelectors('ng-line');
+  setupLineSelectors('std-line');
 
   function setupModelInputs(prefix) {
     const inputs = [];
@@ -182,6 +190,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   setupModelInputs('model-name');
   setupModelInputs('ng-model-name');
+  setupModelInputs('std-model-name');
 
   // Threshold plugin for horizontal lines
   const thresholdPlugin = {
@@ -449,6 +458,67 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     closeNgChart.addEventListener('click', () => { chartNgModal.style.display = 'none'; });
     window.addEventListener('click', e => { if (e.target === chartNgModal) chartNgModal.style.display = 'none'; });
+  }
+
+  // Std Dev Chart modal logic
+  const runStdBtn = document.getElementById('run-std-chart-btn');
+  const chartStdModal = document.getElementById('chart-stddev-modal');
+  const closeStdChart = document.getElementById('close-chart-stddev-modal');
+  const stdCtx = document.getElementById('chart-stddev-canvas');
+  let stdChartInstance;
+  if (runStdBtn && chartStdModal && closeStdChart && stdCtx) {
+    runStdBtn.addEventListener('click', () => {
+      const start = document.getElementById('std-start-date').value;
+      const end = document.getElementById('std-end-date').value;
+      const yMax = parseFloat(document.getElementById('std-y-max').value) || 50;
+      const threshold = parseInt(document.getElementById('std-min-boards').value) || 0;
+      const models = getSelectedModels('std-model-name');
+      const modelQuery = models.length ? `&models=${encodeURIComponent(models.join(','))}` : '';
+      const filter = modelFilter ? modelFilter.value : 'all';
+      const filterQuery = filter !== 'all' ? `&model_filter=${filter}` : '';
+      const { query: lineQuery, text: lineText } = getSelectedLines('std-line');
+      fetch(`/analysis/stddev-data?start=${start}&end=${end}&threshold=${threshold}${lineQuery}${modelQuery}${filterQuery}`)
+        .then(res => res.json())
+        .then(data => {
+          const rates = data.rates.map(r => r.rate).filter(r => r <= yMax);
+          if (stdChartInstance) stdChartInstance.destroy();
+          if (!rates.length) {
+            stdChartInstance = new Chart(stdCtx, { type: 'bar', data: { labels: [], datasets: [] } });
+            document.getElementById('stddev-chart-summary').textContent = 'No data.';
+            chartStdModal.style.display = 'block';
+            return;
+          }
+          const bins = 10;
+          const binWidth = yMax / bins;
+          const counts = Array(bins).fill(0);
+          rates.forEach(rate => {
+            const idx = Math.min(Math.floor(rate / binWidth), bins - 1);
+            counts[idx]++;
+          });
+          const labels = counts.map((_, i) => `${(i * binWidth).toFixed(1)}-${((i + 1) * binWidth).toFixed(1)}`);
+          const total = rates.length;
+          const mean = data.mean;
+          const stdev = data.stdev;
+          const xVals = counts.map((_, i) => i * binWidth + binWidth / 2);
+          const norm = xVals.map(x => (1 / (stdev * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * ((x - mean) ** 2) / (stdev ** 2)) * total * binWidth);
+          stdChartInstance = new Chart(stdCtx, {
+            type: 'bar',
+            data: {
+              labels,
+              datasets: [
+                { label: 'Frequency', data: counts, backgroundColor: 'black', borderColor: 'black' },
+                { type: 'line', label: 'Normal Dist', data: norm, borderColor: 'red', fill: false, tension: 0.4, pointRadius: 0 }
+              ]
+            },
+            options: { scales: { y: { beginAtZero: true } } }
+          });
+          const rangeText = start && end ? `${start} to ${end}` : start ? `From ${start}` : end ? `Up to ${end}` : 'All dates';
+          document.getElementById('stddev-chart-summary').textContent = `From ${rangeText} on ${lineText}, mean FC rate ${mean.toFixed(2)} with std dev ${stdev.toFixed(2)}.`;
+          chartStdModal.style.display = 'block';
+        });
+    });
+    closeStdChart.addEventListener('click', () => { chartStdModal.style.display = 'none'; });
+    window.addEventListener('click', e => { if (e.target === chartStdModal) chartStdModal.style.display = 'none'; });
   }
 
   if (downloadNgBtn) {

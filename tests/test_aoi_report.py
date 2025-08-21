@@ -9,14 +9,15 @@ from run import parse_aoi_rows, app, init_db, get_db
 
 def test_parse_aoi_rows(tmp_path):
     data = [
-        ['Alice', 'Cust1', 'Asm1', 10, 1, 'note1'],
-        ['Bob', 'Cust2', 'Asm2', 20, 2, 'note2'],
+        ['Alice', 'Cust1', 'Asm1', 'R1', 'J100', 10, 1, 'note1'],
+        ['Bob', 'Cust2', 'Asm2', 'R2', 'J200', 20, 2, 'note2'],
     ]
     file = tmp_path / 'aoi.xlsx'
     pd.DataFrame(data).to_excel(file, header=False, index=False)
     rows = parse_aoi_rows(str(file))
     assert rows[0]['operator'] == 'Alice'
     assert rows[1]['qty_rejected'] == 2
+    assert rows[0]['rev'] == 'R1'
 
 
 @pytest.fixture()
@@ -30,12 +31,12 @@ def client(tmp_path, monkeypatch):
         ('tester', 'pw')
     )
     data = [
-        ('2024-01-01', '1st', 'Alice', 'Cust1', 'Asm1', 10, 1, ''),
-        ('2024-01-02', '1st', 'Alice', 'Cust1', 'Asm1', 15, 0, ''),
-        ('2024-01-01', '2nd', 'Bob', 'Cust2', 'Asm2', 20, 2, ''),
+        ('2024-01-01', '1st', 'Alice', 'Cust1', 'Asm1', 'R1', 'J100', 10, 1, ''),
+        ('2024-01-02', '1st', 'Alice', 'Cust1', 'Asm1', 'R1', 'J100', 15, 0, ''),
+        ('2024-01-01', '2nd', 'Bob', 'Cust2', 'Asm2', 'R2', 'J200', 20, 2, ''),
     ]
     conn.executemany(
-        "INSERT INTO aoi_reports (report_date, shift, operator, customer, assembly, qty_inspected, qty_rejected, additional_info) VALUES (?,?,?,?,?,?,?,?)",
+        "INSERT INTO aoi_reports (report_date, shift, operator, customer, assembly, rev, job_number, qty_inspected, qty_rejected, additional_info) VALUES (?,?,?,?,?,?,?,?,?,?)",
         data,
     )
     conn.commit()
