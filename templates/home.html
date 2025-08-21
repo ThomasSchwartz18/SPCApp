@@ -25,42 +25,60 @@
   </div>
   #}
   <p>Select a section below:</p>
-  <div class="widgets">
-    <div class="widget" onclick="location.href='/jobs'">
-      <h2>Jobs</h2>
-      <p>Manage Floor Jobs (<i>in progress</i>)</p>
+
+  {% if is_admin or permissions.get('analysis') or permissions.get('aoi') %}
+  <div class="home-row">
+    <h2>Analysis</h2>
+    <div class="widget-row">
+      {% if is_admin or permissions.get('analysis') %}
+      <div class="widget" onclick="location.href='/analysis'">
+        <h2>Data Analysis</h2>
+        <p>Upload And Data Mine Reports From SPC</p>
+      </div>
+      {% endif %}
+      {% if is_admin or permissions.get('aoi') %}
+      <div class="widget" onclick="location.href='/aoi'">
+        <h2>AOI Daily Report</h2>
+        <p>View and Upload AOI Reports With Data Insights.</p>
+      </div>
+      <div class="widget" onclick="location.href='/final-inspect'">
+        <h2>Final Inspect Daily Report</h2>
+        <p>View and Upload Final Inspection Reports With Data Insights.</p>
+      </div>
+      {% endif %}
     </div>
-    {% if is_admin or permissions.get('analysis') %}
-    <div class="widget" onclick="location.href='/analysis'">
-      <h2>Data Analysis</h2>
-      <p>Upload And Data Mine Reports From SPC</p>
+  </div>
+  {% endif %}
+
+  <div class="home-row">
+    <h2>Tools</h2>
+    <div class="widget-row">
+      <div class="widget" onclick="location.href='/rework'">
+        <h2>Rework</h2>
+        <p>Stencil and part lookup tools</p>
+      </div>
+      {% if is_admin or permissions.get('part_markings') %}
+      <div class="widget" onclick="location.href='/part-markings'">
+        <h2>Verified Part Markings</h2>
+        <p>Lookup Part Numbers To Find Their Verified Part Markings</p>
+      </div>
+      {% endif %}
     </div>
-    {% endif %}
-    {% if is_admin or permissions.get('part_markings') %}
-    <div class="widget" onclick="location.href='/part-markings'">
-      <h2>Verified Part Markings</h2>
-      <p>Lookup Part Numbers To Find Their Verified Part Markings</p>
-    </div>
-    {% endif %}
-    {% if is_admin or permissions.get('aoi') %}
-    <div class="widget" onclick="location.href='/aoi'">
-      <h2>AOI Daily Report</h2>
-      <p>View and Upload AOI Reports With Data Insights.</p>
-    </div>
-    <div class="widget" onclick="location.href='/final-inspect'">
-      <h2>Final Inspect Daily Report</h2>
-      <p>View and Upload Final Inspection Reports With Data Insights.</p>
-    </div>
-    {% endif %}
-    {% if is_admin or permissions.get('dashboard') %}
-    <div class="widget" onclick="location.href='#'">
-      <h2>SPC Dashboard</h2>
-      <p>Statistical Controls (<i>in progress</i>)</p>
-    </div>
-    {% endif %}
-    <div class="widget" onclick="location.href='/rework'">
-      <h2>Rework</h2>
-      <p>Stencil and part lookup tools</p>
+  </div>
+
+  <div class="home-row">
+    <h2>Production</h2>
+    <div class="widget-row">
+      {% if is_admin or permissions.get('dashboard') %}
+      <div class="widget" onclick="location.href='#'">
+        <h2>SPC Dashboard</h2>
+        <p>Statistical Controls (<i>in progress</i>)</p>
+      </div>
+      {% endif %}
+      <div class="widget" onclick="location.href='/jobs'">
+        <h2>Jobs</h2>
+        <p>Manage Floor Jobs (<i>in progress</i>)</p>
+      </div>
     </div>
   </div>
 {% endblock %}
