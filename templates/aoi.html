@@ -99,7 +99,8 @@
         <div class="action-panel">
           <div class="action-card">
             <h2>Data Mining Filters</h2>
-            <form method="get" action="/aoi">
+            <button id="aoi-filter-btn" title="Show or hide filter options">Filter Options</button>
+            <form id="aoi-filter-form" method="get" action="/aoi" style="display:none; margin-top:10px;">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <label>Start: <input type="date" name="start" value="{{ start or '' }}"></label><br>
               <label>End: <input type="date" name="end" value="{{ end or '' }}"></label><br>
