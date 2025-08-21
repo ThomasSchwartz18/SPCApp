@@ -1,5 +1,6 @@
 import os
 import sys
+import re
 import pandas as pd
 import pytest
 
@@ -55,3 +56,18 @@ def test_aoi_report_data_daily(client):
     assert data['operators'][0]['inspected'] == 15
     assert data['shift_totals'][0]['shift'] == '1st'
     assert data['shift_totals'][0]['inspected'] == 15
+
+
+def test_aoi_delete_record(client):
+    resp = client.get('/aoi')
+    assert resp.status_code == 200
+    html = resp.get_data(as_text=True)
+    token = re.search(r'name="csrf_token" value="([^"]+)"', html).group(1)
+    resp = client.delete('/aoi/1', headers={'X-CSRFToken': token})
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['success'] is True
+    conn = get_db()
+    count = conn.execute('SELECT COUNT(*) FROM aoi_reports WHERE id = 1').fetchone()[0]
+    conn.close()
+    assert count == 0
