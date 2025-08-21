@@ -78,7 +78,9 @@ def init_db():
             falsecall_parts INTEGER,
             falsecall_ppm REAL,
             upload_time TEXT,
-            filename TEXT
+            filename TEXT,
+            report_date TEXT,
+            line TEXT
         )
     ''')
 
@@ -88,6 +90,10 @@ def init_db():
     existing_cols = [r['name'] for r in conn.execute("PRAGMA table_info(moat)").fetchall()]
     if 'filename' not in existing_cols:
         conn.execute('ALTER TABLE moat ADD COLUMN filename TEXT')
+    if 'report_date' not in existing_cols:
+        conn.execute('ALTER TABLE moat ADD COLUMN report_date TEXT')
+    if 'line' not in existing_cols:
+        conn.execute('ALTER TABLE moat ADD COLUMN line TEXT')
 
     conn.execute('''
         CREATE TABLE IF NOT EXISTS verified_markings (
@@ -1416,6 +1422,20 @@ def analysis():
             ]
             df['upload_time'] = datetime.utcnow().isoformat()
             df['filename'] = filename
+
+            base = os.path.splitext(filename)[0].replace('_', ' ')
+            match = re.search(r'(\d{4}-\d{1,2}-\d{1,2}).*(L(?:Offline|[0-2]))', base, re.IGNORECASE)
+            report_date = match.group(1) if match else None
+            if report_date:
+                try:
+                    report_date = datetime.strptime(report_date, '%Y-%m-%d').date().isoformat()
+                except ValueError:
+                    report_date = None
+            line_val = match.group(2) if match else None
+            if line_val and line_val.upper() == 'LOFFLINE':
+                line_val = 'LOffline'
+            df['report_date'] = report_date
+            df['line'] = line_val
 
             conn = get_db()
             df.to_sql('moat', conn, if_exists='append', index=False)

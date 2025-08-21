@@ -444,6 +444,7 @@
             <th>Model Name</th><th>Total Boards</th><th>Total Parts/Board</th>
             <th>Total Parts</th><th>NG Parts</th><th>NG PPM</th>
             <th>FalseCall Parts</th><th>FalseCall PPM</th><th>Upload Time</th>
+            <th>Report Date</th><th>Line</th>
           </tr></thead>
           <tbody>
           {% for row in moat %}
@@ -457,6 +458,8 @@
             <td>{{ row['falsecall_parts'] }}</td>
             <td>{{ row['falsecall_ppm'] }}</td>
             <td>{{ row['upload_time'] }}</td>
+            <td>{{ row['report_date'] }}</td>
+            <td>{{ row['line'] }}</td>
           </tr>
           {% endfor %}
           </tbody>
