@@ -1,9 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const basePath = document.body.dataset.basePath || 'aoi';
   const form = document.getElementById('sql-form');
   if (!form) return;
   const queryInput = document.getElementById('sql-query');
   const savedSelect = document.getElementById('saved-queries');
-  const SAVED_KEY = 'aoiSavedQueries';
+  const SAVED_KEY = `${basePath}SavedQueries`;
 
   function getSaved() {
     return JSON.parse(localStorage.getItem(SAVED_KEY) || '{}');
@@ -34,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     const query = queryInput.value;
     try {
-      const resp = await fetch('/aoi/sql', {
+      const resp = await fetch(`/${basePath}/sql`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query })

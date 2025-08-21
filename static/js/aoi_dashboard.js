@@ -1,4 +1,5 @@
 window.addEventListener('DOMContentLoaded', () => {
+  const basePath = document.body.dataset.basePath || 'aoi';
   // Divider logic
   const divider = document.getElementById('divider');
   const container = document.getElementById('container');
@@ -132,13 +133,16 @@ window.addEventListener('DOMContentLoaded', () => {
   if (yieldData && yieldData.length) {
     const ctx = document.getElementById('yieldChart');
     if (ctx) {
+      const values = yieldData.map(y => y.yield * 100);
+      const minVal = Math.min(...values);
+      const yMin = minVal < 80 ? minVal : 80;
       new Chart(ctx, {
         type: 'line',
         data: {
           labels: yieldData.map(y => y.report_date),
           datasets: [{
             label: 'Yield %',
-            data: yieldData.map(y => y.yield * 100),
+            data: values,
             fill: false,
             borderColor: 'rgba(75, 192, 192, 1)'
           }]
@@ -146,7 +150,7 @@ window.addEventListener('DOMContentLoaded', () => {
         options: {
           scales: {
             y: {
-              beginAtZero: true,
+              min: yMin,
               max: 100,
               ticks: {
                 callback: value => `${value}%`
@@ -162,7 +166,7 @@ window.addEventListener('DOMContentLoaded', () => {
     $('#assemblyTable').DataTable();
   }
 
-  const table = document.querySelector('#aoi-table table');
+  const table = document.querySelector(`#${basePath}-table table`);
   if (table) {
     table.addEventListener('click', async e => {
       if (!e.target.classList.contains('delete-row')) return;
@@ -170,7 +174,7 @@ window.addEventListener('DOMContentLoaded', () => {
       const id = row.dataset.id;
       if (!id || !confirm('Delete this entry?')) return;
       try {
-        const resp = await fetch(`/aoi/${id}`, { method: 'DELETE' });
+        const resp = await fetch(`/${basePath}/${id}`, { method: 'DELETE' });
         const data = await resp.json();
         if (data.success) {
           row.remove();
@@ -303,7 +307,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const reportCharts = {};
   ['daily','weekly','monthly','yearly'].forEach(freq => {
-    fetch(`/aoi/report-data?freq=${freq}`)
+    fetch(`/${basePath}/report-data?freq=${freq}`)
       .then(res => res.json())
       .then(data => renderReport(freq, data));
   });

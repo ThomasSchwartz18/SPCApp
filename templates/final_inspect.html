@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+{% block title %}Final Inspect Daily Report{% endblock %}
+{% block head_extra %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+  <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js" defer></script>
+  <script id="operator-data" type="application/json">{{ operators|tojson }}</script>
+  <script id="shift-data" type="application/json">{{ shift_totals|tojson }}</script>
+  <script id="customer-data" type="application/json">{{ customer_rates|tojson }}</script>
+  <script id="yield-data" type="application/json">{{ yield_series|tojson }}</script>
+  <script src="{{ url_for('static', filename='js/html2canvas.min.js') }}" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.plugin.png.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.plugin.jpeg.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.25/dist/jspdf.plugin.autotable.min.js" defer></script>
+  <script src="{{ url_for('static', filename='js/report_utils.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/std_chart.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/aoi_dashboard.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/tabs.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/aoi_sql.js') }}" defer></script>
+{% endblock %}
+{% block content %}
+  <a href="/">← Home</a>
+  <h1>Final Inspect Daily Report</h1>
+  <div id="container">
+    <div id="aoi-actions">
+      <nav class="tab-nav">
+        <button class="tab-link active" data-tab="add-entry">Add Entry</button>
+        <button class="tab-link" data-tab="analysis">Final Inspect Analysis</button>
+        <button class="tab-link" data-tab="reports">Reports</button>
+        <button class="tab-link" data-tab="sql">SQL</button>
+      </nav>
+      <div id="add-entry" class="tab-content active">
+        <div class="action-panel">
+          {% if is_admin or permissions['aoi'] %}
+          <div class="action-card">
+            <h2>Add New Entry</h2>
+            <form method="post">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <label>Report Date
+                <input type="date" name="report_date" required>
+              </label><br>
+              <label>Shift
+                <select name="shift" required>
+                  <option value="1st">1st</option>
+                  <option value="2nd">2nd</option>
+                </select>
+              </label><br>
+              <label>Operator
+                <input type="text" name="operator" required>
+              </label><br>
+              <label>Customer
+                <input type="text" name="customer">
+              </label><br>
+              <label>Assembly
+                <input type="text" name="assembly">
+              </label><br>
+              <label>Rev
+                <input type="text" name="rev">
+              </label><br>
+              <label>Job Number
+                <input type="text" name="job_number">
+              </label><br>
+              <label>Quantity Inspected
+                <input type="number" name="qty_inspected" min="0">
+              </label><br>
+              <label>Quantity Rejected
+                <input type="number" name="qty_rejected" min="0">
+              </label><br>
+              <label>Additional Information
+                <input type="text" name="additional_info">
+              </label><br>
+              <button type="submit">Add</button>
+            </form>
+          </div>
+          <div class="action-card">
+            <h2>Bulk Upload</h2>
+            <form method="post" enctype="multipart/form-data">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <label>Report Date
+                <input type="date" name="report_date" required>
+              </label><br>
+              <label>Shift
+                <select name="shift" required>
+                  <option value="1st">1st</option>
+                  <option value="2nd">2nd</option>
+                </select>
+              </label><br>
+              <label>Excel File
+                <input type="file" name="excel_file" accept=".xls,.xlsx" required>
+              </label><br>
+              <button type="submit">Upload</button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      <div id="analysis" class="tab-content">
+        <div class="action-panel">
+          <div class="action-card">
+            <h2>Data Mining Filters</h2>
+            <button id="aoi-filter-btn" title="Show or hide filter options">Filter Options</button>
+            <form id="aoi-filter-form" method="get" action="/final-inspect" style="display:none; margin-top:10px;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <label>Start: <input type="date" name="start" value="{{ start or '' }}"></label><br>
+              <label>End: <input type="date" name="end" value="{{ end or '' }}"></label><br>
+              <label>Customer:
+                <select name="customer">
+                  <option value="">All</option>
+                  {% for c in customers %}
+                  <option value="{{ c }}" {% if c == selected_customer %}selected{% endif %}>{{ c }}</option>
+                  {% endfor %}
+                </select>
+              </label><br>
+              <label>Shift:
+                <select name="shift">
+                  <option value="">All</option>
+                  {% for s in shifts %}
+                  <option value="{{ s }}" {% if s == selected_shift %}selected{% endif %}>{{ s }}</option>
+                  {% endfor %}
+                </select>
+              </label><br>
+              <label>Operator:
+                <select name="operator">
+                  <option value="">All</option>
+                  {% for o in operator_opts %}
+                  <option value="{{ o }}" {% if o == selected_operator %}selected{% endif %}>{{ o }}</option>
+                  {% endfor %}
+                </select>
+              </label><br>
+              <label>Assembly:
+                <select name="assembly">
+                  <option value="">All</option>
+                  {% for a in assembly_opts %}
+                  <option value="{{ a }}" {% if a == selected_assembly %}selected{% endif %}>{{ a }}</option>
+                  {% endfor %}
+                </select>
+              </label><br>
+              <button type="submit">Apply</button>
+            </form>
+          </div>
+          <h2>Top Operators by Inspected Quantity <button class="expand-chart" data-chart="operators" aria-label="Expand chart">⤢</button></h2>
+          <canvas id="operatorsChart"></canvas>
+          <h2>Shift Totals <button class="expand-chart" data-chart="shift" aria-label="Expand chart">⤢</button></h2>
+          <canvas id="shiftChart"></canvas>
+          <h2>Operator Reject Rates per Customer <button class="expand-chart" data-chart="customer" aria-label="Expand chart">⤢</button></h2>
+          <canvas id="customerChart"></canvas>
+          <h2>Std Dev of Reject Rates per Customer <button class="expand-chart" data-chart="customer-std" aria-label="Expand chart">⤢</button></h2>
+          <canvas id="customerStdChart"></canvas>
+          <p id="customerStdChartSummary" class="chart-summary"></p>
+          <h2>Overall Yield Over Time <button class="expand-chart" data-chart="yield" aria-label="Expand chart">⤢</button></h2>
+          <canvas id="yieldChart"></canvas>
+          <h2>Performance per Assembly</h2>
+          <table id="assemblyTable">
+            <thead>
+              <tr>
+                <th>Assembly</th>
+                <th>Inspected</th>
+                <th>Rejected</th>
+                <th>Yield</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in assemblies %}
+              <tr>
+                <td>{{ row['assembly'] }}</td>
+                <td>{{ row['inspected'] }}</td>
+                <td>{{ row['rejected'] }}</td>
+                <td>{{ '{:.2%}'.format(row['yield']) }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div id="reports" class="tab-content">
+        <div class="action-panel">
+          <nav class="subtab-nav">
+            <button class="subtab-link active" data-subtab="daily">Daily</button>
+            <button class="subtab-link" data-subtab="weekly">Weekly</button>
+            <button class="subtab-link" data-subtab="monthly">Monthly</button>
+            <button class="subtab-link" data-subtab="yearly">Yearly</button>
+          </nav>
+          <div id="daily" class="subtab-content active">
+            <h2>Daily Summary <button class="download-report" data-period="daily">Download PDF</button></h2>
+            <canvas id="daily-operators"></canvas>
+            <canvas id="daily-shift"></canvas>
+            <canvas id="daily-reject"></canvas>
+            <canvas id="daily-yield"></canvas>
+            <table id="daily-table">
+              <thead>
+                <tr><th>Assembly</th><th>Inspected</th><th>Rejected</th><th>Yield</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="weekly" class="subtab-content">
+            <h2>Weekly Summary <button class="download-report" data-period="weekly">Download PDF</button></h2>
+            <canvas id="weekly-operators"></canvas>
+            <canvas id="weekly-shift"></canvas>
+            <canvas id="weekly-reject"></canvas>
+            <canvas id="weekly-yield"></canvas>
+            <table id="weekly-table">
+              <thead>
+                <tr><th>Assembly</th><th>Inspected</th><th>Rejected</th><th>Yield</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="monthly" class="subtab-content">
+            <h2>Monthly Summary <button class="download-report" data-period="monthly">Download PDF</button></h2>
+            <canvas id="monthly-operators"></canvas>
+            <canvas id="monthly-shift"></canvas>
+            <canvas id="monthly-reject"></canvas>
+            <canvas id="monthly-yield"></canvas>
+            <table id="monthly-table">
+              <thead>
+                <tr><th>Assembly</th><th>Inspected</th><th>Rejected</th><th>Yield</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="yearly" class="subtab-content">
+            <h2>Yearly Summary <button class="download-report" data-period="yearly">Download PDF</button></h2>
+            <canvas id="yearly-operators"></canvas>
+            <canvas id="yearly-shift"></canvas>
+            <canvas id="yearly-reject"></canvas>
+            <canvas id="yearly-yield"></canvas>
+            <table id="yearly-table">
+              <thead>
+                <tr><th>Assembly</th><th>Inspected</th><th>Rejected</th><th>Yield</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div id="sql" class="tab-content">
+        <div class="action-panel">
+          <div class="action-card">
+            <h2>Run SQL Query</h2>
+            <form id="sql-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <div class="saved-query-bar">
+                <select id="saved-queries">
+                  <option value="">-- Saved Queries --</option>
+                </select>
+              </div>
+              <textarea id="sql-query" rows="5" cols="60"></textarea><br>
+              <button type="submit">Execute</button>
+            </form>
+            <table id="sql-results">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="divider"></div>
+    <div id="final-inspect-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Shift</th>
+            <th>Operator</th>
+            <th>Customer</th>
+            <th>Assembly</th>
+            <th>Rev</th>
+            <th>Job Number</th>
+            <th>Quantity Inspected</th>
+            <th>Quantity Rejected</th>
+            <th>Additional Information</th>
+            {% if is_admin or permissions['aoi'] %}
+            <th>Actions</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in records %}
+          <tr data-id="{{ r['id'] }}">
+            <td>{{ r['report_date'] }}</td>
+            <td>{{ r['shift'] }}</td>
+            <td>{{ r['operator'] }}</td>
+            <td>{{ r['customer'] }}</td>
+            <td>{{ r['assembly'] }}</td>
+            <td>{{ r['rev'] }}</td>
+            <td>{{ r['job_number'] }}</td>
+            <td>{{ r['qty_inspected'] }}</td>
+            <td>{{ r['qty_rejected'] }}</td>
+            <td>{{ r['additional_info'] }}</td>
+            {% if is_admin or permissions['aoi'] %}
+            <td class="no-edit"><button type="button" class="delete-row">Delete</button></td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Chart Modal -->
+  <div id="chart-modal" class="modal">
+    <div class="modal-content">
+      <span id="close-chart-modal" class="close">&times;</span>
+      <h2 id="modal-chart-title"></h2>
+      <canvas id="modal-chart" height="200"></canvas>
+      <table id="modal-table">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+{% endblock %}
+
