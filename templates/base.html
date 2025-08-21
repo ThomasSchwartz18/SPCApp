@@ -13,7 +13,7 @@
   <script src="/static/js/report_window.js" defer></script>
   {% block head_extra %}{% endblock %}
 </head>
-<body data-admin="{{ 'true' if is_admin else 'false' }}">
+<body data-admin="{{ 'true' if is_admin else 'false' }}" data-base-path="{{ report_base|default('') }}">
   {% if current_user %}
   <div class="topbar">
     <span class="user-label">user:{{ current_user }}</span>

@@ -124,6 +124,22 @@ def init_db():
             additional_info TEXT
         )
     ''')
+
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS fi_reports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            report_date TEXT NOT NULL,
+            shift TEXT,
+            operator TEXT,
+            customer TEXT,
+            assembly TEXT,
+            rev TEXT,
+            job_number TEXT,
+            qty_inspected INTEGER,
+            qty_rejected INTEGER,
+            additional_info TEXT
+        )
+    ''')
     # Users with per-feature permissions. The ADMIN account is created by
     # default along with a basic USER account. Additional users can be managed
     # from the settings page.
@@ -157,6 +173,12 @@ def init_db():
         conn.execute('ALTER TABLE aoi_reports ADD COLUMN rev TEXT')
     if 'job_number' not in aoi_cols:
         conn.execute('ALTER TABLE aoi_reports ADD COLUMN job_number TEXT')
+
+    fi_cols = [r['name'] for r in conn.execute("PRAGMA table_info(fi_reports)").fetchall()]
+    if 'rev' not in fi_cols:
+        conn.execute('ALTER TABLE fi_reports ADD COLUMN rev TEXT')
+    if 'job_number' not in fi_cols:
+        conn.execute('ALTER TABLE fi_reports ADD COLUMN job_number TEXT')
 
     conn.execute(
         'INSERT OR IGNORE INTO users (username, password, part_markings, aoi, analysis, dashboard, reports, c_suite, is_admin) VALUES (?,?,?,?,?,?,?,?,?)',
@@ -812,6 +834,7 @@ def aoi_report():
         selected_shift=shift_filter,
         selected_operator=operator_filter,
         selected_assembly=assembly_filter,
+        report_base='aoi',
     )
 
 
@@ -987,6 +1010,383 @@ def delete_aoi_record(row_id):
         return jsonify(success=True)
     except Exception as e:
         return jsonify(error=str(e)), 500
+
+@app.route('/final-inspect', methods=['GET', 'POST'])
+@login_required
+def final_inspect_report():
+    conn = get_db()
+    if request.method == 'POST':
+        if not has_permission('aoi'):
+            conn.close()
+            return redirect(url_for('final_inspect_report'))
+
+        report_date = request.form.get('report_date')
+        shift = request.form.get('shift')
+        if 'excel_file' in request.files and request.files['excel_file'].filename:
+            file = request.files['excel_file']
+            filename = secure_filename(file.filename)
+            ext = os.path.splitext(filename)[1].lower()
+            if ext not in ALLOWED_EXTENSIONS:
+                flash('Invalid file type')
+                conn.close()
+                return redirect(url_for('final_inspect_report'))
+            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(save_path)
+            rows = parse_aoi_rows(save_path)
+            records = [
+                (
+                    report_date,
+                    shift,
+                    r['operator'],
+                    r['customer'],
+                    r['assembly'],
+                    r.get('rev'),
+                    r.get('job_number'),
+                    int(r['qty_inspected'] or 0),
+                    int(r['qty_rejected'] or 0),
+                    r.get('additional_info', ''),
+                )
+                for r in rows
+            ]
+            if records:
+                conn.executemany(
+                    'INSERT INTO fi_reports (report_date, shift, operator, customer, assembly, rev, job_number, qty_inspected, qty_rejected, additional_info) VALUES (?,?,?,?,?,?,?,?,?,?)',
+                    records,
+                )
+                conn.commit()
+            conn.close()
+            return redirect(url_for('final_inspect_report'))
+
+        operator = request.form.get('operator')
+        customer = request.form.get('customer')
+        assembly = request.form.get('assembly')
+        rev = request.form.get('rev')
+        job_number = request.form.get('job_number')
+        inspected = request.form.get('qty_inspected') or 0
+        rejected = request.form.get('qty_rejected') or 0
+        additional = request.form.get('additional_info') or ''
+        conn.execute(
+            'INSERT INTO fi_reports (report_date, shift, operator, customer, assembly, rev, job_number, qty_inspected, qty_rejected, additional_info) VALUES (?,?,?,?,?,?,?,?,?,?)',
+            (report_date, shift, operator, customer, assembly, rev, job_number, inspected, rejected, additional),
+        )
+        conn.commit()
+        conn.close()
+        return redirect(url_for('final_inspect_report'))
+
+    start = request.args.get('start')
+    end = request.args.get('end')
+    customer = request.args.get('customer')
+    shift_filter = request.args.get('shift')
+    operator_filter = request.args.get('operator')
+    assembly_filter = request.args.get('assembly')
+
+    where = 'WHERE 1=1'
+    params = []
+    if start:
+        where += ' AND report_date >= ?'
+        params.append(start)
+    if end:
+        where += ' AND report_date <= ?'
+        params.append(end)
+    if customer:
+        where += ' AND customer = ?'
+        params.append(customer)
+    if shift_filter:
+        where += ' AND shift = ?'
+        params.append(shift_filter)
+    if operator_filter:
+        where += ' AND operator = ?'
+        params.append(operator_filter)
+    if assembly_filter:
+        where += ' AND assembly = ?'
+        params.append(assembly_filter)
+
+    rows = conn.execute(
+        f'SELECT * FROM fi_reports {where} ORDER BY report_date DESC, id DESC',
+        params,
+    ).fetchall()
+
+    op_rows = conn.execute(
+        f'SELECT operator, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
+        f'FROM fi_reports {where} GROUP BY operator ORDER BY inspected DESC',
+        params,
+    ).fetchall()
+    asm_rows = conn.execute(
+        f'SELECT assembly, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
+        f'FROM fi_reports {where} GROUP BY assembly ORDER BY inspected DESC',
+        params,
+    ).fetchall()
+    shift_rows = conn.execute(
+        f'SELECT report_date, shift, SUM(qty_inspected) AS inspected, '
+        f'SUM(qty_rejected) AS rejected FROM fi_reports {where} '
+        f'GROUP BY report_date, shift ORDER BY report_date, shift',
+        params,
+    ).fetchall()
+    cust_rows = conn.execute(
+        f'SELECT customer, SUM(qty_rejected)*1.0/SUM(qty_inspected) AS rate '
+        f'FROM fi_reports {where} GROUP BY customer ORDER BY customer',
+        params,
+    ).fetchall()
+    yield_rows = conn.execute(
+        f'SELECT report_date, 1 - SUM(qty_rejected)*1.0/SUM(qty_inspected) AS yield '
+        f'FROM fi_reports {where} GROUP BY report_date ORDER BY report_date',
+        params,
+    ).fetchall()
+    customer_opts = [r['customer'] for r in conn.execute('SELECT DISTINCT customer FROM fi_reports ORDER BY customer').fetchall()]
+    shift_opts = [r['shift'] for r in conn.execute('SELECT DISTINCT shift FROM fi_reports ORDER BY shift').fetchall()]
+    operator_opts = [r['operator'] for r in conn.execute('SELECT DISTINCT operator FROM fi_reports ORDER BY operator').fetchall()]
+    assembly_opts = [r['assembly'] for r in conn.execute('SELECT DISTINCT assembly FROM fi_reports ORDER BY assembly').fetchall()]
+    conn.close()
+
+    operators = []
+    for r in op_rows:
+        inspected = r['inspected'] or 0
+        rejected = r['rejected'] or 0
+        yield_rate = 1 - (rejected / inspected) if inspected else 0
+        operators.append({
+            'operator': r['operator'],
+            'inspected': inspected,
+            'rejected': rejected,
+            'yield': yield_rate,
+        })
+
+    assemblies = []
+    for r in asm_rows:
+        inspected = r['inspected'] or 0
+        rejected = r['rejected'] or 0
+        yield_rate = 1 - (rejected / inspected) if inspected else 0
+        assemblies.append({
+            'assembly': r['assembly'],
+            'inspected': inspected,
+            'rejected': rejected,
+            'yield': yield_rate,
+        })
+
+    shift_totals = [
+        {
+            'report_date': r['report_date'],
+            'shift': r['shift'],
+            'inspected': r['inspected'] or 0,
+            'rejected': r['rejected'] or 0,
+        }
+        for r in shift_rows
+    ]
+
+    customer_rates = [
+        {
+            'customer': r['customer'],
+            'rate': r['rate'] or 0,
+        }
+        for r in cust_rows
+    ]
+
+    yield_series = [
+        {
+            'report_date': r['report_date'],
+            'yield': r['yield'] or 0,
+        }
+        for r in yield_rows
+    ]
+
+    return render_template(
+        'final_inspect.html',
+        records=rows,
+        operators=operators,
+        assemblies=assemblies,
+        shift_totals=shift_totals,
+        customer_rates=customer_rates,
+        yield_series=yield_series,
+        customers=customer_opts,
+        shifts=shift_opts,
+        operator_opts=operator_opts,
+        assembly_opts=assembly_opts,
+        start=start,
+        end=end,
+        selected_customer=customer,
+        selected_shift=shift_filter,
+        selected_operator=operator_filter,
+        selected_assembly=assembly_filter,
+        report_base='final-inspect',
+    )
+
+
+@app.route('/final-inspect/report-data')
+@login_required
+def final_inspect_report_data():
+    if not has_permission('aoi'):
+        return jsonify(error='Forbidden'), 403
+    freq = request.args.get('freq', 'daily').lower()
+    start = request.args.get('start')
+    end = request.args.get('end')
+    group_map = {
+        'daily': '%Y-%m-%d',
+        'weekly': '%Y-%W',
+        'monthly': '%Y-%m',
+        'yearly': '%Y',
+    }
+    days_map = {
+        'daily': 1,
+        'weekly': 7,
+        'monthly': 30,
+        'yearly': 365,
+    }
+    group = group_map.get(freq)
+    if not group:
+        return jsonify(error='Invalid frequency'), 400
+
+    conn = get_db()
+    if start and end:
+        try:
+            start_date = datetime.strptime(start, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end, '%Y-%m-%d').date()
+        except ValueError:
+            conn.close()
+            return jsonify(error='Invalid date format'), 400
+    else:
+        delta = days_map.get(freq)
+        if not delta:
+            conn.close()
+            return jsonify(error='Invalid frequency'), 400
+        end_row = conn.execute('SELECT MAX(report_date) AS max_date FROM fi_reports').fetchone()
+        if not end_row or not end_row['max_date']:
+            conn.close()
+            return jsonify(operators=[], shift_totals=[], customer_rates=[], yield_series=[], assemblies=[])
+        end_date = datetime.strptime(end_row['max_date'], '%Y-%m-%d').date()
+        start_date = end_date - timedelta(days=delta - 1)
+
+    params = [start_date.isoformat(), end_date.isoformat()]
+
+    op_rows = conn.execute(
+        'SELECT operator, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
+        'FROM fi_reports WHERE report_date BETWEEN ? AND ? '
+        'GROUP BY operator ORDER BY inspected DESC',
+        params,
+    ).fetchall()
+    asm_rows = conn.execute(
+        'SELECT assembly, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
+        'FROM fi_reports WHERE report_date BETWEEN ? AND ? '
+        'GROUP BY assembly ORDER BY inspected DESC',
+        params,
+    ).fetchall()
+    shift_rows = conn.execute(
+        'SELECT shift, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
+        'FROM fi_reports WHERE report_date BETWEEN ? AND ? '
+        'GROUP BY shift ORDER BY shift',
+        params,
+    ).fetchall()
+    cust_rows = conn.execute(
+        'SELECT customer, SUM(qty_rejected)*1.0/SUM(qty_inspected) AS rate '
+        'FROM fi_reports WHERE report_date BETWEEN ? AND ? '
+        'GROUP BY customer ORDER BY customer',
+        params,
+    ).fetchall()
+    yield_rows = conn.execute(
+        f"SELECT strftime('{group}', report_date) AS period, "
+        "1 - SUM(qty_rejected)*1.0/SUM(qty_inspected) AS yield "
+        "FROM fi_reports WHERE report_date BETWEEN ? AND ? "
+        "GROUP BY period ORDER BY period",
+        params,
+    ).fetchall()
+    conn.close()
+
+    operators = [
+        {
+            'operator': r['operator'],
+            'inspected': r['inspected'] or 0,
+            'rejected': r['rejected'] or 0,
+        }
+        for r in op_rows
+    ]
+    assemblies = [
+        {
+            'assembly': r['assembly'],
+            'inspected': r['inspected'] or 0,
+            'rejected': r['rejected'] or 0,
+            'yield': 1 - (r['rejected'] * 1.0 / r['inspected']) if r['inspected'] else 0,
+        }
+        for r in asm_rows
+    ]
+    shift_totals = [
+        {
+            'shift': r['shift'],
+            'inspected': r['inspected'] or 0,
+            'rejected': r['rejected'] or 0,
+        }
+        for r in shift_rows
+    ]
+    customer_rates = [
+        {
+            'customer': r['customer'],
+            'rate': r['rate'] or 0,
+        }
+        for r in cust_rows
+    ]
+    yield_series = [
+        {
+            'period': r['period'],
+            'yield': r['yield'] or 0,
+        }
+        for r in yield_rows
+    ]
+
+    return jsonify(
+        operators=operators,
+        shift_totals=shift_totals,
+        customer_rates=customer_rates,
+        yield_series=yield_series,
+        assemblies=assemblies,
+    )
+
+
+@app.route('/final-inspect/sql', methods=['POST'])
+@login_required
+def final_inspect_sql():
+    if not has_permission('aoi'):
+        return jsonify(error='Forbidden'), 403
+    data = request.get_json() or {}
+    query = data.get('query', '')
+    params = data.get('params', [])
+    if not isinstance(params, list):
+        return jsonify(error='Invalid parameters'), 400
+    statements = [s.strip() for s in query.split(';') if s.strip()]
+    if len(statements) != 1 or not statements[0].lower().startswith('select'):
+        return jsonify(error='Only SELECT statements allowed'), 400
+    lowered = statements[0].lower()
+    allowed_tables = {'fi_reports'}
+    pattern = re.compile(r'from\s+([a-zA-Z0-9_]+)|join\s+([a-zA-Z0-9_]+)')
+    for m in pattern.finditer(lowered):
+        tbl = m.group(1) or m.group(2)
+        if tbl not in allowed_tables:
+            return jsonify(error='Table not allowed'), 400
+    conn = get_db()
+    try:
+        cur = conn.execute(statements[0], params)
+        rows = [dict(r) for r in cur.fetchall()]
+    except Exception as e:
+        conn.close()
+        return jsonify(error=str(e)), 400
+    conn.close()
+    return jsonify(rows=rows)
+
+
+@app.route('/final-inspect/<int:row_id>', methods=['DELETE'])
+@login_required
+def delete_final_inspect_record(row_id):
+    if not has_permission('aoi'):
+        return jsonify(error='Forbidden'), 403
+    try:
+        conn = get_db()
+        conn.execute('DELETE FROM fi_reports WHERE id = ?', (row_id,))
+        conn.commit()
+        conn.close()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(error=str(e)), 500
+
+@app.route('/final-inspect/html/<path:filename>')
+@login_required
+def final_inspect_html(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/analysis', methods=['GET', 'POST'])
 @login_required
