@@ -648,8 +648,16 @@ window.addEventListener('DOMContentLoaded', () => {
             del.textContent = 'Delete';
             del.style.marginLeft = '10px';
             del.onclick = () => {
-              fetch('/uploads/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({filename:fn}) })
-                .then(r => r.ok ? li.remove() : null);
+              const tokenEl = document.querySelector('input[name=csrf_token]');
+              const headers = { 'Content-Type': 'application/json' };
+              if (tokenEl) headers['X-CSRFToken'] = tokenEl.value;
+              fetch('/uploads/delete', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ filename: fn })
+              }).then(r => {
+                if (r.ok) li.remove();
+              });
             };
             li.appendChild(del);
             uploadsList.appendChild(li);
