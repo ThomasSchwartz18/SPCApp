@@ -119,14 +119,15 @@ window.addEventListener('DOMContentLoaded', () => {
     if (stdCtx) {
       const rates = customerData.map(c => c.rate);
       const yMax = Math.max(...rates, 1);
-      const bins = 10;
+      const bins = 20; // increased bins for finer resolution
       const binWidth = yMax / bins;
       const counts = Array(bins).fill(0);
       rates.forEach(r => {
         const idx = Math.min(Math.floor(r / binWidth), bins - 1);
         counts[idx]++;
       });
-      const labels = counts.map((_, i) => `${(i * binWidth).toFixed(1)}-${((i + 1) * binWidth).toFixed(1)}`);
+      const decimals = binWidth < 1 ? 2 : 1;
+      const labels = counts.map((_, i) => `${(i * binWidth).toFixed(decimals)}-${((i + 1) * binWidth).toFixed(decimals)}`);
       const mean = rates.reduce((a, b) => a + b, 0) / rates.length;
       const variance = rates.reduce((a, b) => a + (b - mean) ** 2, 0) / rates.length;
       const stdev = Math.sqrt(variance);

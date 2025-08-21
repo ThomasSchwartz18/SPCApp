@@ -498,7 +498,7 @@ window.addEventListener('DOMContentLoaded', () => {
             chartStdModal.style.display = 'block';
             return;
           }
-          const bins = 10;
+          const bins = 20; // more bins for clearer distribution
           const binWidth = yMax / bins;
           const counts = Array(bins).fill(0);
           rates.forEach(rate => {
@@ -571,7 +571,7 @@ window.addEventListener('DOMContentLoaded', () => {
             chartNgStdModal.style.display = 'block';
             return;
           }
-          const bins = 10;
+          const bins = 20; // more bins for clearer distribution
           const binWidth = yMax / bins;
           const counts = Array(bins).fill(0);
           rates.forEach(rate => {
