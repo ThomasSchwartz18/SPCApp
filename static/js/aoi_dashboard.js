@@ -174,7 +174,9 @@ window.addEventListener('DOMContentLoaded', () => {
       const id = row.dataset.id;
       if (!id || !confirm('Delete this entry?')) return;
       try {
-        const resp = await fetch(`/${basePath}/${id}`, { method: 'DELETE' });
+        const tokenEl = document.querySelector('input[name=csrf_token]');
+        const headers = tokenEl ? { 'X-CSRFToken': tokenEl.value } : {};
+        const resp = await fetch(`/${basePath}/${id}`, { method: 'DELETE', headers });
         const data = await resp.json();
         if (data.success) {
           row.remove();
