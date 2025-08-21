@@ -147,7 +147,11 @@ table thead th {
 
 .expand-chart {
   margin-left: 8px;
-  font-size: 0.8em;
+  font-size: 1em;
+  background: none;
+  border: none;
+  cursor: pointer;
+  vertical-align: middle;
 }
 
 .action-card p {
