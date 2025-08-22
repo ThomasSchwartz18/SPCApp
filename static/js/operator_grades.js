@@ -15,9 +15,10 @@
     const grades = getJSON('grade-data');
     const labels = grades.map(g => g.operator || '');
     const data = grades.map(g =>
-      g.coverage == null ? null : Math.round(g.coverage * 10000) / 100
+      g.coverage == null ? 0 : Math.round(g.coverage * 10000) / 100
     );
     const colors = grades.map(g => {
+      if (g.grade == null) return 'gray';
       switch (g.grade) {
         case 'A':
           return 'green';
