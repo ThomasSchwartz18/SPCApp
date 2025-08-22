@@ -258,7 +258,7 @@ window.addEventListener('DOMContentLoaded', () => {
       fetch(`/analysis/chart-data?start=${start}&end=${end}&threshold=${threshold}&metric=fc${lineQuery}${modelQuery}${filterQuery}`)
         .then(res => res.json())
         .then(data => {
-          const labels = data.map(d => d.model);
+          const labels = data.map(d => `${d.report_date} ${d.model}`);
           const inRangeValues = data.map(d => (d.rate <= yMax ? d.rate : null));
           const outliers = data.filter(d => d.rate > yMax);
           if (chartInstance) chartInstance.destroy();
@@ -289,7 +289,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 {
                   type: 'scatter',
                   label: 'Outliers',
-                  data: outliers.map(d => ({ x: d.model, y: yMax, real: d.rate })),
+                  data: outliers.map(d => ({ x: `${d.report_date} ${d.model}`, y: yMax, real: d.rate })),
                   borderColor: 'red',
                   pointBackgroundColor: 'red',
                   pointBorderColor: 'red',
@@ -383,7 +383,7 @@ window.addEventListener('DOMContentLoaded', () => {
       fetch(`/analysis/chart-data?start=${start}&end=${end}&threshold=${threshold}&metric=ng${lineQuery}${modelQuery}${filterQuery}`)
         .then(res => res.json())
         .then(data => {
-          const labels = data.map(d => d.model);
+          const labels = data.map(d => `${d.report_date} ${d.model}`);
           const inRangeValues = data.map(d => (d.rate <= yMax ? d.rate : null));
           const outliers = data.filter(d => d.rate > yMax);
           if (ngChartInstance) ngChartInstance.destroy();
@@ -414,7 +414,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 {
                   type: 'scatter',
                   label: 'Outliers',
-                  data: outliers.map(d => ({ x: d.model, y: yMax, real: d.rate })),
+                  data: outliers.map(d => ({ x: `${d.report_date} ${d.model}`, y: yMax, real: d.rate })),
                   borderColor: 'red',
                   pointBackgroundColor: 'red',
                   pointBorderColor: 'red',

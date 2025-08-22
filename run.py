@@ -1448,7 +1448,7 @@ def analysis():
     if args.get('view') == 'moat':
         show = True
         conn = get_db()
-        rows = conn.execute('SELECT * FROM moat ORDER BY id').fetchall()
+        rows = conn.execute('SELECT * FROM moat ORDER BY report_date DESC, id DESC').fetchall()
         conn.close()
 
         total_rows = len(rows)
@@ -1496,7 +1496,11 @@ def chart_data():
     model_filter = request.args.get('model_filter', '').upper()
     column = 'falsecall_parts' if metric == 'fc' else 'ng_parts'
     conn = get_db()
-    query = f'SELECT model_name, SUM({column})*1.0/SUM(total_boards) AS rate, SUM(total_boards) AS boards FROM moat WHERE 1=1'
+    query = (
+        f'SELECT model_name, report_date, '
+        f'{column}*1.0/total_boards AS rate, total_boards '
+        'FROM moat WHERE 1=1'
+    )
     params = []
     if start:
         query += ' AND report_date >= ?'
@@ -1519,11 +1523,21 @@ def chart_data():
     if model_filter in ('SMT', 'TH'):
         query += ' AND UPPER(model_name) LIKE ?'
         params.append(f'%{model_filter}%')
-    query += ' GROUP BY model_name HAVING SUM(total_boards) >= ?'
-    params.append(threshold)
+    if threshold:
+        query += ' AND total_boards >= ?'
+        params.append(threshold)
+    query += ' ORDER BY report_date, model_name'
     data = conn.execute(query, params).fetchall()
     conn.close()
-    return jsonify([{'model': r['model_name'], 'rate': r['rate'], 'boards': r['boards']} for r in data])
+    return jsonify([
+        {
+            'model': r['model_name'],
+            'rate': r['rate'],
+            'boards': r['total_boards'],
+            'report_date': r['report_date'],
+        }
+        for r in data
+    ])
 
 @app.route('/analysis/stddev-data')
 @login_required
