@@ -22,7 +22,7 @@
   {% else %}
     <div class="moat-stats">
       {% if total_rows %}
-        Total rows: {{ total_rows }} | Table range: {{ earliest }} - {{ latest }}
+        Total rows: {{ total_rows }} | Report date range: {{ earliest }} - {{ latest }}
         {% if is_admin or permissions['analysis'] %}
         &nbsp;|&nbsp;
         <button id="show-uploads-btn" title="View or delete previously uploaded reports">Manage Uploads</button>

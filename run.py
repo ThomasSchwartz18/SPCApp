@@ -14,7 +14,7 @@ from functools import wraps
 import os
 import sqlite3
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import re
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -1453,9 +1453,16 @@ def analysis():
 
         total_rows = len(rows)
         if total_rows:
-            times = [datetime.fromisoformat(r['upload_time']) for r in rows]
-            earliest = min(times).date().isoformat()
-            latest = max(times).date().isoformat()
+            report_dates = [
+                date.fromisoformat(r['report_date'])
+                for r in rows
+                if r['report_date']
+            ]
+            if report_dates:
+                earliest = min(report_dates).isoformat()
+                latest = max(report_dates).isoformat()
+            else:
+                earliest = latest = ''
         else:
             earliest = latest = ''
     else:
