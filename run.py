@@ -1492,11 +1492,11 @@ def chart_data():
     query = f'SELECT model_name, SUM({column})*1.0/SUM(total_boards) AS rate, SUM(total_boards) AS boards FROM moat WHERE 1=1'
     params = []
     if start:
-        query += ' AND upload_time >= ?'
-        params.append(f'{start}T00:00:00')
+        query += ' AND report_date >= ?'
+        params.append(start)
     if end:
-        query += ' AND upload_time <= ?'
-        params.append(f'{end}T23:59:59')
+        query += ' AND report_date <= ?'
+        params.append(end)
     if models_param:
         models = [m.strip() for m in models_param.split(',') if m.strip()]
         if models:
@@ -1533,11 +1533,11 @@ def stddev_data():
     query = f'SELECT model_name, SUM({column})*1.0/SUM(total_boards) AS rate, SUM(total_boards) AS boards FROM moat WHERE 1=1'
     params = []
     if start:
-        query += ' AND upload_time >= ?'
-        params.append(f'{start}T00:00:00')
+        query += ' AND report_date >= ?'
+        params.append(start)
     if end:
-        query += ' AND upload_time <= ?'
-        params.append(f'{end}T23:59:59')
+        query += ' AND report_date <= ?'
+        params.append(end)
     if models_param:
         models = [m.strip() for m in models_param.split(',') if m.strip()]
         if models:
