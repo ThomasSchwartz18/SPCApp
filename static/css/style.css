@@ -224,10 +224,10 @@ table thead th {
   color: var(--color-black);
 }
 
-.chart-container {
+/* .chart-container {
   max-width: 600px;
   margin: auto;
-}
+} */
 
 /* Floating report button */
 #report-button {
