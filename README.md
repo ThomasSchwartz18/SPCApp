@@ -20,6 +20,15 @@ Material information is available through the route
 `/sap/material/<material_id>` which returns JSON containing the material
 `id` and `description`.
 
+## Analysis Comparison API
+
+The analysis module exposes a small JSON endpoint for correlating
+Automated Optical Inspection (AOI) and Final Inspect data by job number.
+Use `/analysis/compare/jobs?job_number=<id>` to retrieve operator names,
+yields, and inspected/rejected counts from both sources. The front-end
+currently logs the response to the console; future iterations will link
+job numbers between tables and display details in a modal.
+
 To run the tests using the mock client you can leave `USE_SAP` unset or
 explicitly set it to `false`:
 

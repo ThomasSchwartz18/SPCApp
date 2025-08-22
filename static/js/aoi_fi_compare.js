@@ -72,9 +72,28 @@
       aoiRows: getJSON('aoi-data'),
       fiRows: getJSON('fi-data')
     });
+
+    // Attach click handlers for job-number lookup
+    document.querySelectorAll('.comparison-panels table tbody').forEach(tbody => {
+      tbody.addEventListener('click', e => {
+        const row = e.target.closest('tr');
+        if (!row) return;
+        const jobCell = row.cells[6];
+        if (!jobCell || e.target !== jobCell) return;
+        const job = jobCell.textContent.trim();
+        if (!job) return;
+        fetch(`/analysis/compare/jobs?job_number=${encodeURIComponent(job)}`)
+          .then(r => r.json())
+          .then(data => {
+            // TODO: display correlated details in a modal instead of console
+            console.log('Job details:', data);
+          })
+          .catch(err => console.error('Failed to fetch job details', err));
+      });
+    });
   });
 
-  // Placeholder functions for filtering by job number
+  // Placeholder exports for future filtering features
   function filterByJob(jobNumber) {
     console.warn('filterByJob placeholder not implemented', jobNumber);
   }
