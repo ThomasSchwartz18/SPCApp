@@ -1596,23 +1596,23 @@ def analysis_report_data():
         return jsonify(error='Invalid frequency'), 400
 
     conn = get_db()
-    end_row = conn.execute('SELECT MAX(upload_time) AS max_time FROM moat').fetchone()
-    if not end_row or not end_row['max_time']:
+    end_row = conn.execute('SELECT MAX(report_date) AS max_date FROM moat').fetchone()
+    if not end_row or not end_row['max_date']:
         conn.close()
         return jsonify(labels=[], falsecall_ppm=[], ng_ppm=[], table=[])
 
-    end_date = datetime.fromisoformat(end_row['max_time']).date()
+    end_date = date.fromisoformat(end_row['max_date'])
     start_date = end_date - timedelta(days=delta - 1)
-    params = [f'{start_date.isoformat()}T00:00:00', f'{end_date.isoformat()}T23:59:59']
+    params = [start_date.isoformat(), end_date.isoformat()]
 
     rows = conn.execute(
         f"""
-        SELECT strftime('{group}', upload_time) AS period,
+        SELECT strftime('{group}', report_date) AS period,
                SUM(total_boards) AS boards,
                SUM(falsecall_parts)*1000000.0/SUM(total_parts) AS fc_ppm,
                SUM(ng_parts)*1000000.0/SUM(total_parts) AS ng_ppm
         FROM moat
-        WHERE upload_time BETWEEN ? AND ?
+        WHERE report_date BETWEEN ? AND ?
         GROUP BY period
         ORDER BY period
         """,
