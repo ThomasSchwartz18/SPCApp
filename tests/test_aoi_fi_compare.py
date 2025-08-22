@@ -47,6 +47,7 @@ def test_compare_page_renders(client):
     resp = client.get('/analysis/compare')
     assert resp.status_code == 200
     assert b'yieldOverlayChart' in resp.data
+    assert b'operatorGradesChart' in resp.data
 
 
 def test_compare_jobs_json(client):

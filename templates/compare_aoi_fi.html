@@ -6,7 +6,9 @@
   <script id="fi-series" type="application/json">{{ fi_series|tojson }}</script>
   <script id="aoi-data" type="application/json">{{ aoi_rows|tojson }}</script>
   <script id="fi-data" type="application/json">{{ fi_rows|tojson }}</script>
+  <script id="grade-data" type="application/json">{{ grades|tojson }}</script>
   <script src="{{ url_for('static', filename='js/tabs.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/operator_grades.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/aoi_fi_compare.js') }}" defer></script>
 {% endblock %}
 {% block content %}
@@ -17,6 +19,9 @@
     <label>End: <input type="date" name="end" value="{{ end or '' }}"></label>
     <button type="submit">Apply</button>
   </form>
+  <h2>AOI Operator Grades</h2>
+  <canvas id="operatorGradesChart"></canvas>
+  <h2>Yield Comparison</h2>
   <canvas id="yieldOverlayChart"></canvas>
   <div class="comparison-panels" style="display:flex; gap:20px; flex-wrap:wrap; margin-top:20px;">
     <details class="panel" style="flex:1;" open>

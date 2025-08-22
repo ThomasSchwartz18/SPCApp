@@ -25,6 +25,11 @@
 
     const ctx = document.getElementById('yieldOverlayChart');
     if (ctx) {
+      const aoiVals = dates.map(d => aoiMap[d]).filter(v => v != null);
+      const fiVals = dates.map(d => fiMap[d]).filter(v => v != null);
+      const allVals = aoiVals.concat(fiVals);
+      const minVal = allVals.length ? Math.min(...allVals) : 0.8;
+      const yMin = minVal < 0.8 ? minVal : 0.8;
       new Chart(ctx, {
         type: 'line',
         data: {
@@ -47,8 +52,8 @@
         options: {
           scales: {
             y: {
-              suggestedMin: 0,
-              suggestedMax: 1
+              min: yMin,
+              max: 1
             }
           }
         }
