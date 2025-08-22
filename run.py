@@ -1799,6 +1799,52 @@ def compare_aoi_fi():
     fi_raw_query += ' ORDER BY report_date DESC, id DESC'
     fi_rows = conn.execute(fi_raw_query, raw_params).fetchall()
     fi_rows = [dict(r) for r in fi_rows]
+
+    # Compute operator grades similar to the operator_grades view
+    grade_rows = conn.execute(
+        """
+        WITH a AS (
+            SELECT operator, job_number, assembly, SUM(qty_rejected) AS aoi_rejected
+            FROM aoi_reports
+            WHERE job_number IS NOT NULL AND job_number != ''
+            GROUP BY operator, job_number, assembly
+        ),
+        f AS (
+            SELECT job_number, assembly, SUM(qty_rejected) AS fi_rejected
+            FROM fi_reports
+            WHERE job_number IS NOT NULL AND job_number != ''
+            GROUP BY job_number, assembly
+        )
+        SELECT a.operator, SUM(a.aoi_rejected) AS aoi_rejected, SUM(f.fi_rejected) AS fi_rejected
+        FROM a
+        JOIN f ON a.job_number = f.job_number AND a.assembly = f.assembly
+        GROUP BY a.operator
+        ORDER BY a.operator
+        """
+    ).fetchall()
+
+    def compute_grade(aoi_rej: int, fi_rej: int):
+        total = aoi_rej + fi_rej
+        if total == 0:
+            return None, None
+        coverage = aoi_rej / total
+        if coverage >= 0.8:
+            letter = 'A'
+        elif coverage >= 0.6:
+            letter = 'B'
+        elif coverage >= 0.4:
+            letter = 'C'
+        else:
+            letter = 'D'
+        return coverage, letter
+
+    grades = []
+    for r in grade_rows:
+        a_rej = r['aoi_rejected'] or 0
+        f_rej = r['fi_rejected'] or 0
+        coverage, letter = compute_grade(a_rej, f_rej)
+        grades.append({'operator': r['operator'], 'coverage': coverage, 'grade': letter})
+
     conn.close()
 
     return render_template(
@@ -1807,6 +1853,7 @@ def compare_aoi_fi():
         fi_series=fi_series,
         aoi_rows=aoi_rows,
         fi_rows=fi_rows,
+        grades=grades,
         start=start,
         end=end,
     )
