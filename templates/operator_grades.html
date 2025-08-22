@@ -8,5 +8,7 @@
 {% block content %}
   <a href="{{ url_for('analysis') }}">&larr; Back to Analysis</a>
   <h1>AOI Operator Grades</h1>
-  <canvas id="operatorGradesChart"></canvas>
+  <div class="chart-container">
+    <canvas id="operatorGradesChart"></canvas>
+  </div>
 {% endblock %}
