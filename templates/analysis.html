@@ -21,6 +21,7 @@
     <div style="display:flex; flex-direction:column; gap:10px; width:fit-content;">
       <button onclick="window.location='{{ url_for('analysis') }}?view=moat'">View PPM Reports</button>
       <button onclick="window.location='{{ url_for('compare_aoi_fi') }}'">Compare AOI vs Final Inspect</button>
+      <button onclick="window.location='{{ url_for('operator_grades') }}'">AOI Operator Grades</button>
     </div>
   {% else %}
     <div class="moat-stats">
