@@ -1810,6 +1810,72 @@ def compare_aoi_fi():
     )
 
 
+@app.route('/analysis/compare/jobs')
+@login_required
+def compare_job_numbers():
+    """Return joined AOI and Final Inspect data for a given job number."""
+    if not has_permission('analysis'):
+        return jsonify(error='Forbidden'), 403
+    job_number = request.args.get('job_number')
+    if not job_number:
+        return jsonify(error='job_number is required'), 400
+    conn = get_db()
+    row = conn.execute(
+        """
+        SELECT
+            COALESCE(a.job_number, f.job_number) AS job_number,
+            a.operator AS aoi_operator,
+            a.qty_inspected AS aoi_inspected,
+            a.qty_rejected AS aoi_rejected,
+            f.operator AS fi_operator,
+            f.qty_inspected AS fi_inspected,
+            f.qty_rejected AS fi_rejected
+        FROM aoi_reports a
+        LEFT JOIN fi_reports f ON a.job_number = f.job_number
+        WHERE a.job_number = ?
+        UNION
+        SELECT
+            COALESCE(a.job_number, f.job_number) AS job_number,
+            a.operator AS aoi_operator,
+            a.qty_inspected AS aoi_inspected,
+            a.qty_rejected AS aoi_rejected,
+            f.operator AS fi_operator,
+            f.qty_inspected AS fi_inspected,
+            f.qty_rejected AS fi_rejected
+        FROM fi_reports f
+        LEFT JOIN aoi_reports a ON a.job_number = f.job_number
+        WHERE f.job_number = ?
+        LIMIT 1
+        """,
+        (job_number, job_number),
+    ).fetchone()
+    conn.close()
+    if not row:
+        return jsonify(error='job not found'), 404
+
+    def build(prefix: str):
+        op = row[f'{prefix}_operator']
+        inspected = row[f'{prefix}_inspected']
+        rejected = row[f'{prefix}_rejected']
+        if op is None and inspected is None and rejected is None:
+            return None
+        inspected = inspected or 0
+        rejected = rejected or 0
+        yield_val = 1 - (rejected / inspected) if inspected else None
+        return {
+            'operator': op,
+            'inspected': inspected,
+            'rejected': rejected,
+            'yield': yield_val,
+        }
+
+    return jsonify(
+        job_number=row['job_number'],
+        aoi=build('aoi'),
+        fi=build('fi'),
+    )
+
+
 @app.route('/sap/material/<material_id>')
 @login_required
 def sap_material(material_id):
