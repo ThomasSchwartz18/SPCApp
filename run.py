@@ -1721,6 +1721,12 @@ def moat_sql():
     return jsonify(rows=rows)
 
 
+@app.route('/aoi-fi-compare')
+@login_required
+def aoi_fi_compare():
+    return render_template('aoi_fi_compare.html')
+
+
 @app.route('/sap/material/<material_id>')
 @login_required
 def sap_material(material_id):
