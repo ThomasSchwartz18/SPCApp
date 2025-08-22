@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}AOI vs Final Inspect Comparison{% endblock %}
+{% block head_extra %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+{% endblock %}
+{% block content %}
+  <a href="{{ url_for('analysis') }}">← Back to Analysis</a>
+  <h1>AOI vs Final Inspect Comparison</h1>
+  <form method="get" style="margin-bottom:20px;">
+    <label>Start: <input type="date" name="start" value="{{ start or '' }}"></label>
+    <label>End: <input type="date" name="end" value="{{ end or '' }}"></label>
+    <button type="submit">Apply</button>
+  </form>
+  <canvas id="yieldChart"></canvas>
+  <script id="aoi-series" type="application/json">{{ aoi_series|tojson }}</script>
+  <script id="fi-series" type="application/json">{{ fi_series|tojson }}</script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const aoi = JSON.parse(document.getElementById('aoi-series').textContent);
+      const fi = JSON.parse(document.getElementById('fi-series').textContent);
+      const dates = Array.from(new Set([...aoi.map(r=>r.date), ...fi.map(r=>r.date)])).sort();
+      const aoiMap = Object.fromEntries(aoi.map(r => [r.date, r.yield]));
+      const fiMap = Object.fromEntries(fi.map(r => [r.date, r.yield]));
+      const ctx = document.getElementById('yieldChart');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [
+            {label: 'AOI Yield', data: dates.map(d => aoiMap[d] ?? null), borderColor: 'blue', fill:false},
+            {label: 'Final Inspect Yield', data: dates.map(d => fiMap[d] ?? null), borderColor: 'green', fill:false}
+          ]
+        },
+        options: {scales: {y: {suggestedMin: 0, suggestedMax: 1}}}
+      });
+    });
+  </script>
+  <h2>AOI Reports</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th><th>Shift</th><th>Operator</th><th>Customer</th><th>Assembly</th><th>Rev</th><th>Job</th><th>Inspected</th><th>Rejected</th><th>Info</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in aoi_rows %}
+      <tr>
+        <td>{{ r['report_date'] }}</td>
+        <td>{{ r['shift'] }}</td>
+        <td>{{ r['operator'] }}</td>
+        <td>{{ r['customer'] }}</td>
+        <td>{{ r['assembly'] }}</td>
+        <td>{{ r['rev'] }}</td>
+        <td>{{ r['job_number'] }}</td>
+        <td>{{ r['qty_inspected'] }}</td>
+        <td>{{ r['qty_rejected'] }}</td>
+        <td>{{ r['additional_info'] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <h2>Final Inspect Reports</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th><th>Shift</th><th>Operator</th><th>Customer</th><th>Assembly</th><th>Rev</th><th>Job</th><th>Inspected</th><th>Rejected</th><th>Info</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in fi_rows %}
+      <tr>
+        <td>{{ r['report_date'] }}</td>
+        <td>{{ r['shift'] }}</td>
+        <td>{{ r['operator'] }}</td>
+        <td>{{ r['customer'] }}</td>
+        <td>{{ r['assembly'] }}</td>
+        <td>{{ r['rev'] }}</td>
+        <td>{{ r['job_number'] }}</td>
+        <td>{{ r['qty_inspected'] }}</td>
+        <td>{{ r['qty_rejected'] }}</td>
+        <td>{{ r['additional_info'] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
