@@ -1,45 +1,91 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const aoiSeries = JSON.parse(document.getElementById('aoi-series').textContent || '[]');
-  const fiSeries = JSON.parse(document.getElementById('fi-series').textContent || '[]');
+// aoi_fi_compare.js
+// Build comparison chart and tables for AOI vs Final Inspect data
 
-  const dates = Array.from(new Set([
-    ...aoiSeries.map(r => r.date),
-    ...fiSeries.map(r => r.date)
-  ])).sort();
+(function () {
+  const getJSON = id => {
+    const el = document.getElementById(id);
+    if (!el) return [];
+    try {
+      return JSON.parse(el.textContent || '[]');
+    } catch {
+      return [];
+    }
+  };
 
-  const aoiMap = Object.fromEntries(aoiSeries.map(r => [r.date, r.yield]));
-  const fiMap = Object.fromEntries(fiSeries.map(r => [r.date, r.yield]));
+  document.addEventListener('DOMContentLoaded', () => {
+    const aoiSeries = getJSON('aoi-series');
+    const fiSeries = getJSON('fi-series');
 
-  const ctx = document.getElementById('yieldOverlayChart');
-  if (ctx) {
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: dates,
-        datasets: [
-          {
-            label: 'AOI Yield',
-            data: dates.map(d => aoiMap[d] ?? null),
-            borderColor: 'blue',
-            fill: false
-          },
-          {
-            label: 'Final Inspect Yield',
-            data: dates.map(d => fiMap[d] ?? null),
-            borderColor: 'green',
-            fill: false
-          }
-        ]
-      },
-      options: {
-        scales: {
-          y: {
-            suggestedMin: 0,
-            suggestedMax: 1
+    const dates = Array.from(
+      new Set([...aoiSeries.map(r => r.date), ...fiSeries.map(r => r.date)])
+    ).sort();
+
+    const aoiMap = Object.fromEntries(aoiSeries.map(r => [r.date, r.yield]));
+    const fiMap = Object.fromEntries(fiSeries.map(r => [r.date, r.yield]));
+
+    const ctx = document.getElementById('yieldOverlayChart');
+    if (ctx) {
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [
+            {
+              label: 'AOI Yield',
+              data: dates.map(d => aoiMap[d] ?? null),
+              borderColor: 'blue',
+              fill: false
+            },
+            {
+              label: 'Final Inspect Yield',
+              data: dates.map(d => fiMap[d] ?? null),
+              borderColor: 'green',
+              fill: false
+            }
+          ]
+        },
+        options: {
+          scales: {
+            y: {
+              suggestedMin: 0,
+              suggestedMax: 1
+            }
           }
         }
-      }
+      });
+    }
+
+    // Initialize DataTables if the plugin is available
+    if (window.jQuery && $.fn && $.fn.DataTable) {
+      const aoiTableEl = document.querySelector(
+        '.comparison-panels details:nth-of-type(1) table'
+      );
+      const fiTableEl = document.querySelector(
+        '.comparison-panels details:nth-of-type(2) table'
+      );
+      if (aoiTableEl) $(aoiTableEl).DataTable();
+      if (fiTableEl) $(fiTableEl).DataTable();
+    }
+
+    // Expose row data for future filtering
+    window.AOICompare = Object.assign(window.AOICompare || {}, {
+      aoiRows: getJSON('aoi-data'),
+      fiRows: getJSON('fi-data')
     });
+  });
+
+  // Placeholder functions for filtering by job number
+  function filterByJob(jobNumber) {
+    console.warn('filterByJob placeholder not implemented', jobNumber);
   }
-});
+
+  function clearJobFilter() {
+    console.warn('clearJobFilter placeholder not implemented');
+  }
+
+  window.AOICompare = Object.assign(window.AOICompare || {}, {
+    filterByJob,
+    clearJobFilter
+  });
+})();
 
