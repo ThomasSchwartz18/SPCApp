@@ -1721,10 +1721,93 @@ def moat_sql():
     return jsonify(rows=rows)
 
 
-@app.route('/aoi-fi-compare')
+@app.route('/analysis/compare')
 @login_required
-def aoi_fi_compare():
-    return render_template('aoi_fi_compare.html')
+def compare_aoi_fi():
+    if not has_permission('analysis'):
+        return redirect(url_for('analysis'))
+    start = request.args.get('start')
+    end = request.args.get('end')
+    conn = get_db()
+    # Aggregate AOI yields
+    aoi_params = []
+    aoi_query = (
+        'SELECT report_date, SUM(qty_inspected) AS inspected, '
+        'SUM(qty_rejected) AS rejected FROM aoi_reports WHERE 1=1'
+    )
+    if start:
+        aoi_query += ' AND report_date >= ?'
+        aoi_params.append(start)
+    if end:
+        aoi_query += ' AND report_date <= ?'
+        aoi_params.append(end)
+    aoi_query += ' GROUP BY report_date ORDER BY report_date'
+    aoi_summary = conn.execute(aoi_query, aoi_params).fetchall()
+
+    fi_params = []
+    fi_query = (
+        'SELECT report_date, SUM(qty_inspected) AS inspected, '
+        'SUM(qty_rejected) AS rejected FROM fi_reports WHERE 1=1'
+    )
+    if start:
+        fi_query += ' AND report_date >= ?'
+        fi_params.append(start)
+    if end:
+        fi_query += ' AND report_date <= ?'
+        fi_params.append(end)
+    fi_query += ' GROUP BY report_date ORDER BY report_date'
+    fi_summary = conn.execute(fi_query, fi_params).fetchall()
+
+    def build_series(rows):
+        series = []
+        for r in rows:
+            inspected = r['inspected'] or 0
+            rejected = r['rejected'] or 0
+            yield_val = 1 - (rejected / inspected) if inspected else None
+            series.append({'date': r['report_date'], 'yield': yield_val})
+        return series
+
+    aoi_series = build_series(aoi_summary)
+    fi_series = build_series(fi_summary)
+
+    raw_params = []
+    aoi_raw_query = (
+        'SELECT report_date, shift, operator, customer, assembly, rev, job_number, '
+        'qty_inspected, qty_rejected, additional_info FROM aoi_reports WHERE 1=1'
+    )
+    if start:
+        aoi_raw_query += ' AND report_date >= ?'
+        raw_params.append(start)
+    if end:
+        aoi_raw_query += ' AND report_date <= ?'
+        raw_params.append(end)
+    aoi_raw_query += ' ORDER BY report_date DESC, id DESC'
+    aoi_rows = conn.execute(aoi_raw_query, raw_params).fetchall()
+
+    raw_params = []
+    fi_raw_query = (
+        'SELECT report_date, shift, operator, customer, assembly, rev, job_number, '
+        'qty_inspected, qty_rejected, additional_info FROM fi_reports WHERE 1=1'
+    )
+    if start:
+        fi_raw_query += ' AND report_date >= ?'
+        raw_params.append(start)
+    if end:
+        fi_raw_query += ' AND report_date <= ?'
+        raw_params.append(end)
+    fi_raw_query += ' ORDER BY report_date DESC, id DESC'
+    fi_rows = conn.execute(fi_raw_query, raw_params).fetchall()
+    conn.close()
+
+    return render_template(
+        'compare_aoi_fi.html',
+        aoi_series=aoi_series,
+        fi_series=fi_series,
+        aoi_rows=aoi_rows,
+        fi_rows=fi_rows,
+        start=start,
+        end=end,
+    )
 
 
 @app.route('/sap/material/<material_id>')
