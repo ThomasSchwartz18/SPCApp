@@ -52,6 +52,10 @@ def test_operator_grades_json(client):
         ('2024-01-02', '1st', 'Jane', 'Cust', 'Asm2', 'R1', 'J2', 100, 5, ''),
     )
     conn.execute(
+        "INSERT INTO aoi_reports (report_date, shift, operator, customer, assembly, rev, job_number, qty_inspected, qty_rejected, additional_info) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        ('2024-01-05', '1st', 'Bob', 'Cust', 'Asm3', 'R1', 'J3', 100, 3, ''),
+    )
+    conn.execute(
         "INSERT INTO fi_reports (report_date, shift, operator, customer, assembly, rev, job_number, qty_inspected, qty_rejected, additional_info) VALUES (?,?,?,?,?,?,?,?,?,?)",
         ('2024-01-03', '1st', 'Sam', 'Cust', 'Asm1', 'R1', 'J1', 100, 6, ''),
     )
@@ -73,3 +77,5 @@ def test_operator_grades_json(client):
     assert grades['Jim']['grade'] == 'D'
     assert math.isclose(grades['Jane']['coverage'], 5 / 6)
     assert grades['Jane']['grade'] == 'A'
+    assert grades['Bob']['coverage'] is None
+    assert grades['Bob']['grade'] is None

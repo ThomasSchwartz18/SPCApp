@@ -1817,7 +1817,7 @@ def compare_aoi_fi():
         )
         SELECT a.operator, SUM(a.aoi_rejected) AS aoi_rejected, SUM(f.fi_rejected) AS fi_rejected
         FROM a
-        JOIN f ON a.job_number = f.job_number AND a.assembly = f.assembly
+        LEFT JOIN f ON a.job_number = f.job_number AND a.assembly = f.assembly
         GROUP BY a.operator
         ORDER BY a.operator
         """
@@ -1949,7 +1949,7 @@ def operator_grades():
         )
         SELECT a.operator, SUM(a.aoi_rejected) AS aoi_rejected, SUM(f.fi_rejected) AS fi_rejected
         FROM a
-        JOIN f ON a.job_number = f.job_number AND a.assembly = f.assembly
+        LEFT JOIN f ON a.job_number = f.job_number AND a.assembly = f.assembly
         GROUP BY a.operator
         ORDER BY a.operator
         """
@@ -1974,8 +1974,13 @@ def operator_grades():
     grades = []
     for r in rows:
         a_rej = r['aoi_rejected'] or 0
-        f_rej = r['fi_rejected'] or 0
-        coverage, letter = compute_grade(a_rej, f_rej)
+        f_rej = r['fi_rejected']
+        if f_rej is None:
+            coverage = None
+            letter = None
+        else:
+            f_rej = f_rej or 0
+            coverage, letter = compute_grade(a_rej, f_rej)
         grades.append({'operator': r['operator'], 'coverage': coverage, 'grade': letter})
 
     if request.args.get('format') == 'json':
