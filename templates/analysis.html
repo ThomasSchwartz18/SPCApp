@@ -344,7 +344,9 @@
         <div id="reports-tab" class="tab-content">
           <div class="report-section" id="daily-report">
             <h2>Daily Report</h2>
-            <canvas id="daily-report-canvas" height="200" style="display:none"></canvas>
+            <div class="chart-container">
+              <canvas id="daily-report-canvas" height="200" style="display:none"></canvas>
+            </div>
             <table id="daily-report-table" style="display:none"></table>
             <label>Margin:
               <select id="daily-margin">
@@ -365,7 +367,9 @@
           </div>
           <div class="report-section" id="weekly-report">
             <h2>Weekly Report</h2>
-            <canvas id="weekly-report-canvas" height="200" style="display:none"></canvas>
+            <div class="chart-container">
+              <canvas id="weekly-report-canvas" height="200" style="display:none"></canvas>
+            </div>
             <table id="weekly-report-table" style="display:none"></table>
             <label>Margin:
               <select id="weekly-margin">
@@ -386,7 +390,9 @@
           </div>
           <div class="report-section" id="monthly-report">
             <h2>Monthly Report</h2>
-            <canvas id="monthly-report-canvas" height="200" style="display:none"></canvas>
+            <div class="chart-container">
+              <canvas id="monthly-report-canvas" height="200" style="display:none"></canvas>
+            </div>
             <table id="monthly-report-table" style="display:none"></table>
             <label>Margin:
               <select id="monthly-margin">
@@ -407,7 +413,9 @@
           </div>
           <div class="report-section" id="yearly-report">
             <h2>Yearly Report</h2>
-            <canvas id="yearly-report-canvas" height="200" style="display:none"></canvas>
+            <div class="chart-container">
+              <canvas id="yearly-report-canvas" height="200" style="display:none"></canvas>
+            </div>
             <table id="yearly-report-table" style="display:none"></table>
             <label>Margin:
               <select id="yearly-margin">
@@ -483,7 +491,9 @@
       <div class="modal-content">
         <span id="close-chart-modal" class="close">&times;</span>
         <h2>Control Chart - Avg FalseCall Rate</h2>
-        <canvas id="chart-canvas" height="200"></canvas>
+        <div class="chart-container">
+          <canvas id="chart-canvas" height="200"></canvas>
+        </div>
         <p id="fc-chart-summary" class="chart-summary"></p>
         <table id="fc-data-table"></table>
         <label>Margin:
@@ -502,7 +512,9 @@
       <div class="modal-content">
         <span id="close-chart-ng-modal" class="close">&times;</span>
         <h2>Control Chart - Avg NG Rate</h2>
-        <canvas id="chart-ng-canvas" height="200"></canvas>
+        <div class="chart-container">
+          <canvas id="chart-ng-canvas" height="200"></canvas>
+        </div>
         <p id="ng-chart-summary" class="chart-summary"></p>
         <table id="ng-data-table"></table>
         <label>Margin:
@@ -520,7 +532,9 @@
       <div class="modal-content">
         <span id="close-chart-stddev-modal" class="close">&times;</span>
         <h2>Std Dev - Avg FC per Assembly</h2>
-        <canvas id="chart-stddev-canvas" height="200"></canvas>
+        <div class="chart-container">
+          <canvas id="chart-stddev-canvas" height="200"></canvas>
+        </div>
         <p id="stddev-chart-summary" class="chart-summary"></p>
         <table id="std-data-table"></table>
         <label>Margin:
@@ -538,7 +552,9 @@
       <div class="modal-content">
         <span id="close-chart-ng-stddev-modal" class="close">&times;</span>
         <h2>Std Dev - Avg NG per Assembly</h2>
-        <canvas id="chart-ng-stddev-canvas" height="200"></canvas>
+        <div class="chart-container">
+          <canvas id="chart-ng-stddev-canvas" height="200"></canvas>
+        </div>
         <p id="ng-stddev-chart-summary" class="chart-summary"></p>
         <table id="ng-std-data-table"></table>
         <label>Margin:

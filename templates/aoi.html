@@ -141,16 +141,26 @@
             </form>
           </div>
           <h2>Top Operators by Inspected Quantity <button class="expand-chart" data-chart="operators" aria-label="Expand chart">⤢</button></h2>
-          <canvas id="operatorsChart"></canvas>
+          <div class="chart-container">
+            <canvas id="operatorsChart"></canvas>
+          </div>
           <h2>Shift Totals <button class="expand-chart" data-chart="shift" aria-label="Expand chart">⤢</button></h2>
-          <canvas id="shiftChart"></canvas>
+          <div class="chart-container">
+            <canvas id="shiftChart"></canvas>
+          </div>
           <h2>Operator Reject Rates per Customer <button class="expand-chart" data-chart="customer" aria-label="Expand chart">⤢</button></h2>
-          <canvas id="customerChart"></canvas>
+          <div class="chart-container">
+            <canvas id="customerChart"></canvas>
+          </div>
           <h2>Std Dev of Reject Rates per Customer <button class="expand-chart" data-chart="customer-std" aria-label="Expand chart">⤢</button></h2>
-          <canvas id="customerStdChart"></canvas>
+          <div class="chart-container">
+            <canvas id="customerStdChart"></canvas>
+          </div>
           <p id="customerStdChartSummary" class="chart-summary"></p>
           <h2>Overall Yield Over Time <button class="expand-chart" data-chart="yield" aria-label="Expand chart">⤢</button></h2>
-          <canvas id="yieldChart"></canvas>
+          <div class="chart-container">
+            <canvas id="yieldChart"></canvas>
+          </div>
           <h2>Performance per Assembly</h2>
           <table id="assemblyTable">
             <thead>
@@ -184,10 +194,18 @@
           </nav>
           <div id="daily" class="subtab-content active">
             <h2>Daily Summary <button class="download-report" data-period="daily">Download PDF</button></h2>
-            <canvas id="daily-operators"></canvas>
-            <canvas id="daily-shift"></canvas>
-            <canvas id="daily-reject"></canvas>
-            <canvas id="daily-yield"></canvas>
+            <div class="chart-container">
+              <canvas id="daily-operators"></canvas>
+            </div>
+            <div class="chart-container">
+              <canvas id="daily-shift"></canvas>
+            </div>
+            <div class="chart-container">
+              <canvas id="daily-reject"></canvas>
+            </div>
+            <div class="chart-container">
+              <canvas id="daily-yield"></canvas>
+            </div>
             <table id="daily-table">
               <thead>
                 <tr><th>Assembly</th><th>Inspected</th><th>Rejected</th><th>Yield</th></tr>
@@ -197,10 +215,18 @@
           </div>
           <div id="weekly" class="subtab-content">
             <h2>Weekly Summary <button class="download-report" data-period="weekly">Download PDF</button></h2>
-            <canvas id="weekly-operators"></canvas>
-            <canvas id="weekly-shift"></canvas>
-            <canvas id="weekly-reject"></canvas>
-            <canvas id="weekly-yield"></canvas>
+            <div class="chart-container">
+              <canvas id="weekly-operators"></canvas>
+            </div>
+            <div class="chart-container">
+              <canvas id="weekly-shift"></canvas>
+            </div>
+            <div class="chart-container">
+              <canvas id="weekly-reject"></canvas>
+            </div>
+            <div class="chart-container">
+              <canvas id="weekly-yield"></canvas>
+            </div>
             <table id="weekly-table">
               <thead>
                 <tr><th>Assembly</th><th>Inspected</th><th>Rejected</th><th>Yield</th></tr>
@@ -210,10 +236,18 @@
           </div>
           <div id="monthly" class="subtab-content">
             <h2>Monthly Summary <button class="download-report" data-period="monthly">Download PDF</button></h2>
-            <canvas id="monthly-operators"></canvas>
-            <canvas id="monthly-shift"></canvas>
-            <canvas id="monthly-reject"></canvas>
-            <canvas id="monthly-yield"></canvas>
+            <div class="chart-container">
+              <canvas id="monthly-operators"></canvas>
+            </div>
+            <div class="chart-container">
+              <canvas id="monthly-shift"></canvas>
+            </div>
+            <div class="chart-container">
+              <canvas id="monthly-reject"></canvas>
+            </div>
+            <div class="chart-container">
+              <canvas id="monthly-yield"></canvas>
+            </div>
             <table id="monthly-table">
               <thead>
                 <tr><th>Assembly</th><th>Inspected</th><th>Rejected</th><th>Yield</th></tr>
@@ -223,10 +257,18 @@
           </div>
           <div id="yearly" class="subtab-content">
             <h2>Yearly Summary <button class="download-report" data-period="yearly">Download PDF</button></h2>
-            <canvas id="yearly-operators"></canvas>
-            <canvas id="yearly-shift"></canvas>
-            <canvas id="yearly-reject"></canvas>
-            <canvas id="yearly-yield"></canvas>
+            <div class="chart-container">
+              <canvas id="yearly-operators"></canvas>
+            </div>
+            <div class="chart-container">
+              <canvas id="yearly-shift"></canvas>
+            </div>
+            <div class="chart-container">
+              <canvas id="yearly-reject"></canvas>
+            </div>
+            <div class="chart-container">
+              <canvas id="yearly-yield"></canvas>
+            </div>
             <table id="yearly-table">
               <thead>
                 <tr><th>Assembly</th><th>Inspected</th><th>Rejected</th><th>Yield</th></tr>
@@ -306,7 +348,9 @@
     <div class="modal-content">
       <span id="close-chart-modal" class="close">&times;</span>
       <h2 id="modal-chart-title"></h2>
-      <canvas id="modal-chart" height="200"></canvas>
+      <div class="chart-container">
+        <canvas id="modal-chart" height="200"></canvas>
+      </div>
       <table id="modal-table">
         <thead></thead>
         <tbody></tbody>
