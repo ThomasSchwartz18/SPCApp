@@ -1783,6 +1783,7 @@ def compare_aoi_fi():
         raw_params.append(end)
     aoi_raw_query += ' ORDER BY report_date DESC, id DESC'
     aoi_rows = conn.execute(aoi_raw_query, raw_params).fetchall()
+    aoi_rows = [dict(r) for r in aoi_rows]
 
     raw_params = []
     fi_raw_query = (
@@ -1797,6 +1798,7 @@ def compare_aoi_fi():
         raw_params.append(end)
     fi_raw_query += ' ORDER BY report_date DESC, id DESC'
     fi_rows = conn.execute(fi_raw_query, raw_params).fetchall()
+    fi_rows = [dict(r) for r in fi_rows]
     conn.close()
 
     return render_template(
