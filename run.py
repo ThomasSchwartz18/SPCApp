@@ -1878,6 +1878,65 @@ def compare_job_numbers():
     )
 
 
+@app.route('/analysis/operator-grades')
+@login_required
+def operator_grades():
+    """Display or return AOI operator grading data."""
+    if not has_permission('analysis'):
+        return redirect(url_for('analysis'))
+
+    conn = get_db()
+    rows = conn.execute(
+        """
+        WITH a AS (
+            SELECT operator, job_number, assembly, SUM(qty_rejected) AS aoi_rejected
+            FROM aoi_reports
+            WHERE job_number IS NOT NULL AND job_number != ''
+            GROUP BY operator, job_number, assembly
+        ),
+        f AS (
+            SELECT job_number, assembly, SUM(qty_rejected) AS fi_rejected
+            FROM fi_reports
+            WHERE job_number IS NOT NULL AND job_number != ''
+            GROUP BY job_number, assembly
+        )
+        SELECT a.operator, SUM(a.aoi_rejected) AS aoi_rejected, SUM(f.fi_rejected) AS fi_rejected
+        FROM a
+        JOIN f ON a.job_number = f.job_number AND a.assembly = f.assembly
+        GROUP BY a.operator
+        ORDER BY a.operator
+        """
+    ).fetchall()
+    conn.close()
+
+    def compute_grade(aoi_rej: int, fi_rej: int):
+        total = aoi_rej + fi_rej
+        if total == 0:
+            return None, None
+        coverage = aoi_rej / total
+        if coverage >= 0.8:
+            letter = 'A'
+        elif coverage >= 0.6:
+            letter = 'B'
+        elif coverage >= 0.4:
+            letter = 'C'
+        else:
+            letter = 'D'
+        return coverage, letter
+
+    grades = []
+    for r in rows:
+        a_rej = r['aoi_rejected'] or 0
+        f_rej = r['fi_rejected'] or 0
+        coverage, letter = compute_grade(a_rej, f_rej)
+        grades.append({'operator': r['operator'], 'coverage': coverage, 'grade': letter})
+
+    if request.args.get('format') == 'json':
+        return jsonify(grades=grades)
+
+    return render_template('operator_grades.html', grades=grades)
+
+
 @app.route('/sap/material/<material_id>')
 @login_required
 def sap_material(material_id):
