@@ -185,6 +185,32 @@ window.addEventListener('DOMContentLoaded', () => {
         console.error(err);
       }
     });
+
+    table.addEventListener('focusout', async e => {
+      if (!e.target.classList.contains('editable')) return;
+      const cell = e.target;
+      const row = cell.closest('tr');
+      const id = row.dataset.id;
+      const field = cell.dataset.field;
+      const value = cell.textContent.trim();
+      if (!id || !field) return;
+      try {
+        const tokenEl = document.querySelector('input[name=csrf_token]');
+        const headers = { 'Content-Type': 'application/json' };
+        if (tokenEl) headers['X-CSRFToken'] = tokenEl.value;
+        const resp = await fetch(`/${basePath}/${id}`, {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify({ field, value })
+        });
+        const data = await resp.json();
+        if (!data.success) {
+          alert(data.error || 'Update failed');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    });
   }
 
   // Collapsible cards

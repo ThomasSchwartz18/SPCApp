@@ -1017,6 +1017,38 @@ def delete_aoi_record(row_id):
     except Exception as e:
         return jsonify(error=str(e)), 500
 
+
+@app.route('/aoi/<int:row_id>', methods=['PATCH'])
+@login_required
+def update_aoi_record(row_id):
+    if not has_permission('aoi'):
+        return jsonify(error='Forbidden'), 403
+    data = request.get_json() or {}
+    field = data.get('field')
+    value = data.get('value', '')
+    allowed_fields = {
+        'report_date',
+        'shift',
+        'operator',
+        'customer',
+        'assembly',
+        'rev',
+        'job_number',
+        'qty_inspected',
+        'qty_rejected',
+        'additional_info',
+    }
+    if field not in allowed_fields:
+        return jsonify(error='Invalid field'), 400
+    try:
+        conn = get_db()
+        conn.execute(f'UPDATE aoi_reports SET {field} = ? WHERE id = ?', (value, row_id))
+        conn.commit()
+        conn.close()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(error=str(e)), 500
+
 @app.route('/final-inspect', methods=['GET', 'POST'])
 @login_required
 def final_inspect_report():

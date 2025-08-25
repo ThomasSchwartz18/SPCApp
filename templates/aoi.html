@@ -329,7 +329,7 @@
             <td>{{ r['customer'] }}</td>
             <td>{{ r['assembly'] }}</td>
             <td>{{ r['rev'] }}</td>
-            <td>{{ r['job_number'] }}</td>
+            <td{% if is_admin or permissions['aoi'] %} contenteditable="true" class="editable" data-field="job_number"{% endif %}>{{ r['job_number'] }}</td>
             <td>{{ r['qty_inspected'] }}</td>
             <td>{{ r['qty_rejected'] }}</td>
             <td>{{ r['additional_info'] }}</td>
