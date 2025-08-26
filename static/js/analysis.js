@@ -255,13 +255,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // FC Chart modal logic
   const runBtn = document.getElementById('run-chart-btn');
-  const chartModal = document.getElementById('chart-modal');
-  const closeChart = document.getElementById('close-chart-modal');
+  const chartModalEl = document.getElementById('chart-modal');
+  const chartModal = chartModalEl ? new bootstrap.Modal(chartModalEl) : null;
   const ctx = document.getElementById('chart-canvas');
   const downloadFcBtn = document.getElementById('download-fc-pdf');
   let chartInstance;
 
-  if (runBtn && chartModal && closeChart && ctx) {
+  if (runBtn && chartModal && ctx) {
     runBtn.addEventListener('click', () => {
       const start = document.getElementById('start-date').value;
       const end = document.getElementById('end-date').value;
@@ -355,11 +355,9 @@ window.addEventListener('DOMContentLoaded', () => {
           const rangeText = start && end ? `${start} to ${end}` : start ? `From ${start}` : end ? `Up to ${end}` : 'All dates';
           const summary = `From ${rangeText} on ${lineText}, ${entryCount} models (${totalBoards} boards) averaged a false call rate of ${avgRate.toFixed(2)}.`;
           document.getElementById('fc-chart-summary').textContent = summary;
-          chartModal.style.display = 'block';
+          chartModal.show();
         });
     });
-    closeChart.addEventListener('click', () => { chartModal.style.display = 'none'; });
-    window.addEventListener('click', e => { if (e.target === chartModal) chartModal.style.display = 'none'; });
   }
 
   if (downloadFcBtn) {
@@ -380,13 +378,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // NG Chart modal logic
   const runNgBtn = document.getElementById('run-ng-chart-btn');
-  const chartNgModal = document.getElementById('chart-ng-modal');
-  const closeNgChart = document.getElementById('close-chart-ng-modal');
+  const chartNgModalEl = document.getElementById('chart-ng-modal');
+  const chartNgModal = chartNgModalEl ? new bootstrap.Modal(chartNgModalEl) : null;
   const ngCtx = document.getElementById('chart-ng-canvas');
   const downloadNgBtn = document.getElementById('download-ng-pdf');
   let ngChartInstance;
 
-  if (runNgBtn && chartNgModal && closeNgChart && ngCtx) {
+  if (runNgBtn && chartNgModal && ngCtx) {
     runNgBtn.addEventListener('click', () => {
       const start = document.getElementById('ng-start-date').value;
       const end = document.getElementById('ng-end-date').value;
@@ -480,21 +478,19 @@ window.addEventListener('DOMContentLoaded', () => {
           const rangeText = start && end ? `${start} to ${end}` : start ? `From ${start}` : end ? `Up to ${end}` : 'All dates';
           const summary = `From ${rangeText} on ${lineText}, ${entryCount} models (${totalBoards} boards) averaged an NG rate of ${avgRate.toFixed(3)}.`;
           document.getElementById('ng-chart-summary').textContent = summary;
-          chartNgModal.style.display = 'block';
+          chartNgModal.show();
         });
     });
-    closeNgChart.addEventListener('click', () => { chartNgModal.style.display = 'none'; });
-    window.addEventListener('click', e => { if (e.target === chartNgModal) chartNgModal.style.display = 'none'; });
   }
 
   // Std Dev Chart modal logic
   const runStdBtn = document.getElementById('run-std-chart-btn');
-  const chartStdModal = document.getElementById('chart-stddev-modal');
-  const closeStdChart = document.getElementById('close-chart-stddev-modal');
+  const chartStdModalEl = document.getElementById('chart-stddev-modal');
+  const chartStdModal = chartStdModalEl ? new bootstrap.Modal(chartStdModalEl) : null;
   const stdCtx = document.getElementById('chart-stddev-canvas');
   const downloadStdBtn = document.getElementById('download-std-pdf');
   let stdChartInstance;
-  if (runStdBtn && chartStdModal && closeStdChart && stdCtx) {
+  if (runStdBtn && chartStdModal && stdCtx) {
     runStdBtn.addEventListener('click', () => {
       const start = document.getElementById('std-start-date').value;
       const end = document.getElementById('std-end-date').value;
@@ -513,7 +509,7 @@ window.addEventListener('DOMContentLoaded', () => {
           if (!rates.length) {
             stdChartInstance = new Chart(stdCtx, { type: 'bar', data: { labels: [], datasets: [] } });
             document.getElementById('stddev-chart-summary').textContent = 'No data.';
-            chartStdModal.style.display = 'block';
+            chartStdModal.show();
             return;
           }
           const mean = data.mean;
@@ -532,20 +528,18 @@ window.addEventListener('DOMContentLoaded', () => {
           }
           const rangeText = start && end ? `${start} to ${end}` : start ? `From ${start}` : end ? `Up to ${end}` : 'All dates';
           document.getElementById('stddev-chart-summary').textContent = `From ${rangeText} on ${lineText}, Avg FC rate ${mean.toFixed(2)} with std dev ${stdev.toFixed(2)}.`;
-          chartStdModal.style.display = 'block';
+          chartStdModal.show();
         });
     });
-    closeStdChart.addEventListener('click', () => { chartStdModal.style.display = 'none'; });
-    window.addEventListener('click', e => { if (e.target === chartStdModal) chartStdModal.style.display = 'none'; });
   }
 
   const runNgStdBtn = document.getElementById('run-ng-std-chart-btn');
-  const chartNgStdModal = document.getElementById('chart-ng-stddev-modal');
-  const closeNgStdChart = document.getElementById('close-chart-ng-stddev-modal');
+  const chartNgStdModalEl = document.getElementById('chart-ng-stddev-modal');
+  const chartNgStdModal = chartNgStdModalEl ? new bootstrap.Modal(chartNgStdModalEl) : null;
   const ngStdCtx = document.getElementById('chart-ng-stddev-canvas');
   const downloadNgStdBtn = document.getElementById('download-ng-std-pdf');
   let ngStdChartInstance;
-  if (runNgStdBtn && chartNgStdModal && closeNgStdChart && ngStdCtx) {
+  if (runNgStdBtn && chartNgStdModal && ngStdCtx) {
     runNgStdBtn.addEventListener('click', () => {
       const start = document.getElementById('ng-std-start-date').value;
       const end = document.getElementById('ng-std-end-date').value;
@@ -564,7 +558,7 @@ window.addEventListener('DOMContentLoaded', () => {
           if (!rates.length) {
             ngStdChartInstance = new Chart(ngStdCtx, { type: 'bar', data: { labels: [], datasets: [] } });
             document.getElementById('ng-stddev-chart-summary').textContent = 'No data.';
-            chartNgStdModal.style.display = 'block';
+            chartNgStdModal.show();
             return;
           }
           const mean = data.mean;
@@ -588,11 +582,9 @@ window.addEventListener('DOMContentLoaded', () => {
           }
           const rangeText = start && end ? `${start} to ${end}` : start ? `From ${start}` : end ? `Up to ${end}` : 'All dates';
           document.getElementById('ng-stddev-chart-summary').textContent = `From ${rangeText} on ${lineText}, Avg NG rate ${mean.toFixed(3)} with std dev ${stdev.toFixed(3)}.`;
-          chartNgStdModal.style.display = 'block';
+          chartNgStdModal.show();
         });
     });
-    closeNgStdChart.addEventListener('click', () => { chartNgStdModal.style.display = 'none'; });
-    window.addEventListener('click', e => { if (e.target === chartNgStdModal) chartNgStdModal.style.display = 'none'; });
   }
 
   if (downloadStdBtn) {
@@ -645,12 +637,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Uploads modal logic (unchanged)
   const uploadsBtn = document.getElementById('show-uploads-btn');
-  const uploadsModal = document.getElementById('uploads-modal');
-  const closeUploads = document.getElementById('close-uploads-modal');
+  const uploadsModalEl = document.getElementById('uploads-modal');
+  const uploadsModal = uploadsModalEl ? new bootstrap.Modal(uploadsModalEl) : null;
   const uploadsList = document.getElementById('uploads-list');
-  if (uploadsBtn && uploadsModal && closeUploads && uploadsList) {
+  if (uploadsBtn && uploadsModal && uploadsList) {
     uploadsBtn.onclick = () => {
-      uploadsModal.style.display = 'block';
+      uploadsModal.show();
       uploadsList.innerHTML = '<li>Loading...</li>';
       fetch('/uploads')
         .then(res => res.json())
@@ -681,8 +673,6 @@ window.addEventListener('DOMContentLoaded', () => {
           });
         });
     };
-    closeUploads.onclick = () => { uploadsModal.style.display = 'none'; };
-    window.addEventListener('click', e => { if (e.target === uploadsModal) uploadsModal.style.display = 'none'; });
   }
 
   // Report sections (Daily, Weekly, Monthly, Yearly)

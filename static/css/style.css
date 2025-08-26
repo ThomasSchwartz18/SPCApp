@@ -12,64 +12,6 @@ body {
 }
 h1, p { color: var(--color-black); }
 a { color: var(--color-accent); }
-.topbar {
-  text-align: right;
-  color: var(--color-black);
-  font-size: 0.8em;
-}
-.topbar a {
-  margin-left: 10px;
-  color: var(--color-accent);
-}
-.topbar button {
-  margin-left: 10px;
-  font-size: 0.8em;
-  background: var(--color-accent);
-  color: var(--color-white);
-  border: none;
-  padding: 2px 6px;
-  cursor: pointer;
-}
-.widgets {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.home-row {
-  margin-top: 20px;
-}
-
-.home-row h2 {
-  text-align: left;
-  margin: 0 0 10px 0;
-}
-
-.widget-row {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-.widget {
-  border:1px solid var(--color-black);
-  border-radius:8px;
-  padding:20px;
-  text-align:center;
-  cursor:pointer;
-  transition:background 0.3s,color 0.3s;
-  background: var(--color-white);
-  flex: 1 1 200px;
-  max-width: 200px;
-  height: 150px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.widget:hover {
-  background: var(--color-accent);
-  color: var(--color-white);
-}
 
 /* Job preview section */
 .job-previews { margin: 0 -20px 20px -20px; width: calc(100% + 40px); }
@@ -88,37 +30,6 @@ a { color: var(--color-accent); }
 }
 #show-uploads-btn { font-size: 0.9em; }
 
-/* Modal styles */
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 1;
-  left: 0; top: 0;
-  width: 100%; height: 100%;
-  overflow: auto;
-  background-color: rgba(0,0,0,0.4);
-}
-.modal-content {
-  background-color: var(--color-white);
-  margin: 5% auto;
-  padding: 20px;
-  border: 1px solid var(--color-black);
-  width: 80%;       /* Make modal wider */
-  max-width: none;
-  border-radius: 8px;
-  overflow-x: auto; /* Enable horizontal scroll */
-}
-.close {
-  color: var(--color-black);
-  float: right;
-  font-size: 24px;
-  font-weight: bold;
-  cursor: pointer;
-  width: 100%;
-  text-align: end;
-  align-items: end;
-}
-.close:hover { color: var(--color-accent); }
 
 /* Analysis split-screen */
 #container { display:flex; height:80vh; margin-top:20px; }
@@ -434,14 +345,9 @@ table thead th {
     border-radius: 7px;
 }
 
-/* Chart canvas sizing inside modal */
-#chart-modal .modal-content {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
+/* Chart canvas sizing */
 #chart-canvas {
-  width: 100%;      /* Stretch to container width */
+  width: 100%;
   height: auto;
   min-width: 600px; /* Ensure enough width for labels */
 }
@@ -465,15 +371,6 @@ body.dark-mode span {
   color: var(--color-white);
 }
 body.dark-mode a { color: var(--color-accent); }
-body.dark-mode .topbar { color: var(--color-white); }
-body.dark-mode .topbar a { color: var(--color-accent); }
-body.dark-mode .widget {
-  border-color: var(--color-white);
-  background: var(--color-black);
-  color: var(--color-white);
-}
-body.dark-mode .widget:hover { background: var(--color-accent); color: var(--color-white); }
-body.dark-mode .widget:hover p { color: var(--color-white); }
 body.dark-mode .action-card { background: var(--color-black); border-color: var(--color-white); }
 body.dark-mode .action-card p { color: var(--color-white); }
 body.dark-mode table { border-color: var(--color-white); }

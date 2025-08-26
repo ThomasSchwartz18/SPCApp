@@ -1,0 +1,25 @@
+:root {
+  --bs-body-bg: var(--color-white);
+  --bs-body-color: var(--color-black);
+  --bs-primary: var(--color-accent);
+}
+
+.navbar {
+  background-color: var(--color-accent);
+}
+.navbar .nav-link,
+.navbar .navbar-text {
+  color: var(--color-white);
+}
+.navbar .nav-link:hover {
+  color: var(--color-white);
+}
+
+.widget-card {
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+.widget-card:hover {
+  background-color: var(--color-accent);
+  color: var(--color-white);
+}
