@@ -1,17 +1,34 @@
-:root {
-  --color-black: #000000;
-  --color-white: #f5f5f5;
-  --color-accent: #3b836d;
-}
-
 body {
-  font-family: Arial, sans-serif;
+  font-family: var(--font-body);
   margin: 20px;
   background: var(--color-white);
   color: var(--color-black);
 }
-h1, p { color: var(--color-black); }
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: var(--heading-weight);
+  color: var(--color-black);
+}
+p { color: var(--color-black); }
 a { color: var(--color-accent); }
+
+/* Buttons */
+.btn {
+  font-weight: var(--button-font-weight);
+}
+.btn-primary {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-white);
+}
+
+/* Alerts */
+.alert {
+  border: 1px solid var(--color-black);
+  color: var(--color-black);
+}
+.alert-warning { background: var(--color-warning-bg); }
+.alert-danger { background: var(--color-danger-bg); }
 
 /* Accessible focus outlines for navigation */
 .navbar-nav .nav-link:focus,
@@ -24,8 +41,8 @@ a { color: var(--color-accent); }
 .job-previews { margin: 0 -20px 20px -20px; width: calc(100% + 40px); }
 .job-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; width: 100%; }
 .job-preview { margin-bottom: 0; padding: 10px; border: 1px solid var(--color-black); border-radius: 4px; }
-.job-preview.warning { background: #fff3cd; }
-.job-preview.danger { background: #f8d7da; }
+.job-preview.warning { background: var(--color-warning-bg); }
+.job-preview.danger { background: var(--color-danger-bg); }
 .job-preview ul { list-style: none; padding-left: 0; margin: 5px 0 0 0; }
 .job-preview li { font-family: monospace; }
 
@@ -52,8 +69,8 @@ table thead th {
   z-index: 1;
 }
 .highlight { background: yellow; }
-.threshold-red { background: #f8d7da; }
-.threshold-yellow { background: #fff3cd; }
+.threshold-red { background: var(--color-danger-bg); }
+.threshold-yellow { background: var(--color-warning-bg); }
 
 /* Action panels */
 .action-panel {
@@ -367,25 +384,6 @@ table thead th {
 }
 
 /* Dark mode styles */
-body.dark-mode {
-  background: var(--color-black);
-  color: var(--color-white);
-}
-body.dark-mode h1,
-body.dark-mode p,
-body.dark-mode label,
-body.dark-mode span {
-  color: var(--color-white);
-}
-body.dark-mode a { color: var(--color-accent); }
-body.dark-mode .action-card { background: var(--color-black); border-color: var(--color-white); }
-body.dark-mode .action-card p { color: var(--color-white); }
-body.dark-mode table { border-color: var(--color-white); }
-body.dark-mode th,
-body.dark-mode td { border-color: var(--color-white); }
-body.dark-mode table thead th { background: var(--color-black); }
-body.dark-mode .job-preview.warning { background: #bdbd3a; border-color: #b7b700; color: #fff; }
-body.dark-mode .job-preview.danger { background: #a72828; border-color: #660000; color: #fff; }
 
 /* SQL popup windows */
 .sql-popup {

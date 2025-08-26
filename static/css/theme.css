@@ -1,0 +1,26 @@
+/* Centralized theme variables for light and dark modes */
+:root {
+  /* Base colors */
+  --color-black: #000000;
+  --color-white: #f5f5f5;
+  --color-accent: #3b836d;
+
+  /* Extended palette */
+  --color-warning-bg: #fff3cd;
+  --color-danger-bg: #f8d7da;
+
+  /* Typography */
+  --font-body: Arial, sans-serif;
+  --font-heading: 'Segoe UI', Tahoma, sans-serif;
+  --heading-weight: 600;
+  --button-font-weight: 500;
+}
+
+/* Dark mode overrides */
+body.dark-mode {
+  --color-black: #f5f5f5;
+  --color-white: #000000;
+  --color-accent: #3b836d;
+  --color-warning-bg: #bdbd3a;
+  --color-danger-bg: #a72828;
+}
