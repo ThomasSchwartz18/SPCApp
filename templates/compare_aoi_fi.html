@@ -12,7 +12,6 @@
   <script src="{{ url_for('static', filename='js/aoi_fi_compare.js') }}" defer></script>
 {% endblock %}
 {% block content %}
-  <a href="{{ url_for('home') }}">&larr; Back to Home</a>
   <h1>AOI vs Final Inspect Comparison</h1>
   <form method="get" style="margin-bottom:20px;">
     <label>Start: <input type="date" name="start" value="{{ start or '' }}"></label>

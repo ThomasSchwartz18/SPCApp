@@ -1,8 +1,12 @@
 body {
   font-family: var(--font-body);
-  margin: 20px;
+  margin: 0;
   background: var(--color-white);
   color: var(--color-black);
+}
+
+main {
+  margin: 20px;
 }
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
@@ -11,6 +15,10 @@ h1, h2, h3, h4, h5, h6 {
 }
 p { color: var(--color-black); }
 a { color: var(--color-accent); }
+
+.navbar {
+  background-color: var(--color-accent) !important;
+}
 
 /* Buttons */
 .btn {
