@@ -1,13 +1,14 @@
 {% extends 'base.html' %}
+{% import 'components/forms.html' as forms %}
 {% block title %}Jobs Dashboard{% endblock %}
 {% block content %}
   <a href="/">← Home</a>
   <h1>Jobs Dashboard</h1>
 
-  <form id="add-form">
+  <form id="add-form" class="needs-validation" novalidate>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="text" id="name" placeholder="New job name" required>
-    <button type="submit">Add Job</button>
+    {{ forms.text_input('name', 'New Job Name', required=True, id='name') }}
+    {{ forms.button('Add Job') }}
   </form>
 
   <table id="jobs-table">
@@ -17,17 +18,12 @@
     <tbody></tbody>
   </table>
 
-  <form id="update-form">
+  <form id="update-form" class="needs-validation" novalidate>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="number" id="job_id" placeholder="Job ID" required>
-    <select id="status">
-      <option>Waiting</option>
-      <option>In Progress</option>
-      <option>Blocked</option>
-      <option>Done</option>
-    </select>
-    <input type="text" id="location" placeholder="Location" required>
-    <button type="submit">Update Job</button>
+    {{ forms.text_input('job_id', 'Job ID', type='number', required=True, id='job_id') }}
+    {{ forms.select_input('status', 'Status', ['Waiting','In Progress','Blocked','Done'], id='status') }}
+    {{ forms.text_input('location', 'Location', required=True, id='location') }}
+    {{ forms.button('Update Job') }}
   </form>
 
   <script src="{{ url_for('static', filename='js/jobs.js') }}"></script>

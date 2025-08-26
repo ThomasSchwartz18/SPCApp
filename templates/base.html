@@ -14,6 +14,7 @@
   <script src="/static/js/html2canvas.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script src="/static/js/report_window.js" defer></script>
+  <script src="/static/js/validation.js" defer></script>
   {% block head_extra %}{% endblock %}
 </head>
 <body data-admin="{{ 'true' if is_admin else 'false' }}" data-base-path="{{ report_base|default('') }}">
