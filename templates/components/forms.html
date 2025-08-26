@@ -1,0 +1,25 @@
+{% macro text_input(name, label, type='text', value='', required=False, placeholder='', help='', id=None, title='') %}
+  <div class="mb-3">
+    <label for="{{ id or name }}" class="form-label">{{ label }}</label>
+    <input type="{{ type }}" class="form-control" name="{{ name }}" id="{{ id or name }}" value="{{ value }}" placeholder="{{ placeholder }}" {% if title %}title="{{ title }}"{% endif %}{% if required %} required{% endif %}>
+    {% if help %}<div class="form-text">{{ help }}</div>{% endif %}
+    <div class="invalid-feedback">Please provide a valid {{ label|lower }}.</div>
+  </div>
+{% endmacro %}
+
+{% macro select_input(name, label, options, value='', required=False, help='', id=None, title='') %}
+  <div class="mb-3">
+    <label for="{{ id or name }}" class="form-label">{{ label }}</label>
+    <select class="form-select" name="{{ name }}" id="{{ id or name }}" {% if title %}title="{{ title }}"{% endif %}{% if required %} required{% endif %}>
+      {% for opt in options %}
+      <option value="{{ opt }}"{% if opt == value %} selected{% endif %}>{{ opt }}</option>
+      {% endfor %}
+    </select>
+    {% if help %}<div class="form-text">{{ help }}</div>{% endif %}
+    <div class="invalid-feedback">Please select a {{ label|lower }}.</div>
+  </div>
+{% endmacro %}
+
+{% macro button(text, type='submit', style='primary', id=None, title='') %}
+  <button type="{{ type }}" class="btn btn-{{ style }}"{% if id %} id="{{ id }}"{% endif %}{% if title %} title="{{ title }}"{% endif %}>{{ text }}</button>
+{% endmacro %}

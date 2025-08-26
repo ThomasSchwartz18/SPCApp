@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% import 'components/forms.html' as forms %}
 {% block title %}Rework - Stencil Lookup{% endblock %}
 {% block head_extra %}
   <script src="/static/js/stencil_lookup.js" defer></script>
@@ -12,33 +13,21 @@
         <div class="action-card">
           <h2>Search Stencil</h2>
           <p class="desc">Enter a part number to highlight matching stencils.</p>
-          <label for="search-part-number">Part Number</label>
-          <input type="text" id="search-part-number" placeholder="e.g., 10-1000" aria-label="Part number to search" title="Part number to locate">
-          <p class="field-desc">Highlight matching part number in the table.</p>
-          <button id="search-btn" type="button" title="Highlight matching part number">Search</button>
+          {{ forms.text_input('search-part-number', 'Part Number', placeholder='e.g., 10-1000', help='Highlight matching part number in the table.', id='search-part-number', title='Part number to locate') }}
+          {{ forms.button('Search', type='button', id='search-btn', title='Highlight matching part number') }}
         </div>
         <div class="action-card">
           <h2>Add New Entry</h2>
           <p class="desc">Use this form to add a stencil and associated parts.</p>
-          <form method="post">
+          <form method="post" class="needs-validation" novalidate>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <label>Stencil Number
-              <input type="text" name="stencil_number" required title="Stencil number">
-            </label><br>
-            <label>Part Number(s)
-              <input type="text" name="part_number" required title="Comma separated part numbers">
-            </label><br>
-            <label>Ref
-              <input type="text" name="ref" title="Reference designator">
-            </label><br>
-            <label>Description
-              <input type="text" name="description" title="Description">
-            </label><br>
-            <label>Location Of Stencil
-              <input type="text" name="location_of_stencil" title="Location of stencil">
-            </label><br>
+            {{ forms.text_input('stencil_number', 'Stencil Number', required=True, title='Stencil number') }}
+            {{ forms.text_input('part_number', 'Part Number(s)', required=True, title='Comma separated part numbers') }}
+            {{ forms.text_input('ref', 'Ref', title='Reference designator') }}
+            {{ forms.text_input('description', 'Description', title='Description') }}
+            {{ forms.text_input('location_of_stencil', 'Location Of Stencil', title='Location of stencil') }}
             <p class="field-desc">Add the stencil to the table.</p>
-            <button type="submit" title="Add new stencil">Add</button>
+            {{ forms.button('Add', title='Add new stencil') }}
           </form>
         </div>
       </div>

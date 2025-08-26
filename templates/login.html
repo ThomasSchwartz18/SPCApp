@@ -1,24 +1,17 @@
 {% extends 'base.html' %}
+{% import 'components/forms.html' as forms %}
 {% block title %}Login{% endblock %}
 {% block content %}
   <div class="action-panel" style="max-width:300px;margin:100px auto;">
     <div class="action-card">
       <img src="/static/images/company-logo.png" alt="Company Logo" style="display:block;margin:0 auto 20px;">
       <h1>Login</h1>
-      <form method="post">
+      <form method="post" class="needs-validation" novalidate>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <label>User
-          <select name="username">
-            {% for u in users %}
-            <option value="{{ u }}">{{ u }}</option>
-            {% endfor %}
-          </select>
-        </label><br>
-        <label>Password
-          <input type="password" name="password" required>
-        </label><br>
-        <button type="submit">Login</button>
-        {% if error %}<p style="color:red">{{ error }}</p>{% endif %}
+        {{ forms.select_input('username', 'User', users, required=True) }}
+        {{ forms.text_input('password', 'Password', type='password', required=True) }}
+        {{ forms.button('Login') }}
+        {% if error %}<p class="text-danger mt-2">{{ error }}</p>{% endif %}
       </form>
     </div>
   </div>

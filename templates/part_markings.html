@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% import 'components/forms.html' as forms %}
 {% block title %}Verified Part Markings{% endblock %}
 {% block head_extra %}
   <script src="/static/js/part_markings.js" defer></script>
@@ -12,46 +13,32 @@
         <div class="action-card">
           <h2>Search Verified Part</h2>
           <p class="desc">Enter a part number to highlight it in the table.</p>
-          <label for="search-part-number">Part Number</label>
-          <input type="text" id="search-part-number" placeholder="e.g., 10-1000" aria-label="Part number to search" title="Part number to locate">
-          <p class="field-desc">Highlight matching part number in the table.</p>
-          <button id="search-btn" type="button" title="Highlight matching part number">Search</button>
+          {{ forms.text_input('search-part-number', 'Part Number', placeholder='e.g., 10-1000', help='Highlight matching part number in the table.', id='search-part-number', title='Part number to locate') }}
+          {{ forms.button('Search', type='button', id='search-btn', title='Highlight matching part number') }}
         </div>
         {% if is_admin or permissions['part_markings'] %}
         <div class="action-card">
           <h2>Add New Entry</h2>
           <p class="desc">Use this form to add a single verified part marking.</p>
-          <form method="post">
+          <form method="post" class="needs-validation" novalidate>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <label>Part Number
-              <input type="text" name="part_number" required title="Unique part number">
-            </label><br>
-            <label>Mfg Number 1
-              <input type="text" name="mfg_number1" title="Manufacturer number 1">
-            </label><br>
-            <label>Mfg Number 2
-              <input type="text" name="mfg_number2" title="Manufacturer number 2">
-            </label><br>
-            <label>Manufacturer
-              <input type="text" name="manufacturer" title="Manufacturer name">
-            </label><br>
-            <label>Verified Markings
-              <input type="text" name="verified_markings" title="Verified markings text">
-            </label><br>
+            {{ forms.text_input('part_number', 'Part Number', required=True, title='Unique part number') }}
+            {{ forms.text_input('mfg_number1', 'Mfg Number 1', title='Manufacturer number 1') }}
+            {{ forms.text_input('mfg_number2', 'Mfg Number 2', title='Manufacturer number 2') }}
+            {{ forms.text_input('manufacturer', 'Manufacturer', title='Manufacturer name') }}
+            {{ forms.text_input('verified_markings', 'Verified Markings', title='Verified markings text') }}
             <p class="field-desc">Add the new part marking to the table.</p>
-            <button type="submit" title="Add new part marking">Add</button>
+            {{ forms.button('Add', title='Add new part marking') }}
           </form>
         </div>
         <div class="action-card">
           <h2>Bulk Upload</h2>
           <p class="desc">Upload an Excel file to add multiple entries at once.</p>
-          <form method="post" enctype="multipart/form-data">
+          <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <label>Excel File
-              <input type="file" name="excel_file" accept=".xlsx,.xls" required title="Excel file containing part markings">
-            </label><br>
+            {{ forms.text_input('excel_file', 'Excel File', type='file', required=True, title='Excel file containing part markings') }}
             <p class="field-desc">Import rows from the selected spreadsheet.</p>
-            <button type="submit" title="Upload spreadsheet">Upload</button>
+            {{ forms.button('Upload', title='Upload spreadsheet') }}
           </form>
         </div>
         {% endif %}
