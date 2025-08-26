@@ -1,8 +1,5 @@
 {% extends 'base.html' %}
 {% block title %}SPCApp Home{% endblock %}
-{% block head_extra %}
-  <script src="{{ url_for('static', filename='js/tabs.js') }}" defer></script>
-{% endblock %}
 {% block content %}
   <div class="home-title">
     <img src="/static/images/image.png" alt="Spectra Tech Logo">
@@ -29,90 +26,79 @@
   #}
   <p>Select a section below:</p>
 
-  <nav class="tab-nav">
-    {% if is_admin or permissions.get('analysis') or permissions.get('aoi') %}
-    <button class="tab-link active" data-tab="analysis-tab" data-desc="Upload and explore reports for data insights.">Analysis</button>
-    {% endif %}
-    <button class="tab-link{% if not (is_admin or permissions.get('analysis') or permissions.get('aoi')) %} active{% endif %}" data-tab="tools-tab" data-desc="Utilities such as rework lookup and verified part markings.">Tools</button>
-    <button class="tab-link" data-tab="production-tab" data-desc="Dashboards and job management features.">Production</button>
-  </nav>
-
   {% if is_admin or permissions.get('analysis') or permissions.get('aoi') %}
-  <div id="analysis-tab" class="tab-content active">
-    <div class="row g-3">
-      {% if is_admin or permissions.get('analysis') %}
-      <div class="col-md-3">
-        <div class="card widget-card text-center h-100" onclick="location.href='/analysis'">
-          <div class="card-body">
-            <h5 class="card-title">Data Analysis</h5>
-            <p class="card-text">Upload And Data Mine Reports From SPC</p>
-          </div>
+  <h2>Analysis</h2>
+  <div class="row g-3 mb-4">
+    {% if is_admin or permissions.get('analysis') %}
+    <div class="col-md-3">
+      <div class="card widget-card text-center h-100" onclick="location.href='/analysis'" role="link" tabindex="0">
+        <div class="card-body">
+          <h5 class="card-title">Data Analysis</h5>
+          <p class="card-text">Upload And Data Mine Reports From SPC</p>
         </div>
       </div>
-      {% endif %}
-      {% if is_admin or permissions.get('aoi') %}
-      <div class="col-md-3">
-        <div class="card widget-card text-center h-100" onclick="location.href='/aoi'">
-          <div class="card-body">
-            <h5 class="card-title">AOI Daily Report</h5>
-            <p class="card-text">View and Upload AOI Reports With Data Insights.</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card widget-card text-center h-100" onclick="location.href='/final-inspect'">
-          <div class="card-body">
-            <h5 class="card-title">Final Inspect Daily Report</h5>
-            <p class="card-text">View and Upload Final Inspection Reports With Data Insights.</p>
-          </div>
-        </div>
-      </div>
-      {% endif %}
     </div>
+    {% endif %}
+    {% if is_admin or permissions.get('aoi') %}
+    <div class="col-md-3">
+      <div class="card widget-card text-center h-100" onclick="location.href='/aoi'" role="link" tabindex="0">
+        <div class="card-body">
+          <h5 class="card-title">AOI Daily Report</h5>
+          <p class="card-text">View and Upload AOI Reports With Data Insights.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card widget-card text-center h-100" onclick="location.href='/final-inspect'" role="link" tabindex="0">
+        <div class="card-body">
+          <h5 class="card-title">Final Inspect Daily Report</h5>
+          <p class="card-text">View and Upload Final Inspection Reports With Data Insights.</p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
   </div>
   {% endif %}
 
-  <div id="tools-tab" class="tab-content{% if not (is_admin or permissions.get('analysis') or permissions.get('aoi')) %} active{% endif %}">
-    <div class="row g-3">
-      <div class="col-md-3">
-        <div class="card widget-card text-center h-100" onclick="location.href='/rework'">
-          <div class="card-body">
-            <h5 class="card-title">Rework</h5>
-            <p class="card-text">Stencil and part lookup tools</p>
-          </div>
+  <h2>Tools</h2>
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card widget-card text-center h-100" onclick="location.href='/rework'" role="link" tabindex="0">
+        <div class="card-body">
+          <h5 class="card-title">Rework</h5>
+          <p class="card-text">Stencil and part lookup tools</p>
         </div>
       </div>
-      {% if is_admin or permissions.get('part_markings') %}
-      <div class="col-md-3">
-        <div class="card widget-card text-center h-100" onclick="location.href='/part-markings'">
-          <div class="card-body">
-            <h5 class="card-title">Verified Part Markings</h5>
-            <p class="card-text">Lookup Part Numbers To Find Their Verified Part Markings</p>
-          </div>
-        </div>
-      </div>
-      {% endif %}
     </div>
+    {% if is_admin or permissions.get('part_markings') %}
+    <div class="col-md-3">
+      <div class="card widget-card text-center h-100" onclick="location.href='/part-markings'" role="link" tabindex="0">
+        <div class="card-body">
+          <h5 class="card-title">Verified Part Markings</h5>
+          <p class="card-text">Lookup Part Numbers To Find Their Verified Part Markings</p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
   </div>
 
-  <div id="production-tab" class="tab-content">
-    <div class="row g-3">
-      {% if is_admin or permissions.get('dashboard') %}
-      <div class="col-md-3">
-        <div class="card widget-card text-center h-100" onclick="location.href='#'">
-          <div class="card-body">
-            <h5 class="card-title">SPC Dashboard</h5>
-            <p class="card-text">Statistical Controls (<i>in progress</i>)</p>
-          </div>
+  <h2>Production</h2>
+  <div class="row g-3">
+    {% if is_admin or permissions.get('dashboard') %}
+    <div class="col-md-3">
+      <div class="card widget-card text-center h-100" onclick="location.href='#'" role="link" tabindex="0">
+        <div class="card-body">
+          <h5 class="card-title">SPC Dashboard</h5>
+          <p class="card-text">Statistical Controls (<i>in progress</i>)</p>
         </div>
       </div>
-      {% endif %}
-      <div class="col-md-3">
-        <div class="card widget-card text-center h-100" onclick="location.href='/jobs'">
-          <div class="card-body">
-            <h5 class="card-title">Jobs</h5>
-            <p class="card-text">Manage Floor Jobs (<i>in progress</i>)</p>
-          </div>
+    </div>
+    {% endif %}
+    <div class="col-md-3">
+      <div class="card widget-card text-center h-100" onclick="location.href='/jobs'" role="link" tabindex="0">
+        <div class="card-body">
+          <h5 class="card-title">Jobs</h5>
+          <p class="card-text">Manage Floor Jobs (<i>in progress</i>)</p>
         </div>
       </div>
     </div>

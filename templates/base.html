@@ -18,16 +18,57 @@
 </head>
 <body data-admin="{{ 'true' if is_admin else 'false' }}" data-base-path="{{ report_base|default('') }}">
   {% if current_user %}
-  <nav class="navbar navbar-expand navbar-dark bg-primary mb-3">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-3" aria-label="Main navigation">
     <div class="container-fluid">
-      <div class="navbar-nav ms-auto align-items-center">
-        <span class="navbar-text text-light me-2">user:{{ current_user }}</span>
-        <a class="nav-link" href="{{ url_for('docs') }}">Docs</a>
-        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
-        <button id="theme-toggle" type="button" class="btn btn-light btn-sm ms-2">Dark Mode</button>
-        {% if is_admin %}
-        <a class="nav-link" href="{{ url_for('settings') }}">Settings</a>
-        {% endif %}
+      <a class="navbar-brand" href="{{ url_for('home') }}">SPCApp</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link{% if request.endpoint == 'home' %} active{% endif %}" href="{{ url_for('home') }}"{% if request.endpoint == 'home' %} aria-current="page"{% endif %}>Home</a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle{% if request.endpoint and (request.endpoint.startswith('analysis') or request.endpoint in ['aoi_report','final_inspect_report']) %} active{% endif %}" href="#" id="analysisDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Analysis</a>
+            <ul class="dropdown-menu" aria-labelledby="analysisDropdown">
+              {% if is_admin or permissions.get('analysis') %}
+              <li><a class="dropdown-item{% if request.endpoint == 'analysis' %} active{% endif %}" href="{{ url_for('analysis') }}"{% if request.endpoint == 'analysis' %} aria-current="page"{% endif %}>Data Analysis</a></li>
+              {% endif %}
+              {% if is_admin or permissions.get('aoi') %}
+              <li><a class="dropdown-item{% if request.endpoint == 'aoi_report' %} active{% endif %}" href="{{ url_for('aoi_report') }}"{% if request.endpoint == 'aoi_report' %} aria-current="page"{% endif %}>AOI Daily Report</a></li>
+              <li><a class="dropdown-item{% if request.endpoint == 'final_inspect_report' %} active{% endif %}" href="{{ url_for('final_inspect_report') }}"{% if request.endpoint == 'final_inspect_report' %} aria-current="page"{% endif %}>Final Inspect Daily Report</a></li>
+              {% endif %}
+            </ul>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle{% if request.endpoint and (request.endpoint.startswith('rework') or request.endpoint.startswith('part_markings')) %} active{% endif %}" href="#" id="toolsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Tools</a>
+            <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
+              <li><a class="dropdown-item{% if request.endpoint == 'rework' %} active{% endif %}" href="{{ url_for('rework') }}"{% if request.endpoint == 'rework' %} aria-current="page"{% endif %}>Rework</a></li>
+              {% if is_admin or permissions.get('part_markings') %}
+              <li><a class="dropdown-item{% if request.endpoint == 'part_markings' %} active{% endif %}" href="{{ url_for('part_markings') }}"{% if request.endpoint == 'part_markings' %} aria-current="page"{% endif %}>Verified Part Markings</a></li>
+              {% endif %}
+            </ul>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle{% if request.endpoint and request.endpoint.startswith('jobs') %} active{% endif %}" href="#" id="productionDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Production</a>
+            <ul class="dropdown-menu" aria-labelledby="productionDropdown">
+              {% if is_admin or permissions.get('dashboard') %}
+              <li><span class="dropdown-item disabled">SPC Dashboard</span></li>
+              {% endif %}
+              <li><a class="dropdown-item" href="/jobs">Jobs</a></li>
+            </ul>
+          </li>
+        </ul>
+        <div class="navbar-nav ms-auto align-items-center">
+          <span class="navbar-text text-light me-2">user:{{ current_user }}</span>
+          <a class="nav-link{% if request.endpoint == 'docs' %} active{% endif %}" href="{{ url_for('docs') }}"{% if request.endpoint == 'docs' %} aria-current="page"{% endif %}>Docs</a>
+          {% if is_admin %}
+          <a class="nav-link{% if request.endpoint == 'settings' %} active{% endif %}" href="{{ url_for('settings') }}"{% if request.endpoint == 'settings' %} aria-current="page"{% endif %}>Settings</a>
+          {% endif %}
+          <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+          <button id="theme-toggle" type="button" class="btn btn-light btn-sm ms-2">Dark Mode</button>
+        </div>
       </div>
     </div>
   </nav>
