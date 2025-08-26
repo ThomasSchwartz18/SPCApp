@@ -4,6 +4,12 @@
   --bs-primary: var(--color-accent);
 }
 
+body.dark-mode {
+  --bs-body-bg: var(--color-white);
+  --bs-body-color: var(--color-black);
+  --bs-primary: var(--color-accent);
+}
+
 .navbar {
   background-color: var(--color-accent);
 }
