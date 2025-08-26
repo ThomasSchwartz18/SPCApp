@@ -65,6 +65,23 @@ window.addEventListener('DOMContentLoaded', () => {
     modelFilter.dispatchEvent(new Event('change'));
   }
 
+  const refreshBtn = document.getElementById('ppm-refresh-btn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', () => {
+      const tokenEl = document.querySelector('input[name=csrf_token]');
+      const headers = { 'Content-Type': 'application/json' };
+      if (tokenEl) headers['X-CSRFToken'] = tokenEl.value;
+      fetch('/analysis/refresh', { method: 'POST', headers })
+        .then(r => r.json())
+        .then(data => {
+          alert(data.message);
+          if (data.message && data.message.startsWith('Imported')) {
+            window.location.reload();
+          }
+        });
+    });
+  }
+
   function setupLineSelectors(prefix) {
     const selects = [];
     const ands = [];

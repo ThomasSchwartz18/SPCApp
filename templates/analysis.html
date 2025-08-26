@@ -442,6 +442,9 @@
       </datalist>
       <div id="divider"></div>
       <div id="moat-table">
+        {% if is_admin or permissions['analysis'] %}
+        <button id="ppm-refresh-btn">Report Refresh</button>
+        {% endif %}
         <div id="model-filter-container">
           <label for="model-filter">Show Models</label>
           <select id="model-filter">
@@ -567,5 +570,12 @@
         <button id="download-ng-std-pdf">Download PDF</button>
       </div>
     </div>
-  {% endif %}
-{% endblock %}
+    {% endif %}
+    {% if startup_ppm_msg %}
+    <script>
+      window.addEventListener('DOMContentLoaded', function() {
+        alert({{ startup_ppm_msg|tojson }});
+      });
+    </script>
+    {% endif %}
+  {% endblock %}

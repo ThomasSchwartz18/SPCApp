@@ -45,6 +45,10 @@ def parse_aoi_rows(path: str):
 app = Flask(__name__)
 csrf = CSRFProtect(app)
 app.config['UPLOAD_FOLDER'] = 'uploads'
+# Root directory for public PPM reports (shared drive)
+app.config['PUBLIC_PPM_DIR'] = os.environ.get('PUBLIC_PPM_DIR', '')
+# Message populated at startup when attempting to import public reports
+app.config['STARTUP_PPM_MSG'] = ''
 # Only allow known-safe spreadsheet extensions
 ALLOWED_EXTENSIONS = {'.xls', '.xlsx'}
 secret_key = os.environ.get('SECRET_KEY')
@@ -63,6 +67,76 @@ def get_db():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def import_public_ppm_reports():
+    """Import PPM reports from the shared drive into the database.
+
+    Traverses the directory tree configured at ``PUBLIC_PPM_DIR`` with the
+    expected structure ``<root>/<LineX>/<YYYYMMDD>/``. For each Excel file not
+    already recorded in the ``moat`` table, rows are parsed and inserted using
+    the same logic as manual uploads. A status message describing the outcome
+    is returned.
+    """
+    root = app.config.get('PUBLIC_PPM_DIR')
+    if not root:
+        return 'Public PPM directory not configured.'
+    if not os.path.isdir(root):
+        return f'Public PPM directory missing: {root}'
+
+    conn = get_db()
+    try:
+        existing = {r['filename'] for r in conn.execute('SELECT filename FROM moat')}
+        imported = 0
+        for line_name in os.listdir(root):
+            line_path = os.path.join(root, line_name)
+            if not os.path.isdir(line_path):
+                continue
+            line_val = line_name.replace('Line', 'L', 1)
+            for date_name in os.listdir(line_path):
+                date_path = os.path.join(line_path, date_name)
+                if not os.path.isdir(date_path):
+                    continue
+                try:
+                    report_date = datetime.strptime(date_name, '%Y%m%d').date().isoformat()
+                except ValueError:
+                    report_date = None
+                for fname in os.listdir(date_path):
+                    if not fname.lower().endswith(('.xls', '.xlsx')):
+                        continue
+                    if fname in existing:
+                        continue
+                    full_path = os.path.join(date_path, fname)
+                    ext = os.path.splitext(fname)[1].lower()
+                    engine = 'xlrd' if ext == '.xls' else 'openpyxl'
+                    df = pd.read_excel(full_path, engine=engine, header=5, usecols='B:I')
+                    df = df[df.iloc[:, 0] != 'Total']
+                    df.columns = [
+                        'model_name',
+                        'total_boards',
+                        'total_parts_per_board',
+                        'total_parts',
+                        'ng_parts',
+                        'ng_ppm',
+                        'falsecall_parts',
+                        'falsecall_ppm',
+                    ]
+                    df['upload_time'] = datetime.utcnow().isoformat()
+                    df['filename'] = fname
+                    df['report_date'] = report_date
+                    df['line'] = line_val
+                    df.to_sql('moat', conn, if_exists='append', index=False)
+                    existing.add(fname)
+                    imported += 1
+        if imported == 0:
+            return 'No new PPM reports found.'
+        return f'Imported {imported} PPM report(s).'
+    except PermissionError as e:
+        return f'Permission error accessing PPM directory: {e}'
+    except Exception as e:
+        return f'Error importing PPM reports: {e}'
+    finally:
+        conn.close()
 
 def init_db():
     conn = get_db()
@@ -222,6 +296,25 @@ def init_db():
 
 # Initialize database
 init_db()
+
+
+if hasattr(app, 'before_first_request'):
+
+    @app.before_first_request
+    def _import_public_reports_startup():
+        """Attempt to import public PPM reports at startup."""
+        msg = import_public_ppm_reports()
+        app.config['STARTUP_PPM_MSG'] = msg
+else:
+    _startup_run = False
+
+    @app.before_request
+    def _import_public_reports_startup():
+        global _startup_run
+        if not _startup_run:
+            _startup_run = True
+            msg = import_public_ppm_reports()
+            app.config['STARTUP_PPM_MSG'] = msg
 
 # --- Auth helpers ---
 def login_required(f):
@@ -1513,8 +1606,18 @@ def analysis():
         total_rows=total_rows,
         earliest=earliest,
         latest=latest,
-        model_names=model_names
+        model_names=model_names,
+        startup_ppm_msg=app.config.get('STARTUP_PPM_MSG')
     )
+
+
+@app.route('/analysis/refresh', methods=['POST'])
+@login_required
+def analysis_refresh():
+    if not has_permission('analysis'):
+        return jsonify(message='Forbidden'), 403
+    msg = import_public_ppm_reports()
+    return jsonify(message=msg)
 
 @app.route('/analysis/chart-data')
 @login_required
