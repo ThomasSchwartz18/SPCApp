@@ -224,8 +224,8 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   // Expand chart modal
-  const chartModal = document.getElementById('chart-modal');
-  const closeChart = document.getElementById('close-chart-modal');
+  const chartModalEl = document.getElementById('chart-modal');
+  const chartModal = chartModalEl ? new bootstrap.Modal(chartModalEl) : null;
   const modalTitle = document.getElementById('modal-chart-title');
   const modalCanvas = document.getElementById('modal-chart');
   const modalHead = document.querySelector('#modal-table thead');
@@ -238,11 +238,8 @@ window.addEventListener('DOMContentLoaded', () => {
     modalChart = new Chart(modalCanvas, config);
     modalHead.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
     modalBody.innerHTML = rows.map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('');
-    chartModal.style.display = 'block';
+    chartModal.show();
   }
-
-  closeChart?.addEventListener('click', () => { chartModal.style.display = 'none'; });
-  window.addEventListener('click', e => { if (e.target === chartModal) chartModal.style.display = 'none'; });
 
   document.querySelectorAll('.expand-chart').forEach(btn => {
     btn.addEventListener('click', () => {

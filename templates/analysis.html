@@ -480,94 +480,124 @@
     </div>
 
     <!-- Uploads Modal -->
-    <div id="uploads-modal" class="modal">
-      <div class="modal-content">
-        <span id="close-uploads-modal" class="close">&times;</span>
-        <h2>Uploaded Files</h2>
-        <ul id="uploads-list"></ul>
+    <div class="modal fade" id="uploads-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Uploaded Files</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <ul id="uploads-list"></ul>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Chart Modal -->
-    <div id="chart-modal" class="modal">
-      <div class="modal-content">
-        <span id="close-chart-modal" class="close">&times;</span>
-        <h2>Control Chart - Avg FalseCall Rate</h2>
-        <div class="chart-container">
-          <canvas id="chart-canvas" height="200"></canvas>
+    <div class="modal fade" id="chart-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Control Chart - Avg FalseCall Rate</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="chart-container">
+              <canvas id="chart-canvas" height="200"></canvas>
+            </div>
+            <p id="fc-chart-summary" class="chart-summary"></p>
+            <table id="fc-data-table"></table>
+            <label>Margin:
+              <select id="fc-margin">
+                <option value="0.25">0.25"</option>
+                <option value="0.5" selected>0.5"</option>
+                <option value="0.75">0.75"</option>
+                <option value="1">1"</option>
+              </select>
+            </label>
+            <button id="download-fc-pdf">Download PDF</button>
+          </div>
         </div>
-        <p id="fc-chart-summary" class="chart-summary"></p>
-        <table id="fc-data-table"></table>
-        <label>Margin:
-          <select id="fc-margin">
-            <option value="0.25">0.25"</option>
-            <option value="0.5" selected>0.5"</option>
-            <option value="0.75">0.75"</option>
-            <option value="1">1"</option>
-          </select>
-        </label>
-        <button id="download-fc-pdf">Download PDF</button>
       </div>
     </div>
 
-    <div id="chart-ng-modal" class="modal">
-      <div class="modal-content">
-        <span id="close-chart-ng-modal" class="close">&times;</span>
-        <h2>Control Chart - Avg NG Rate</h2>
-        <div class="chart-container">
-          <canvas id="chart-ng-canvas" height="200"></canvas>
+    <div class="modal fade" id="chart-ng-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Control Chart - Avg NG Rate</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="chart-container">
+              <canvas id="chart-ng-canvas" height="200"></canvas>
+            </div>
+            <p id="ng-chart-summary" class="chart-summary"></p>
+            <table id="ng-data-table"></table>
+            <label>Margin:
+              <select id="ng-margin">
+                <option value="0.25">0.25"</option>
+                <option value="0.5" selected>0.5"</option>
+                <option value="0.75">0.75"</option>
+                <option value="1">1"</option>
+              </select>
+            </label>
+            <button id="download-ng-pdf">Download PDF</button>
+          </div>
         </div>
-        <p id="ng-chart-summary" class="chart-summary"></p>
-        <table id="ng-data-table"></table>
-        <label>Margin:
-          <select id="ng-margin">
-            <option value="0.25">0.25"</option>
-            <option value="0.5" selected>0.5"</option>
-            <option value="0.75">0.75"</option>
-            <option value="1">1"</option>
-          </select>
-        </label>
-        <button id="download-ng-pdf">Download PDF</button>
       </div>
     </div>
-    <div id="chart-stddev-modal" class="modal">
-      <div class="modal-content">
-        <span id="close-chart-stddev-modal" class="close">&times;</span>
-        <h2>Std Dev - Avg FC per Assembly</h2>
-        <div class="chart-container">
-          <canvas id="chart-stddev-canvas" height="200"></canvas>
+    <div class="modal fade" id="chart-stddev-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Std Dev - Avg FC per Assembly</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="chart-container">
+              <canvas id="chart-stddev-canvas" height="200"></canvas>
+            </div>
+            <p id="stddev-chart-summary" class="chart-summary"></p>
+            <table id="std-data-table"></table>
+            <label>Margin:
+              <select id="std-margin">
+                <option value="0.25">0.25"</option>
+                <option value="0.5" selected>0.5"</option>
+                <option value="0.75">0.75"</option>
+                <option value="1">1"</option>
+              </select>
+            </label>
+            <button id="download-std-pdf">Download PDF</button>
+          </div>
         </div>
-        <p id="stddev-chart-summary" class="chart-summary"></p>
-        <table id="std-data-table"></table>
-        <label>Margin:
-          <select id="std-margin">
-            <option value="0.25">0.25"</option>
-            <option value="0.5" selected>0.5"</option>
-            <option value="0.75">0.75"</option>
-            <option value="1">1"</option>
-          </select>
-        </label>
-        <button id="download-std-pdf">Download PDF</button>
       </div>
     </div>
-    <div id="chart-ng-stddev-modal" class="modal">
-      <div class="modal-content">
-        <span id="close-chart-ng-stddev-modal" class="close">&times;</span>
-        <h2>Std Dev - Avg NG per Assembly</h2>
-        <div class="chart-container">
-          <canvas id="chart-ng-stddev-canvas" height="200"></canvas>
+    <div class="modal fade" id="chart-ng-stddev-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Std Dev - Avg NG per Assembly</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="chart-container">
+              <canvas id="chart-ng-stddev-canvas" height="200"></canvas>
+            </div>
+            <p id="ng-stddev-chart-summary" class="chart-summary"></p>
+            <table id="ng-std-data-table"></table>
+            <label>Margin:
+              <select id="ng-std-margin">
+                <option value="0.25">0.25"</option>
+                <option value="0.5" selected>0.5"</option>
+                <option value="0.75">0.75"</option>
+                <option value="1">1"</option>
+              </select>
+            </label>
+            <button id="download-ng-std-pdf">Download PDF</button>
+          </div>
         </div>
-        <p id="ng-stddev-chart-summary" class="chart-summary"></p>
-        <table id="ng-std-data-table"></table>
-        <label>Margin:
-          <select id="ng-std-margin">
-            <option value="0.25">0.25"</option>
-            <option value="0.5" selected>0.5"</option>
-            <option value="0.75">0.75"</option>
-            <option value="1">1"</option>
-          </select>
-        </label>
-        <button id="download-ng-std-pdf">Download PDF</button>
       </div>
     </div>
     {% endif %}

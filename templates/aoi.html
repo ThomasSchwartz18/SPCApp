@@ -344,17 +344,23 @@
   </div>
 
   <!-- Chart Modal -->
-  <div id="chart-modal" class="modal">
-    <div class="modal-content">
-      <span id="close-chart-modal" class="close">&times;</span>
-      <h2 id="modal-chart-title"></h2>
-      <div class="chart-container">
-        <canvas id="modal-chart" height="200"></canvas>
+  <div class="modal fade" id="chart-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modal-chart-title"></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="chart-container">
+            <canvas id="modal-chart" height="200"></canvas>
+          </div>
+          <table id="modal-table">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
-      <table id="modal-table">
-        <thead></thead>
-        <tbody></tbody>
-      </table>
     </div>
   </div>
 
