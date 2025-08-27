@@ -981,36 +981,42 @@ def aoi_report_data():
         end_date = datetime.strptime(end_row['max_date'], '%Y-%m-%d').date()
         start_date = end_date - timedelta(days=delta - 1)
 
+    where = 'WHERE report_date BETWEEN ? AND ?'
     params = [start_date.isoformat(), end_date.isoformat()]
+    for field in ['customer', 'shift', 'operator', 'assembly']:
+        val = request.args.get(field)
+        if val:
+            where += f' AND {field} = ?'
+            params.append(val)
 
     op_rows = conn.execute(
-        'SELECT operator, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
-        'FROM aoi_reports WHERE report_date BETWEEN ? AND ? '
+        f'SELECT operator, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
+        f'FROM aoi_reports {where} '
         'GROUP BY operator ORDER BY inspected DESC',
         params,
     ).fetchall()
     asm_rows = conn.execute(
-        'SELECT assembly, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
-        'FROM aoi_reports WHERE report_date BETWEEN ? AND ? '
+        f'SELECT assembly, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
+        f'FROM aoi_reports {where} '
         'GROUP BY assembly ORDER BY inspected DESC',
         params,
     ).fetchall()
     shift_rows = conn.execute(
-        'SELECT shift, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
-        'FROM aoi_reports WHERE report_date BETWEEN ? AND ? '
+        f'SELECT shift, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
+        f'FROM aoi_reports {where} '
         'GROUP BY shift ORDER BY shift',
         params,
     ).fetchall()
     cust_rows = conn.execute(
-        'SELECT customer, SUM(qty_rejected)*1.0/SUM(qty_inspected) AS rate '
-        'FROM aoi_reports WHERE report_date BETWEEN ? AND ? '
+        f'SELECT customer, SUM(qty_rejected)*1.0/SUM(qty_inspected) AS rate '
+        f'FROM aoi_reports {where} '
         'GROUP BY customer ORDER BY customer',
         params,
     ).fetchall()
     yield_rows = conn.execute(
         f"SELECT strftime('{group}', report_date) AS period, "
         "1 - SUM(qty_rejected)*1.0/SUM(qty_inspected) AS yield "
-        "FROM aoi_reports WHERE report_date BETWEEN ? AND ? "
+        f'FROM aoi_reports {where} '
         "GROUP BY period ORDER BY period",
         params,
     ).fetchall()
@@ -1385,36 +1391,42 @@ def final_inspect_report_data():
         end_date = datetime.strptime(end_row['max_date'], '%Y-%m-%d').date()
         start_date = end_date - timedelta(days=delta - 1)
 
+    where = 'WHERE report_date BETWEEN ? AND ?'
     params = [start_date.isoformat(), end_date.isoformat()]
+    for field in ['customer', 'shift', 'operator', 'assembly']:
+        val = request.args.get(field)
+        if val:
+            where += f' AND {field} = ?'
+            params.append(val)
 
     op_rows = conn.execute(
-        'SELECT operator, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
-        'FROM fi_reports WHERE report_date BETWEEN ? AND ? '
+        f'SELECT operator, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
+        f'FROM fi_reports {where} '
         'GROUP BY operator ORDER BY inspected DESC',
         params,
     ).fetchall()
     asm_rows = conn.execute(
-        'SELECT assembly, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
-        'FROM fi_reports WHERE report_date BETWEEN ? AND ? '
+        f'SELECT assembly, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
+        f'FROM fi_reports {where} '
         'GROUP BY assembly ORDER BY inspected DESC',
         params,
     ).fetchall()
     shift_rows = conn.execute(
-        'SELECT shift, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
-        'FROM fi_reports WHERE report_date BETWEEN ? AND ? '
+        f'SELECT shift, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
+        f'FROM fi_reports {where} '
         'GROUP BY shift ORDER BY shift',
         params,
     ).fetchall()
     cust_rows = conn.execute(
-        'SELECT customer, SUM(qty_rejected)*1.0/SUM(qty_inspected) AS rate '
-        'FROM fi_reports WHERE report_date BETWEEN ? AND ? '
+        f'SELECT customer, SUM(qty_rejected)*1.0/SUM(qty_inspected) AS rate '
+        f'FROM fi_reports {where} '
         'GROUP BY customer ORDER BY customer',
         params,
     ).fetchall()
     yield_rows = conn.execute(
         f"SELECT strftime('{group}', report_date) AS period, "
         "1 - SUM(qty_rejected)*1.0/SUM(qty_inspected) AS yield "
-        "FROM fi_reports WHERE report_date BETWEEN ? AND ? "
+        f'FROM fi_reports {where} '
         "GROUP BY period ORDER BY period",
         params,
     ).fetchall()

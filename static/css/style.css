@@ -167,6 +167,54 @@ table thead th {
   color: var(--color-black);
 }
 
+/* Grid layout for chart widgets */
+.chart-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.chart-widget {
+  flex: 1 1 calc(50% - 20px);
+  background: var(--color-white);
+  border: 1px solid var(--color-black);
+  border-radius: 8px;
+  padding: 10px;
+  box-sizing: border-box;
+  min-width: 300px;
+  height: 40vh;
+}
+
+.chart-widget canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Analysis split layout */
+.analysis-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.analysis-charts {
+  flex: 1 1 60%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.analysis-table {
+  flex: 1 1 40%;
+  overflow: auto;
+}
+
+@media (max-width: 900px) {
+  .analysis-layout {
+    flex-direction: column;
+  }
+}
+
 /* .chart-container {
   max-width: 600px;
   margin: auto;
