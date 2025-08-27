@@ -141,28 +141,41 @@
                 <button type="submit">Apply</button>
               </form>
             </div>
-            <div class="chart-grid">
-              <div class="chart-widget">
+            <div class="chart-row">
+              <div class="chart-box">
                 <h2>Operators by Inspected Quantity <button class="expand-chart" data-chart="operators" aria-label="Expand chart">⤢</button></h2>
                 <canvas id="operatorsChart"></canvas>
               </div>
-              <div class="chart-widget">
+              <div class="chart-details" id="operatorsDetails"></div>
+            </div>
+            <div class="chart-row">
+              <div class="chart-box">
                 <h2>Shift Totals <button class="expand-chart" data-chart="shift" aria-label="Expand chart">⤢</button></h2>
                 <canvas id="shiftChart"></canvas>
               </div>
-              <div class="chart-widget">
+              <div class="chart-details" id="shiftDetails"></div>
+            </div>
+            <div class="chart-row">
+              <div class="chart-box">
                 <h2>Operator Reject Rates per Customer <button class="expand-chart" data-chart="customer" aria-label="Expand chart">⤢</button></h2>
                 <canvas id="customerChart"></canvas>
               </div>
-              <div class="chart-widget">
+              <div class="chart-details" id="customerDetails"></div>
+            </div>
+            <div class="chart-row">
+              <div class="chart-box">
                 <h2>Std Dev of Reject Rates per Customer <button class="expand-chart" data-chart="customer-std" aria-label="Expand chart">⤢</button></h2>
                 <canvas id="customerStdChart"></canvas>
-                <p id="customerStdChartSummary" class="chart-summary"></p>
               </div>
-              <div class="chart-widget">
+              <div class="chart-details" id="customerStdDetails"></div>
+            </div>
+            <div class="chart-row">
+              <div class="chart-box">
                 <h2>Overall Yield Over Time <button class="expand-chart" data-chart="yield" aria-label="Expand chart">⤢</button></h2>
                 <canvas id="yieldChart"></canvas>
-              </div>            </div>
+              </div>
+              <div class="chart-details" id="yieldDetails"></div>
+            </div>
           </div>
           <div class="analysis-table">
             <h2>Performance per Assembly</h2>

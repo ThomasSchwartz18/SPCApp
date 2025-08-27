@@ -246,6 +246,57 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function updateOperatorsDetails() {
+    const el = document.getElementById('operatorsDetails');
+    if (!el) return;
+    const data = buildOperatorsChartData();
+    if (!data) { el.textContent = ''; return; }
+    const rate = data.totals.inspected ? (data.totals.rejected / data.totals.inspected * 100) : 0;
+    el.textContent = `Total inspected: ${data.totals.inspected}, Total rejected: ${data.totals.rejected}, Avg reject rate: ${rate.toFixed(2)}%`;
+  }
+
+  function updateShiftDetails() {
+    const el = document.getElementById('shiftDetails');
+    if (!el) return;
+    const data = buildShiftChartData(true);
+    if (!data) { el.textContent = ''; return; }
+    const avg = data.dates.length ? data.totals.inspected / data.dates.length : 0;
+    el.textContent = `Total inspected: ${data.totals.inspected}, Avg per day: ${avg.toFixed(1)}`;
+  }
+
+  function updateCustomerDetails(dataset) {
+    const el = document.getElementById('customerDetails');
+    if (!el) return;
+    const data = dataset || buildCustomerChartData(true);
+    if (!data) { el.textContent = ''; return; }
+    const outliers = data.rates
+      .map((r, i) => Math.abs(r - data.mean) > 3 * data.stdev ? data.labels[i] : null)
+      .filter(Boolean);
+    el.textContent = `Average rate: ${data.mean.toFixed(2)}%, Std dev: ${data.stdev.toFixed(2)}, Outliers: ${outliers.join(', ') || 'None'}`;
+  }
+
+  function updateCustomerStdDetails(summary) {
+    const el = document.getElementById('customerStdDetails');
+    if (!el) return;
+    el.textContent = summary || '';
+  }
+
+  function updateYieldDetails() {
+    const el = document.getElementById('yieldDetails');
+    if (!el) return;
+    const data = buildYieldChartData(true);
+    if (!data) { el.textContent = ''; return; }
+    const mean = data.avg;
+    const variance = data.values.reduce((a, b) => a + (b - mean) ** 2, 0) / data.values.length;
+    const stdev = Math.sqrt(variance);
+    const minVal = Math.min(...data.values);
+    const maxVal = Math.max(...data.values);
+    const outliers = data.values
+      .map((v, i) => Math.abs(v - mean) > 3 * stdev ? data.labels[i] : null)
+      .filter(Boolean);
+    el.textContent = `Average yield: ${mean.toFixed(2)}%, Std dev: ${stdev.toFixed(2)}, Min: ${minVal.toFixed(2)}%, Max: ${maxVal.toFixed(2)}%, Outliers: ${outliers.join(', ') || 'None'}`;
+  }
+
   function renderAll() {
     const opCtx = document.getElementById('operatorsChart');
     if (opCtx) {
@@ -254,6 +305,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (charts.operators) charts.operators.destroy();
         charts.operators = new Chart(opCtx, cfg);
       }
+      updateOperatorsDetails();
     }
 
     const shiftCtx = document.getElementById('shiftChart');
@@ -263,11 +315,11 @@ window.addEventListener('DOMContentLoaded', () => {
         if (charts.shift) charts.shift.destroy();
         charts.shift = new Chart(shiftCtx, cfg);
       }
+      updateShiftDetails();
     }
 
     const custCtx = document.getElementById('customerChart');
     const custStdCtx = document.getElementById('customerStdChart');
-    const summaryEl = document.getElementById('customerStdChartSummary');
     const custCfg = renderCustomer('widget');
     if (custCfg) {
       if (custCtx) {
@@ -278,9 +330,11 @@ window.addEventListener('DOMContentLoaded', () => {
         if (charts.customerStd) charts.customerStd.destroy();
         charts.customerStd = new Chart(custStdCtx, custCfg.stdConfig);
       }
-      if (summaryEl) summaryEl.textContent = custCfg.summary;
-    } else if (summaryEl) {
-      summaryEl.textContent = '';
+      updateCustomerDetails();
+      updateCustomerStdDetails(custCfg.summary);
+    } else {
+      updateCustomerDetails();
+      updateCustomerStdDetails();
     }
 
     const yieldCtx = document.getElementById('yieldChart');
@@ -290,6 +344,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (charts.yield) charts.yield.destroy();
         charts.yield = new Chart(yieldCtx, cfg);
       }
+      updateYieldDetails();
     }
 
     renderAssembly();
