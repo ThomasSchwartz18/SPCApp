@@ -2,6 +2,7 @@
 {% import 'components/forms.html' as forms %}
 {% block title %}Rework - Stencil Lookup{% endblock %}
 {% block head_extra %}
+  <script src="{{ url_for('static', filename='js/report_utils.js') }}" defer></script>
   <script src="/static/js/stencil_lookup.js" defer></script>
 {% endblock %}
 {% block content %}
@@ -33,7 +34,7 @@
     </div>
     <div id="divider"></div>
     <div id="stencil-table">
-      <table class="editable" data-update-url="/rework" data-fields="stencil_number,part_number,ref,description,location_of_stencil">
+      <table id="stencil-data-table" class="editable" data-update-url="/rework" data-fields="stencil_number,part_number,ref,description,location_of_stencil">
         <thead>
           <tr>
             <th>Stencil Number</th>
@@ -61,6 +62,7 @@
           {% endfor %}
         </tbody>
       </table>
+      <button type="button" onclick="exportTableToExcel('#stencil-data-table','stencil_lookup.csv')">Export CSV</button>
     </div>
   </div>
 {% endblock %}
