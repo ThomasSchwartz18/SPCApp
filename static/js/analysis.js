@@ -677,6 +677,11 @@ window.addEventListener('DOMContentLoaded', () => {
     fetch(`/analysis/report-data?freq=${freq}`)
       .then(res => res.json())
       .then(data => {
+        if (reportCharts[freq]) {
+          reportCharts[freq].destroy();
+          const ctx = canvas.getContext('2d');
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
         reportCharts[freq] = new Chart(canvas, {
           type: 'line',
           data: {
