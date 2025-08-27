@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 {% import 'components/forms.html' as forms %}
 {% block title %}Jobs Dashboard{% endblock %}
+{% block head_extra %}
+  <script src="{{ url_for('static', filename='js/report_utils.js') }}" defer></script>
+{% endblock %}
 {% block content %}
   <h1>Jobs Dashboard</h1>
 
@@ -16,6 +19,7 @@
     </thead>
     <tbody></tbody>
   </table>
+  <button type="button" onclick="exportTableToExcel('#jobs-table','jobs.csv')">Export CSV</button>
 
   <form id="update-form" class="needs-validation" novalidate>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

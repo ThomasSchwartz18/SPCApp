@@ -336,6 +336,7 @@
                 <thead></thead>
                 <tbody></tbody>
               </table>
+              <button type="button" onclick="exportTableToExcel('#sql-results','sql_results.csv')">Export CSV</button>
             </div>
           </div>
         </div>
@@ -346,6 +347,7 @@
               <canvas id="daily-report-canvas" style="display:none"></canvas>
             </div>
             <table id="daily-report-table" style="display:none"></table>
+            <button type="button" onclick="exportTableToExcel('#daily-report-table','daily_report.csv')">Export CSV</button>
             <label>Margin:
               <select id="daily-margin">
                 <option value="0.25">0.25"</option>
@@ -369,6 +371,7 @@
               <canvas id="weekly-report-canvas" style="display:none"></canvas>
             </div>
             <table id="weekly-report-table" style="display:none"></table>
+            <button type="button" onclick="exportTableToExcel('#weekly-report-table','weekly_report.csv')">Export CSV</button>
             <label>Margin:
               <select id="weekly-margin">
                 <option value="0.25">0.25"</option>
@@ -392,6 +395,7 @@
               <canvas id="monthly-report-canvas" style="display:none"></canvas>
             </div>
             <table id="monthly-report-table" style="display:none"></table>
+            <button type="button" onclick="exportTableToExcel('#monthly-report-table','monthly_report.csv')">Export CSV</button>
             <label>Margin:
               <select id="monthly-margin">
                 <option value="0.25">0.25"</option>
@@ -415,6 +419,7 @@
               <canvas id="yearly-report-canvas" style="display:none"></canvas>
             </div>
             <table id="yearly-report-table" style="display:none"></table>
+            <button type="button" onclick="exportTableToExcel('#yearly-report-table','yearly_report.csv')">Export CSV</button>
             <label>Margin:
               <select id="yearly-margin">
                 <option value="0.25">0.25"</option>
@@ -452,7 +457,7 @@
             <button type="button" class="model-filter-btn" data-filter="th">TH</button>
           </div>
         </div>
-        <table>
+        <table id="moat-data-table">
           <thead><tr>
             <th>Model Name</th><th>Total Boards</th><th>Total Parts/Board</th>
             <th>Total Parts</th><th>NG Parts</th><th>NG PPM</th>
@@ -475,6 +480,7 @@
           {% endfor %}
           </tbody>
         </table>
+        <button type="button" onclick="exportTableToExcel('#moat-data-table','moat.csv')">Export CSV</button>
       </div>
     </div>
 
@@ -507,6 +513,7 @@
             </div>
             <p id="fc-chart-summary" class="chart-summary"></p>
             <table id="fc-data-table"></table>
+            <button type="button" onclick="exportTableToExcel('#fc-data-table','fc_data.csv')">Export CSV</button>
             <label>Margin:
               <select id="fc-margin">
                 <option value="0.25">0.25"</option>
@@ -534,6 +541,7 @@
             </div>
             <p id="ng-chart-summary" class="chart-summary"></p>
             <table id="ng-data-table"></table>
+            <button type="button" onclick="exportTableToExcel('#ng-data-table','ng_data.csv')">Export CSV</button>
             <label>Margin:
               <select id="ng-margin">
                 <option value="0.25">0.25"</option>
@@ -560,6 +568,7 @@
             </div>
             <p id="stddev-chart-summary" class="chart-summary"></p>
             <table id="std-data-table"></table>
+            <button type="button" onclick="exportTableToExcel('#std-data-table','std_data.csv')">Export CSV</button>
             <label>Margin:
               <select id="std-margin">
                 <option value="0.25">0.25"</option>
@@ -586,6 +595,7 @@
             </div>
             <p id="ng-stddev-chart-summary" class="chart-summary"></p>
             <table id="ng-std-data-table"></table>
+            <button type="button" onclick="exportTableToExcel('#ng-std-data-table','ng_std_data.csv')">Export CSV</button>
             <label>Margin:
               <select id="ng-std-margin">
                 <option value="0.25">0.25"</option>

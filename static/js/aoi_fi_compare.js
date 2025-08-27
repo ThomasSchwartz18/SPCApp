@@ -149,10 +149,10 @@
 
     // Initialize DataTables if the plugin is available
     if (window.jQuery && $.fn && $.fn.DataTable) {
-      const aoiTableEl = document.querySelector('.comparison-panels details:nth-of-type(1) table');
-      const fiTableEl = document.querySelector('.comparison-panels details:nth-of-type(2) table');
-      if (aoiTableEl) $(aoiTableEl).DataTable();
-      if (fiTableEl) $(fiTableEl).DataTable();
+      const aoiTableEl = document.getElementById('compare-aoi-table');
+      const fiTableEl = document.getElementById('compare-fi-table');
+      if (aoiTableEl) $(aoiTableEl).DataTable({ paging: false });
+      if (fiTableEl) $(fiTableEl).DataTable({ paging: false });
     }
 
     // Expose row data for future filtering

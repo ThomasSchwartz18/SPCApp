@@ -241,7 +241,7 @@ window.addEventListener('DOMContentLoaded', () => {
         .join('');
       if (window.jQuery) {
         if ($.fn.DataTable.isDataTable(table)) $(table).DataTable().destroy();
-        $(table).DataTable();
+        $(table).DataTable({ paging: false });
       }
     }
   }
@@ -379,7 +379,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const table = document.querySelector(`#${basePath}-table table`);
   if (table && window.jQuery) {
-    $(table).DataTable();
+    $(table).DataTable({ paging: false });
   }
   if (table) {
     table.addEventListener('click', async e => {
