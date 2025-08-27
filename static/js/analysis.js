@@ -307,6 +307,8 @@ window.addEventListener('DOMContentLoaded', () => {
               ]
             },
             options: {
+              responsive: false,
+              maintainAspectRatio: false,
               layout: { padding: { top: 20 } },
               scales: { y: { beginAtZero: true, max: yMax } },
               plugins: {
@@ -430,6 +432,8 @@ window.addEventListener('DOMContentLoaded', () => {
               ]
             },
             options: {
+              responsive: false,
+              maintainAspectRatio: false,
               layout: { padding: { top: 20 } },
               scales: { y: { beginAtZero: true, max: yMax } },
               plugins: {
@@ -496,7 +500,7 @@ window.addEventListener('DOMContentLoaded', () => {
           const rates = data.rates.map(r => r.rate).filter(r => r <= yMax);
           if (stdChartInstance) stdChartInstance.destroy();
           if (!rates.length) {
-            stdChartInstance = new Chart(stdCtx, { type: 'bar', data: { labels: [], datasets: [] } });
+            stdChartInstance = new Chart(stdCtx, { type: 'bar', data: { labels: [], datasets: [] }, options: { responsive: false, maintainAspectRatio: false } });
             document.getElementById('stddev-chart-summary').textContent = 'No data.';
             chartStdModal.show();
             return;
@@ -504,6 +508,9 @@ window.addEventListener('DOMContentLoaded', () => {
           const mean = data.mean;
           const stdev = data.stdev;
           const { config, rows } = createStdChartConfig(rates, mean, stdev, yMax);
+          config.options = config.options || {};
+          config.options.responsive = false;
+          config.options.maintainAspectRatio = false;
           stdChartInstance = new Chart(stdCtx, config);
           const stdTable = document.getElementById('std-data-table');
           if (stdTable) {
@@ -545,7 +552,7 @@ window.addEventListener('DOMContentLoaded', () => {
           const rates = data.rates.map(r => r.rate).filter(r => r <= yMax);
           if (ngStdChartInstance) ngStdChartInstance.destroy();
           if (!rates.length) {
-            ngStdChartInstance = new Chart(ngStdCtx, { type: 'bar', data: { labels: [], datasets: [] } });
+            ngStdChartInstance = new Chart(ngStdCtx, { type: 'bar', data: { labels: [], datasets: [] }, options: { responsive: false, maintainAspectRatio: false } });
             document.getElementById('ng-stddev-chart-summary').textContent = 'No data.';
             chartNgStdModal.show();
             return;
@@ -558,6 +565,9 @@ window.addEventListener('DOMContentLoaded', () => {
             lineColor: 'rgba(153, 102, 255, 1)',
             decimals: 3
           });
+          config.options = config.options || {};
+          config.options.responsive = false;
+          config.options.maintainAspectRatio = false;
           ngStdChartInstance = new Chart(ngStdCtx, config);
           const ngStdTable = document.getElementById('ng-std-data-table');
           if (ngStdTable) {
@@ -691,7 +701,11 @@ window.addEventListener('DOMContentLoaded', () => {
               { label: 'NG PPM', data: data.ng_ppm, borderColor: 'red', fill: false }
             ]
           },
-          options: { scales: { y: { beginAtZero: true } } }
+          options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true } }
+          }
         });
         if (table) {
           table.innerHTML = '<thead><tr><th>Period</th><th>Total Boards</th><th>FalseCall PPM</th><th>NG PPM</th></tr></thead><tbody></tbody>';
