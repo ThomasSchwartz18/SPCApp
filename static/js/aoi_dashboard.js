@@ -22,18 +22,78 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const charts = {};
 
-  function renderOperators(mode = 'widget') {
+  // Helpers to build datasets
+  function buildOperatorsChartData(full = false) {
     if (!ops.length) return null;
     let data = [...ops].sort((a, b) => b.inspected - a.inspected);
-    if (mode === 'widget') data = data.slice(0, 5);
+    if (!full) data = data.slice(0, 5);
     const labels = data.map((o, idx) => (isAdmin ? o.operator : `Operator ${idx + 1}`));
+    const inspected = data.map(o => o.inspected);
+    const rejected = data.map(o => o.rejected);
+    const totals = {
+      inspected: inspected.reduce((a, b) => a + b, 0),
+      rejected: rejected.reduce((a, b) => a + b, 0)
+    };
+    return { labels, inspected, rejected, totals };
+  }
+
+  function buildShiftChartData(full = false) {
+    if (!shiftData.length) return null;
+    let dates = [...new Set(shiftData.map(r => r.report_date))].sort();
+    if (!full) dates = dates.slice(-5);
+    const shifts = [...new Set(shiftData.map(r => r.shift))];
+    const colors = ['rgba(255,99,132,0.7)', 'rgba(54,162,235,0.7)', 'rgba(75,192,192,0.7)', 'rgba(255,205,86,0.7)'];
+    const datasets = shifts.map((s, idx) => ({
+      label: s,
+      data: dates.map(d => {
+        const row = shiftData.find(r => r.report_date === d && r.shift === s);
+        return row ? row.inspected : 0;
+      }),
+      backgroundColor: colors[idx % colors.length]
+    }));
+    const totals = {
+      inspected: dates.map((_, i) => datasets.reduce((sum, ds) => sum + ds.data[i], 0)).reduce((a, b) => a + b, 0)
+    };
+    return { dates, datasets, totals };
+  }
+
+  function buildCustomerChartData(full = false) {
+    if (!customerData.length) return null;
+    let data = [...customerData].sort((a, b) => b.rate - a.rate);
+    if (!full) data = data.slice(0, 5);
+    const labels = data.map(c => c.customer);
+    const rates = data.map(c => c.rate);
+    const mean = rates.reduce((a, b) => a + b, 0) / rates.length;
+    const variance = rates.reduce((a, b) => a + (b - mean) ** 2, 0) / rates.length;
+    const stdev = Math.sqrt(variance);
+    const yMax = Math.max(...rates, mean + 3 * stdev, 1);
+    const { config: stdConfig, rows: stdRows } = createStdChartConfig(rates, mean, stdev, yMax);
+    return { labels, rates, mean, stdev, stdConfig, stdRows };
+  }
+
+  function buildYieldChartData(full = false) {
+    if (!yieldData.length) return null;
+    let data = [...yieldData];
+    if (!full) data = data.slice(-5);
+    const labels = data.map(y => y.report_date || y.period);
+    const values = data.map(y => y.yield * 100);
+    const avg = values.reduce((a, b) => a + b, 0) / values.length;
+    const minVal = Math.min(...values);
+    const yMin = minVal < 80 ? minVal : 80;
+    return { labels, values, avg, yMin };
+  }
+
+  // Chart renderers using datasets
+  function renderOperators(mode = 'widget', dataSet = null) {
+    const data = dataSet || buildOperatorsChartData(mode === 'detail');
+    if (!data) return null;
     const config = {
       type: 'bar',
       data: {
-        labels,
+        labels: data.labels,
         datasets: [
-          { label: 'Accepted', data: data.map(o => o.inspected - o.rejected), backgroundColor: 'rgba(54,162,235,0.7)' },
-          { label: 'Rejected', data: data.map(o => o.rejected), backgroundColor: 'rgba(255,99,132,0.7)' }
+          { label: 'Accepted', data: data.inspected.map((v, i) => v - data.rejected[i]), backgroundColor: 'rgba(54,162,235,0.7)' },
+          { label: 'Rejected', data: data.rejected, backgroundColor: 'rgba(255,99,132,0.7)' }
         ]
       },
       options: {
@@ -49,7 +109,7 @@ window.addEventListener('DOMContentLoaded', () => {
             ? {
                 callbacks: {
                   label: c => {
-                    const total = data[c.dataIndex].inspected;
+                    const total = data.inspected[c.dataIndex];
                     const value = c.raw;
                     const percent = total ? (value / total * 100).toFixed(1) : 0;
                     return `${c.dataset.label}: ${value} (${percent}%)`;
@@ -67,24 +127,12 @@ window.addEventListener('DOMContentLoaded', () => {
     return config;
   }
 
-  function renderShift(mode = 'widget') {
-    if (!shiftData.length) return null;
-    let dates = [...new Set(shiftData.map(r => r.report_date))];
-    dates.sort();
-    if (mode === 'widget') dates = dates.slice(-5);
-    const shifts = [...new Set(shiftData.map(r => r.shift))];
-    const colors = ['rgba(255,99,132,0.7)', 'rgba(54,162,235,0.7)', 'rgba(75,192,192,0.7)', 'rgba(255,205,86,0.7)'];
-    const datasets = shifts.map((s, idx) => ({
-      label: s,
-      data: dates.map(d => {
-        const row = shiftData.find(r => r.report_date === d && r.shift === s);
-        return row ? row.inspected : 0;
-      }),
-      backgroundColor: colors[idx % colors.length]
-    }));
+  function renderShift(mode = 'widget', dataSet = null) {
+    const data = dataSet || buildShiftChartData(mode === 'detail');
+    if (!data) return null;
     const config = {
       type: 'bar',
-      data: { labels: dates, datasets },
+      data: { labels: data.dates, datasets: data.datasets },
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -105,15 +153,14 @@ window.addEventListener('DOMContentLoaded', () => {
     return config;
   }
 
-  function renderCustomer(mode = 'widget') {
-    if (!customerData.length) return null;
-    let data = [...customerData].sort((a, b) => b.rate - a.rate);
-    if (mode === 'widget') data = data.slice(0, 5);
+  function renderCustomer(mode = 'widget', dataSet = null) {
+    const data = dataSet || buildCustomerChartData(mode === 'detail');
+    if (!data) return null;
     const barConfig = {
       type: 'bar',
       data: {
-        labels: data.map(c => c.customer),
-        datasets: [{ label: 'Reject Rate', data: data.map(c => c.rate), backgroundColor: 'rgba(255,159,64,0.7)' }]
+        labels: data.labels,
+        datasets: [{ label: 'Reject Rate', data: data.rates, backgroundColor: 'rgba(255,159,64,0.7)' }]
       },
       options: {
         responsive: true,
@@ -133,12 +180,7 @@ window.addEventListener('DOMContentLoaded', () => {
       barConfig.options.scales.y.ticks = { maxTicksLimit: 5 };
     }
 
-    const rates = data.map(c => c.rate);
-    const mean = rates.reduce((a, b) => a + b, 0) / rates.length;
-    const variance = rates.reduce((a, b) => a + (b - mean) ** 2, 0) / rates.length;
-    const stdev = Math.sqrt(variance);
-    const yMax = Math.max(...rates, mean + 3 * stdev, 1);
-    const { config: stdConfig, rows: stdRows } = createStdChartConfig(rates, mean, stdev, yMax);
+    const stdConfig = data.stdConfig;
     stdConfig.options = {
       ...stdConfig.options,
       responsive: true,
@@ -157,29 +199,25 @@ window.addEventListener('DOMContentLoaded', () => {
       stdConfig.options.scales.x.ticks = { maxTicksLimit: 5 };
       stdConfig.options.scales.y.ticks = { maxTicksLimit: 5 };
     }
-    const summary = `Avg rate ${mean.toFixed(2)} with std dev ${stdev.toFixed(2)}.`;
-    const barRows = data.map(c => [c.customer, c.rate]);
-    return { barConfig, stdConfig, barRows, stdRows, summary };
+    const barRows = data.labels.map((c, idx) => [c, data.rates[idx]]);
+    const summary = `Avg rate ${data.mean.toFixed(2)} with std dev ${data.stdev.toFixed(2)}.`;
+    return { barConfig, stdConfig, barRows, stdRows: data.stdRows, mean: data.mean, summary };
   }
 
-  function renderYield(mode = 'widget') {
-    if (!yieldData.length) return null;
-    let data = [...yieldData];
-    if (mode === 'widget') data = data.slice(-5);
-    const values = data.map(y => y.yield * 100);
-    const minVal = Math.min(...values);
-    const yMin = minVal < 80 ? minVal : 80;
+  function renderYield(mode = 'widget', dataSet = null) {
+    const data = dataSet || buildYieldChartData(mode === 'detail');
+    if (!data) return null;
     const config = {
       type: 'line',
       data: {
-        labels: data.map(y => y.report_date || y.period),
-        datasets: [{ label: 'Yield %', data: values, fill: false, borderColor: 'rgba(75,192,192,1)' }]
+        labels: data.labels,
+        datasets: [{ label: 'Yield %', data: data.values, fill: false, borderColor: 'rgba(75,192,192,1)' }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          y: { min: yMin, max: 100, ticks: { callback: v => `${v}%` } },
+          y: { min: data.yMin, max: 100, ticks: { callback: v => `${v}%` } },
           x: {}
         },
         plugins: {
@@ -366,22 +404,75 @@ window.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => {
       const type = btn.dataset.chart;
       if (type === 'operators' && ops.length) {
-        const config = renderOperators('detail');
-        const rows = ops.map((o, idx) => [isAdmin ? o.operator : `Operator ${idx + 1}`, o.inspected, o.rejected]);
+        const data = buildOperatorsChartData(true);
+        const config = renderOperators('detail', data);
+        config.options.plugins.legend.display = true;
+        config.options.scales.x.title = { display: true, text: 'Operator' };
+        config.options.scales.y.title = { display: true, text: 'Quantity' };
+        config.options.plugins.annotation = {
+          annotations: {
+            total: {
+              type: 'line',
+              yMin: data.totals.inspected,
+              yMax: data.totals.inspected,
+              borderColor: 'red',
+              borderDash: [4, 4]
+            }
+          }
+        };
+        const rows = data.labels.map((label, idx) => [label, data.inspected[idx], data.rejected[idx]]);
+        rows.push(['Total', data.totals.inspected, data.totals.rejected]);
         showModal('Top Operators by Inspected Quantity', config, ['Operator','Inspected','Rejected'], rows);
       } else if (type === 'shift' && shiftData.length) {
-        const config = renderShift('detail');
+        const data = buildShiftChartData(true);
+        const config = renderShift('detail', data);
+        config.options.plugins.legend.display = true;
+        config.options.scales.x.title = { display: true, text: 'Date' };
+        config.options.scales.y.title = { display: true, text: 'Inspected' };
+        const avg = data.totals.inspected / data.dates.length;
+        config.options.plugins.annotation = {
+          annotations: {
+            avg: { type: 'line', yMin: avg, yMax: avg, borderColor: 'red', borderDash: [4, 4] }
+          }
+        };
         const rows = shiftData.map(r => [r.report_date, r.shift, r.inspected]);
+        rows.push(['', 'Total', data.totals.inspected]);
         showModal('Shift Totals', config, ['Date','Shift','Inspected'], rows);
       } else if (type === 'customer' && customerData.length) {
-        const { barConfig, barRows } = renderCustomer('detail');
-        showModal('Operator Reject Rates', barConfig, ['Customer','Reject Rate'], barRows);
+        const data = buildCustomerChartData(true);
+        const { barConfig, barRows, mean } = renderCustomer('detail', data);
+        barConfig.options.plugins.legend.display = true;
+        barConfig.options.scales.x.title = { display: true, text: 'Customer' };
+        barConfig.options.scales.y.title = { display: true, text: 'Reject Rate' };
+        const rows = [...barRows, ['Average', mean.toFixed(2)]];
+        showModal('Operator Reject Rates', barConfig, ['Customer','Reject Rate'], rows);
       } else if (type === 'customer-std' && customerData.length) {
-        const { stdConfig, stdRows } = renderCustomer('detail');
-        showModal('Std Dev of Reject Rates per Customer', stdConfig, ['Range','Frequency'], stdRows);
+        const data = buildCustomerChartData(true);
+        const { stdConfig, stdRows, mean } = renderCustomer('detail', data);
+        stdConfig.options.plugins.legend.display = true;
+        stdConfig.options.scales.x.title = { display: true, text: 'Range' };
+        stdConfig.options.scales.y.title = { display: true, text: 'Frequency' };
+        const rows = [...stdRows, ['Mean', mean.toFixed(2)]];
+        showModal('Std Dev of Reject Rates per Customer', stdConfig, ['Range','Frequency'], rows);
       } else if (type === 'yield' && yieldData.length) {
-        const config = renderYield('detail');
-        const rows = yieldData.map(y => [y.report_date || y.period, (y.yield * 100).toFixed(2) + '%']);
+        const data = buildYieldChartData(true);
+        const config = renderYield('detail', data);
+        config.options.plugins.legend.display = true;
+        config.options.scales.x.title = { display: true, text: 'Date' };
+        config.options.scales.y.title = { display: true, text: 'Yield %' };
+        config.options.plugins.annotation = {
+          annotations: {
+            avg: {
+              type: 'line',
+              yMin: data.avg,
+              yMax: data.avg,
+              borderColor: 'red',
+              borderDash: [4, 4]
+            }
+          }
+        };
+        const rows = data.labels.map((label, idx) => [label, data.values[idx].toFixed(2) + '%']);
+        rows.push(['Average', data.avg.toFixed(2) + '%']);
         showModal('Overall Yield Over Time', config, ['Date','Yield %'], rows);
       }
     });
