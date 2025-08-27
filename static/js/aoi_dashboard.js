@@ -38,6 +38,8 @@ window.addEventListener('DOMContentLoaded', () => {
         ]
       },
       options: {
+        responsive: true,
+        maintainAspectRatio: false,
         scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
         plugins: {
           tooltip: {
@@ -74,7 +76,7 @@ window.addEventListener('DOMContentLoaded', () => {
     charts.shift = new Chart(ctx, {
       type: 'bar',
       data: { labels: dates, datasets },
-      options: { scales: { y: { beginAtZero: true } } }
+      options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
     });
   }
 
@@ -95,7 +97,7 @@ window.addEventListener('DOMContentLoaded', () => {
           labels: customerData.map(c => c.customer),
           datasets: [{ label: 'Reject Rate', data: customerData.map(c => c.rate), backgroundColor: 'rgba(255,159,64,0.7)' }]
         },
-        options: { scales: { y: { beginAtZero: true } } }
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
       });
     }
     if (stdCtx) {
@@ -105,6 +107,7 @@ window.addEventListener('DOMContentLoaded', () => {
       const stdev = Math.sqrt(variance);
       const yMax = Math.max(...rates, mean + 3 * stdev, 1);
       const { config } = createStdChartConfig(rates, mean, stdev, yMax);
+      config.options = { ...config.options, responsive: true, maintainAspectRatio: false };
       charts.customerStd = new Chart(stdCtx, config);
       if (summaryEl) summaryEl.textContent = `Avg rate ${mean.toFixed(2)} with std dev ${stdev.toFixed(2)}.`;
     }
@@ -125,6 +128,8 @@ window.addEventListener('DOMContentLoaded', () => {
         datasets: [{ label: 'Yield %', data: values, fill: false, borderColor: 'rgba(75,192,192,1)' }]
       },
       options: {
+        responsive: true,
+        maintainAspectRatio: false,
         scales: { y: { min: yMin, max: 100, ticks: { callback: v => `${v}%` } } }
       }
     });
@@ -249,6 +254,7 @@ window.addEventListener('DOMContentLoaded', () => {
   function showModal(title, config, headers, rows) {
     if (modalChart) modalChart.destroy();
     modalTitle.textContent = title;
+    config.options = { ...config.options, responsive: true, maintainAspectRatio: false };
     modalChart = new Chart(modalCanvas, config);
     modalHead.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
     modalBody.innerHTML = rows.map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('');
@@ -269,7 +275,7 @@ window.addEventListener('DOMContentLoaded', () => {
               { label: 'Rejected', data: ops.map(o => o.rejected), backgroundColor: 'rgba(255, 99, 132, 0.7)' }
             ]
           },
-          options: { scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } } }
+          options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } } }
         };
         const rows = ops.map((o, idx) => [isAdmin ? o.operator : `Operator ${idx + 1}`, o.inspected, o.rejected]);
         showModal('Top Operators by Inspected Quantity', config, ['Operator','Inspected','Rejected'], rows);
@@ -285,7 +291,7 @@ window.addEventListener('DOMContentLoaded', () => {
           }),
           backgroundColor: colors[idx % colors.length]
         }));
-        const config = { type: 'bar', data: { labels: dates, datasets }, options: { scales: { y: { beginAtZero: true } } } };
+        const config = { type: 'bar', data: { labels: dates, datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } };
         const rows = shiftData.map(r => [r.report_date, r.shift, r.inspected]);
         showModal('Shift Totals', config, ['Date','Shift','Inspected'], rows);
       } else if (type === 'customer' && customerData) {
@@ -295,7 +301,7 @@ window.addEventListener('DOMContentLoaded', () => {
             labels: customerData.map(c => c.customer),
             datasets: [{ label: 'Reject Rate', data: customerData.map(c => c.rate), backgroundColor: 'rgba(255, 159, 64, 0.7)' }]
           },
-          options: { scales: { y: { beginAtZero: true } } }
+          options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
         };
         const rows = customerData.map(c => [c.customer, c.rate]);
         showModal('Operator Reject Rates', config, ['Customer','Reject Rate'], rows);
@@ -306,6 +312,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const stdev = Math.sqrt(variance);
         const yMax = Math.max(...rates, mean + 3 * stdev, 1);
         const { config, rows } = createStdChartConfig(rates, mean, stdev, yMax);
+        config.options = { ...config.options, responsive: true, maintainAspectRatio: false };
         showModal('Std Dev of Reject Rates per Customer', config, ['Range','Frequency'], rows);
       } else if (type === 'yield' && yieldData) {
         const config = {
@@ -315,6 +322,8 @@ window.addEventListener('DOMContentLoaded', () => {
             datasets: [{ label: 'Yield %', data: yieldData.map(y => y.yield * 100), fill: false, borderColor: 'rgba(75, 192, 192, 1)' }]
           },
           options: {
+            responsive: true,
+            maintainAspectRatio: false,
             scales: {
               y: {
                 beginAtZero: true,
@@ -367,7 +376,7 @@ window.addEventListener('DOMContentLoaded', () => {
               { label: 'Rejected', data: ops.map(o => o.rejected), backgroundColor: 'rgba(255, 99, 132, 0.7)' }
             ]
           },
-          options: { scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } } }
+          options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } } }
         });
       }
     }
@@ -382,7 +391,7 @@ window.addEventListener('DOMContentLoaded', () => {
             labels: shifts.map(s => s.shift),
             datasets: [{ label: 'Inspected', data: shifts.map(s => s.inspected), backgroundColor: 'rgba(75, 192, 192, 0.7)' }]
           },
-          options: { scales: { y: { beginAtZero: true } } }
+          options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
         });
       }
     }
@@ -397,7 +406,7 @@ window.addEventListener('DOMContentLoaded', () => {
             labels: cust.map(c => c.customer),
             datasets: [{ label: 'Reject Rate', data: cust.map(c => c.rate), backgroundColor: 'rgba(255, 159, 64, 0.7)' }]
           },
-          options: { scales: { y: { beginAtZero: true } } }
+          options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
         });
       }
     }
@@ -413,6 +422,8 @@ window.addEventListener('DOMContentLoaded', () => {
             datasets: [{ label: 'Yield %', data: ySeries.map(y => y.yield * 100), fill: false, borderColor: 'rgba(75, 192, 192, 1)' }]
           },
           options: {
+            responsive: true,
+            maintainAspectRatio: false,
             scales: {
               y: {
                 beginAtZero: true,
