@@ -99,13 +99,11 @@
       <div id="analysis" class="tab-content">
         <div class="analysis-layout">
           <div class="analysis-charts">
-            <div class="action-card">
-              <h2>Data Mining Filters</h2>
-              <button id="aoi-filter-btn" title="Show or hide filter options">Filter Options</button>
-              <form id="aoi-filter-form" method="get" action="/final-inspect" style="display:none; margin-top:10px;">
+            <div class="filter-toolbar">
+              <form id="aoi-filter-form" method="get" action="/final-inspect">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <label>Start: <input type="date" name="start" value="{{ start or '' }}"></label><br>
-                <label>End: <input type="date" name="end" value="{{ end or '' }}"></label><br>
+                <label>Start: <input type="date" name="start" value="{{ start or '' }}"></label>
+                <label>End: <input type="date" name="end" value="{{ end or '' }}"></label>
                 <label>Customer:
                   <select name="customer">
                     <option value="">All</option>
@@ -113,7 +111,7 @@
                     <option value="{{ c }}" {% if c == selected_customer %}selected{% endif %}>{{ c }}</option>
                     {% endfor %}
                   </select>
-                </label><br>
+                </label>
                 <label>Shift:
                   <select name="shift">
                     <option value="">All</option>
@@ -121,7 +119,7 @@
                     <option value="{{ s }}" {% if s == selected_shift %}selected{% endif %}>{{ s }}</option>
                     {% endfor %}
                   </select>
-                </label><br>
+                </label>
                 <label>Operator:
                   <select name="operator">
                     <option value="">All</option>
@@ -129,7 +127,7 @@
                     <option value="{{ o }}" {% if o == selected_operator %}selected{% endif %}>{{ o }}</option>
                     {% endfor %}
                   </select>
-                </label><br>
+                </label>
                 <label>Assembly:
                   <select name="assembly">
                     <option value="">All</option>
@@ -137,7 +135,7 @@
                     <option value="{{ a }}" {% if a == selected_assembly %}selected{% endif %}>{{ a }}</option>
                     {% endfor %}
                   </select>
-                </label><br>
+                </label>
                 <button type="submit">Apply</button>
               </form>
             </div>

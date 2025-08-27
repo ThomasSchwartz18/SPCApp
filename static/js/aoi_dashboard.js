@@ -1,14 +1,6 @@
 window.addEventListener('DOMContentLoaded', () => {
   const basePath = document.body.dataset.basePath || 'aoi';
 
-  const filterBtn = document.getElementById('aoi-filter-btn');
-  const filterForm = document.getElementById('aoi-filter-form');
-  if (filterBtn && filterForm) {
-    filterBtn.addEventListener('click', () => {
-      filterForm.style.display = filterForm.style.display === 'none' ? 'block' : 'none';
-    });
-  }
-
   const getData = id => {
     const el = document.getElementById(id);
     return el ? JSON.parse(el.textContent) : null;
