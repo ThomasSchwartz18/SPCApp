@@ -183,18 +183,35 @@ table thead th {
 .chart-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 10px;
 }
 
-.chart-widget {
-  flex: 1 1 calc(50% - 20px);
+.filter-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   background: var(--color-white);
   border: 1px solid var(--color-black);
   border-radius: 8px;
   padding: 10px;
+  margin-bottom: 10px;
+}
+
+.filter-toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chart-widget {
+  flex: 1 1 calc(50% - 10px);
+  background: var(--color-white);
+  border: 1px solid var(--color-black);
+  border-radius: 8px;
+  padding: 8px;
   box-sizing: border-box;
   min-width: 300px;
-  height: 40vh;
+  height: 50vh;
   overflow: hidden;
 }
 
