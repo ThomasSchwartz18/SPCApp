@@ -9,6 +9,7 @@
   <script id="shift-data" type="application/json">{{ shift_totals|tojson }}</script>
   <script id="customer-data" type="application/json">{{ customer_rates|tojson }}</script>
   <script id="yield-data" type="application/json">{{ yield_series|tojson }}</script>
+  <script id="assembly-data" type="application/json">{{ assemblies|tojson }}</script>
   <script src="{{ url_for('static', filename='js/html2canvas.min.js') }}" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.plugin.png.min.js" defer></script>
@@ -96,91 +97,97 @@
         </div>
       </div>
       <div id="analysis" class="tab-content">
-        <div class="action-panel">
-          <div class="action-card">
-            <h2>Data Mining Filters</h2>
-            <button id="aoi-filter-btn" title="Show or hide filter options">Filter Options</button>
-            <form id="aoi-filter-form" method="get" action="/aoi" style="display:none; margin-top:10px;">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <label>Start: <input type="date" name="start" value="{{ start or '' }}"></label><br>
-              <label>End: <input type="date" name="end" value="{{ end or '' }}"></label><br>
-              <label>Customer:
-                <select name="customer">
-                  <option value="">All</option>
-                  {% for c in customers %}
-                  <option value="{{ c }}" {% if c == selected_customer %}selected{% endif %}>{{ c }}</option>
-                  {% endfor %}
-                </select>
-              </label><br>
-              <label>Shift:
-                <select name="shift">
-                  <option value="">All</option>
-                  {% for s in shifts %}
-                  <option value="{{ s }}" {% if s == selected_shift %}selected{% endif %}>{{ s }}</option>
-                  {% endfor %}
-                </select>
-              </label><br>
-              <label>Operator:
-                <select name="operator">
-                  <option value="">All</option>
-                  {% for o in operator_opts %}
-                  <option value="{{ o }}" {% if o == selected_operator %}selected{% endif %}>{{ o }}</option>
-                  {% endfor %}
-                </select>
-              </label><br>
-              <label>Assembly:
-                <select name="assembly">
-                  <option value="">All</option>
-                  {% for a in assembly_opts %}
-                  <option value="{{ a }}" {% if a == selected_assembly %}selected{% endif %}>{{ a }}</option>
-                  {% endfor %}
-                </select>
-              </label><br>
-              <button type="submit">Apply</button>
-            </form>
+        <div class="analysis-layout">
+          <div class="analysis-charts">
+            <div class="action-card">
+              <h2>Data Mining Filters</h2>
+              <button id="aoi-filter-btn" title="Show or hide filter options">Filter Options</button>
+              <form id="aoi-filter-form" method="get" action="/aoi" style="display:none; margin-top:10px;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label>Start: <input type="date" name="start" value="{{ start or '' }}"></label><br>
+                <label>End: <input type="date" name="end" value="{{ end or '' }}"></label><br>
+                <label>Customer:
+                  <select name="customer">
+                    <option value="">All</option>
+                    {% for c in customers %}
+                    <option value="{{ c }}" {% if c == selected_customer %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                  </select>
+                </label><br>
+                <label>Shift:
+                  <select name="shift">
+                    <option value="">All</option>
+                    {% for s in shifts %}
+                    <option value="{{ s }}" {% if s == selected_shift %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                  </select>
+                </label><br>
+                <label>Operator:
+                  <select name="operator">
+                    <option value="">All</option>
+                    {% for o in operator_opts %}
+                    <option value="{{ o }}" {% if o == selected_operator %}selected{% endif %}>{{ o }}</option>
+                    {% endfor %}
+                  </select>
+                </label><br>
+                <label>Assembly:
+                  <select name="assembly">
+                    <option value="">All</option>
+                    {% for a in assembly_opts %}
+                    <option value="{{ a }}" {% if a == selected_assembly %}selected{% endif %}>{{ a }}</option>
+                    {% endfor %}
+                  </select>
+                </label><br>
+                <button type="submit">Apply</button>
+              </form>
+            </div>
+            <div class="chart-grid">
+              <div class="chart-widget">
+                <h2>Top Operators by Inspected Quantity <button class="expand-chart" data-chart="operators" aria-label="Expand chart">⤢</button></h2>
+                <canvas id="operatorsChart"></canvas>
+              </div>
+              <div class="chart-widget">
+                <h2>Shift Totals <button class="expand-chart" data-chart="shift" aria-label="Expand chart">⤢</button></h2>
+                <canvas id="shiftChart"></canvas>
+              </div>
+              <div class="chart-widget">
+                <h2>Operator Reject Rates per Customer <button class="expand-chart" data-chart="customer" aria-label="Expand chart">⤢</button></h2>
+                <canvas id="customerChart"></canvas>
+              </div>
+              <div class="chart-widget">
+                <h2>Std Dev of Reject Rates per Customer <button class="expand-chart" data-chart="customer-std" aria-label="Expand chart">⤢</button></h2>
+                <canvas id="customerStdChart"></canvas>
+                <p id="customerStdChartSummary" class="chart-summary"></p>
+              </div>
+              <div class="chart-widget">
+                <h2>Overall Yield Over Time <button class="expand-chart" data-chart="yield" aria-label="Expand chart">⤢</button></h2>
+                <canvas id="yieldChart"></canvas>
+              </div>
+            </div>
           </div>
-          <h2>Top Operators by Inspected Quantity <button class="expand-chart" data-chart="operators" aria-label="Expand chart">⤢</button></h2>
-          <div class="chart-container">
-            <canvas id="operatorsChart"></canvas>
+          <div class="analysis-table">
+            <h2>Performance per Assembly</h2>
+            <table id="assemblyTable">
+              <thead>
+                <tr>
+                  <th>Assembly</th>
+                  <th>Inspected</th>
+                  <th>Rejected</th>
+                  <th>Yield</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in assemblies %}
+                <tr>
+                  <td>{{ row['assembly'] }}</td>
+                  <td>{{ row['inspected'] }}</td>
+                  <td>{{ row['rejected'] }}</td>
+                  <td>{{ '{:.2%}'.format(row['yield']) }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
           </div>
-          <h2>Shift Totals <button class="expand-chart" data-chart="shift" aria-label="Expand chart">⤢</button></h2>
-          <div class="chart-container">
-            <canvas id="shiftChart"></canvas>
-          </div>
-          <h2>Operator Reject Rates per Customer <button class="expand-chart" data-chart="customer" aria-label="Expand chart">⤢</button></h2>
-          <div class="chart-container">
-            <canvas id="customerChart"></canvas>
-          </div>
-          <h2>Std Dev of Reject Rates per Customer <button class="expand-chart" data-chart="customer-std" aria-label="Expand chart">⤢</button></h2>
-          <div class="chart-container">
-            <canvas id="customerStdChart"></canvas>
-          </div>
-          <p id="customerStdChartSummary" class="chart-summary"></p>
-          <h2>Overall Yield Over Time <button class="expand-chart" data-chart="yield" aria-label="Expand chart">⤢</button></h2>
-          <div class="chart-container">
-            <canvas id="yieldChart"></canvas>
-          </div>
-          <h2>Performance per Assembly</h2>
-          <table id="assemblyTable">
-            <thead>
-              <tr>
-                <th>Assembly</th>
-                <th>Inspected</th>
-                <th>Rejected</th>
-                <th>Yield</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for row in assemblies %}
-              <tr>
-                <td>{{ row['assembly'] }}</td>
-                <td>{{ row['inspected'] }}</td>
-                <td>{{ row['rejected'] }}</td>
-                <td>{{ '{:.2%}'.format(row['yield']) }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
         </div>
       </div>
       <div id="reports" class="tab-content">

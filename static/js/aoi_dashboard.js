@@ -29,93 +29,91 @@ window.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById(id);
     return el ? JSON.parse(el.textContent) : null;
   };
-
-  const ops = getData('operator-data');
   const isAdmin = document.body.dataset.admin === 'true';
-  if (ops && ops.length) {
+  let ops = getData('operator-data') || [];
+  let shiftData = getData('shift-data') || [];
+  let customerData = getData('customer-data') || [];
+  let yieldData = getData('yield-data') || [];
+  let assemblies = getData('assembly-data') || [];
+
+  const charts = {};
+
+  function renderOperators() {
     const ctx = document.getElementById('operatorsChart');
-    if (ctx) {
-      const labels = ops.map((o, idx) => isAdmin ? o.operator : `Operator ${idx + 1}`);
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: 'Accepted',
-              data: ops.map(o => o.inspected - o.rejected),
-              backgroundColor: 'rgba(54, 162, 235, 0.7)'
-            },
-            {
-              label: 'Rejected',
-              data: ops.map(o => o.rejected),
-              backgroundColor: 'rgba(255, 99, 132, 0.7)'
-            }
-          ]
-        },
-        options: {
-          scales: {
-            x: { stacked: true },
-            y: { stacked: true, beginAtZero: true }
-          },
-          plugins: {
-            tooltip: {
-              callbacks: {
-                label: ctx => {
-                  const total = ops[ctx.dataIndex].inspected;
-                  const value = ctx.raw;
-                  const percent = total ? (value / total * 100).toFixed(1) : 0;
-                  return `${ctx.dataset.label}: ${value} (${percent}%)`;
-                }
+    if (!ctx) return;
+    if (charts.operators) charts.operators.destroy();
+    if (!ops.length) return;
+    const labels = ops.map((o, idx) => (isAdmin ? o.operator : `Operator ${idx + 1}`));
+    charts.operators = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Accepted', data: ops.map(o => o.inspected - o.rejected), backgroundColor: 'rgba(54,162,235,0.7)' },
+          { label: 'Rejected', data: ops.map(o => o.rejected), backgroundColor: 'rgba(255,99,132,0.7)' }
+        ]
+      },
+      options: {
+        scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: c => {
+                const total = ops[c.dataIndex].inspected;
+                const value = c.raw;
+                const percent = total ? (value / total * 100).toFixed(1) : 0;
+                return `${c.dataset.label}: ${value} (${percent}%)`;
               }
             }
           }
         }
-      });
-    }
+      }
+    });
   }
 
-  const shiftData = getData('shift-data');
-  if (shiftData && shiftData.length) {
+  function renderShift() {
     const ctx = document.getElementById('shiftChart');
-    if (ctx) {
-      const dates = [...new Set(shiftData.map(r => r.report_date))];
-      const shifts = [...new Set(shiftData.map(r => r.shift))];
-      const colors = ['rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(75, 192, 192, 0.7)', 'rgba(255, 205, 86, 0.7)'];
-      const datasets = shifts.map((s, idx) => ({
-        label: s,
-        data: dates.map(d => {
-          const row = shiftData.find(r => r.report_date === d && r.shift === s);
-          return row ? row.inspected : 0;
-        }),
-        backgroundColor: colors[idx % colors.length]
-      }));
-      new Chart(ctx, {
-        type: 'bar',
-        data: { labels: dates, datasets },
-        options: { scales: { y: { beginAtZero: true } } }
-      });
-    }
+    if (!ctx) return;
+    if (charts.shift) charts.shift.destroy();
+    if (!shiftData.length) return;
+    const dates = [...new Set(shiftData.map(r => r.report_date))];
+    const shifts = [...new Set(shiftData.map(r => r.shift))];
+    const colors = ['rgba(255,99,132,0.7)', 'rgba(54,162,235,0.7)', 'rgba(75,192,192,0.7)', 'rgba(255,205,86,0.7)'];
+    const datasets = shifts.map((s, idx) => ({
+      label: s,
+      data: dates.map(d => {
+        const row = shiftData.find(r => r.report_date === d && r.shift === s);
+        return row ? row.inspected : 0;
+      }),
+      backgroundColor: colors[idx % colors.length]
+    }));
+    charts.shift = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: dates, datasets },
+      options: { scales: { y: { beginAtZero: true } } }
+    });
   }
 
-  const customerData = getData('customer-data');
-  if (customerData && customerData.length) {
+  function renderCustomer() {
     const ctx = document.getElementById('customerChart');
+    const stdCtx = document.getElementById('customerStdChart');
+    const summaryEl = document.getElementById('customerStdChartSummary');
+    if (charts.customer) charts.customer.destroy();
+    if (charts.customerStd) charts.customerStd.destroy();
+    if (!customerData.length) {
+      if (summaryEl) summaryEl.textContent = '';
+      return;
+    }
     if (ctx) {
-      new Chart(ctx, {
+      charts.customer = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: customerData.map(c => c.customer),
-          datasets: [{
-            label: 'Reject Rate',
-            data: customerData.map(c => c.rate),
-            backgroundColor: 'rgba(255, 159, 64, 0.7)'
-          }]
+          datasets: [{ label: 'Reject Rate', data: customerData.map(c => c.rate), backgroundColor: 'rgba(255,159,64,0.7)' }]
         },
         options: { scales: { y: { beginAtZero: true } } }
       });
     }
-    const stdCtx = document.getElementById('customerStdChart');
     if (stdCtx) {
       const rates = customerData.map(c => c.rate);
       const mean = rates.reduce((a, b) => a + b, 0) / rates.length;
@@ -123,47 +121,79 @@ window.addEventListener('DOMContentLoaded', () => {
       const stdev = Math.sqrt(variance);
       const yMax = Math.max(...rates, mean + 3 * stdev, 1);
       const { config } = createStdChartConfig(rates, mean, stdev, yMax);
-      new Chart(stdCtx, config);
-      const summaryEl = document.getElementById('customerStdChartSummary');
+      charts.customerStd = new Chart(stdCtx, config);
       if (summaryEl) summaryEl.textContent = `Avg rate ${mean.toFixed(2)} with std dev ${stdev.toFixed(2)}.`;
     }
   }
 
-  const yieldData = getData('yield-data');
-  if (yieldData && yieldData.length) {
+  function renderYield() {
     const ctx = document.getElementById('yieldChart');
-    if (ctx) {
-      const values = yieldData.map(y => y.yield * 100);
-      const minVal = Math.min(...values);
-      const yMin = minVal < 80 ? minVal : 80;
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: yieldData.map(y => y.report_date),
-          datasets: [{
-            label: 'Yield %',
-            data: values,
-            fill: false,
-            borderColor: 'rgba(75, 192, 192, 1)'
-          }]
-        },
-        options: {
-          scales: {
-            y: {
-              min: yMin,
-              max: 100,
-              ticks: {
-                callback: value => `${value}%`
-              }
-            }
-          }
-        }
-      });
+    if (!ctx) return;
+    if (charts.yield) charts.yield.destroy();
+    if (!yieldData.length) return;
+    const values = yieldData.map(y => y.yield * 100);
+    const minVal = Math.min(...values);
+    const yMin = minVal < 80 ? minVal : 80;
+    charts.yield = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: yieldData.map(y => y.report_date || y.period),
+        datasets: [{ label: 'Yield %', data: values, fill: false, borderColor: 'rgba(75,192,192,1)' }]
+      },
+      options: {
+        scales: { y: { min: yMin, max: 100, ticks: { callback: v => `${v}%` } } }
+      }
+    });
+  }
+
+  function renderAssembly() {
+    const table = document.getElementById('assemblyTable');
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    if (tbody) {
+      tbody.innerHTML = assemblies
+        .map(r => `<tr><td>${r.assembly}</td><td>${r.inspected}</td><td>${r.rejected}</td><td>${(r.yield * 100).toFixed(2)}%</td></tr>`)
+        .join('');
+      if (window.jQuery) {
+        if ($.fn.DataTable.isDataTable(table)) $(table).DataTable().destroy();
+        $(table).DataTable();
+      }
     }
   }
 
-  if (window.jQuery) {
-    $('#assemblyTable').DataTable();
+  function renderAll() {
+    renderOperators();
+    renderShift();
+    renderCustomer();
+    renderYield();
+    renderAssembly();
+  }
+
+  renderAll();
+
+  async function refreshData() {
+    if (!filterForm) return;
+    const params = new URLSearchParams(new FormData(filterForm));
+    try {
+      const resp = await fetch(`/${basePath}/report-data?${params.toString()}`);
+      const data = await resp.json();
+      ops = data.operators || [];
+      shiftData = data.shift_totals || [];
+      customerData = data.customer_rates || [];
+      yieldData = data.yield_series || [];
+      assemblies = data.assemblies || [];
+      renderAll();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  if (filterForm) {
+    filterForm.addEventListener('change', refreshData);
+    filterForm.addEventListener('submit', e => {
+      e.preventDefault();
+      refreshData();
+    });
   }
 
   const table = document.querySelector(`#${basePath}-table table`);

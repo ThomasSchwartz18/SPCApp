@@ -18,13 +18,15 @@
     <label>End: <input type="date" name="end" value="{{ end or '' }}"></label>
     <button type="submit">Apply</button>
   </form>
-  <h2>AOI Operator Grades</h2>
-  <div class="chart-container">
-    <canvas id="operatorGradesChart"></canvas>
-  </div>
-  <h2>Yield Comparison</h2>
-  <div class="chart-container">
-    <canvas id="yieldOverlayChart"></canvas>
+  <div class="chart-grid">
+    <div class="chart-widget">
+      <h2>AOI Operator Grades</h2>
+      <canvas id="operatorGradesChart"></canvas>
+    </div>
+    <div class="chart-widget">
+      <h2>Yield Comparison</h2>
+      <canvas id="yieldOverlayChart"></canvas>
+    </div>
   </div>
   <div class="comparison-panels" style="display:flex; gap:20px; flex-wrap:wrap; margin-top:20px;">
     <details class="panel" style="flex:1;" open>
