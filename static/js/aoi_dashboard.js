@@ -381,25 +381,6 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Expand chart modal
-  const chartModalEl = document.getElementById('chart-modal');
-  const chartModal = chartModalEl ? new bootstrap.Modal(chartModalEl) : null;
-  const modalTitle = document.getElementById('modal-chart-title');
-  const modalCanvas = document.getElementById('modal-chart');
-  const modalHead = document.querySelector('#modal-table thead');
-  const modalBody = document.querySelector('#modal-table tbody');
-  let modalChart;
-
-  function showModal(title, config, headers, rows) {
-    if (modalChart) modalChart.destroy();
-    modalTitle.textContent = title;
-    config.options = { ...config.options, responsive: true, maintainAspectRatio: false };
-    modalChart = new Chart(modalCanvas, config);
-    modalHead.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
-    modalBody.innerHTML = rows.map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('');
-    chartModal.show();
-  }
-
   document.querySelectorAll('.expand-chart').forEach(btn => {
     btn.addEventListener('click', () => {
       const type = btn.dataset.chart;
@@ -422,7 +403,7 @@ window.addEventListener('DOMContentLoaded', () => {
         };
         const rows = data.labels.map((label, idx) => [label, data.inspected[idx], data.rejected[idx]]);
         rows.push(['Total', data.totals.inspected, data.totals.rejected]);
-        showModal('Top Operators by Inspected Quantity', config, ['Operator','Inspected','Rejected'], rows);
+        ChartModal.show('Top Operators by Inspected Quantity', config, ['Operator','Inspected','Rejected'], rows);
       } else if (type === 'shift' && shiftData.length) {
         const data = buildShiftChartData(true);
         const config = renderShift('detail', data);
@@ -437,7 +418,7 @@ window.addEventListener('DOMContentLoaded', () => {
         };
         const rows = shiftData.map(r => [r.report_date, r.shift, r.inspected]);
         rows.push(['', 'Total', data.totals.inspected]);
-        showModal('Shift Totals', config, ['Date','Shift','Inspected'], rows);
+        ChartModal.show('Shift Totals', config, ['Date','Shift','Inspected'], rows);
       } else if (type === 'customer' && customerData.length) {
         const data = buildCustomerChartData(true);
         const { barConfig, barRows, mean } = renderCustomer('detail', data);
@@ -445,7 +426,7 @@ window.addEventListener('DOMContentLoaded', () => {
         barConfig.options.scales.x.title = { display: true, text: 'Customer' };
         barConfig.options.scales.y.title = { display: true, text: 'Reject Rate' };
         const rows = [...barRows, ['Average', mean.toFixed(2)]];
-        showModal('Operator Reject Rates', barConfig, ['Customer','Reject Rate'], rows);
+        ChartModal.show('Operator Reject Rates', barConfig, ['Customer','Reject Rate'], rows);
       } else if (type === 'customer-std' && customerData.length) {
         const data = buildCustomerChartData(true);
         const { stdConfig, stdRows, mean } = renderCustomer('detail', data);
@@ -453,7 +434,7 @@ window.addEventListener('DOMContentLoaded', () => {
         stdConfig.options.scales.x.title = { display: true, text: 'Range' };
         stdConfig.options.scales.y.title = { display: true, text: 'Frequency' };
         const rows = [...stdRows, ['Mean', mean.toFixed(2)]];
-        showModal('Std Dev of Reject Rates per Customer', stdConfig, ['Range','Frequency'], rows);
+        ChartModal.show('Std Dev of Reject Rates per Customer', stdConfig, ['Range','Frequency'], rows);
       } else if (type === 'yield' && yieldData.length) {
         const data = buildYieldChartData(true);
         const config = renderYield('detail', data);
@@ -473,7 +454,7 @@ window.addEventListener('DOMContentLoaded', () => {
         };
         const rows = data.labels.map((label, idx) => [label, data.values[idx].toFixed(2) + '%']);
         rows.push(['Average', data.avg.toFixed(2) + '%']);
-        showModal('Overall Yield Over Time', config, ['Date','Yield %'], rows);
+        ChartModal.show('Overall Yield Over Time', config, ['Date','Yield %'], rows);
       }
     });
   });
