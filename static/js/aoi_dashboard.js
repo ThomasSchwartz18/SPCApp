@@ -23,10 +23,9 @@ window.addEventListener('DOMContentLoaded', () => {
   const charts = {};
 
   // Helpers to build datasets
-  function buildOperatorsChartData(full = false) {
+  function buildOperatorsChartData() {
     if (!ops.length) return null;
     let data = [...ops].sort((a, b) => b.inspected - a.inspected);
-    if (!full) data = data.slice(0, 5);
     const labels = data.map((o, idx) => (isAdmin ? o.operator : `Operator ${idx + 1}`));
     const inspected = data.map(o => o.inspected);
     const rejected = data.map(o => o.rejected);
@@ -85,7 +84,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Chart renderers using datasets
   function renderOperators(mode = 'widget', dataSet = null) {
-    const data = dataSet || buildOperatorsChartData(mode === 'detail');
+    const data = dataSet || buildOperatorsChartData();
     if (!data) return null;
     const config = {
       type: 'bar',
@@ -121,7 +120,6 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     };
     if (mode === 'widget') {
-      config.options.scales.x.ticks = { maxTicksLimit: 5 };
       config.options.scales.y.ticks = { maxTicksLimit: 5 };
     }
     return config;
@@ -385,7 +383,7 @@ window.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => {
       const type = btn.dataset.chart;
       if (type === 'operators' && ops.length) {
-        const data = buildOperatorsChartData(true);
+        const data = buildOperatorsChartData();
         const config = renderOperators('detail', data);
         config.options.plugins.legend.display = true;
         config.options.scales.x.title = { display: true, text: 'Operator' };
@@ -403,7 +401,7 @@ window.addEventListener('DOMContentLoaded', () => {
         };
         const rows = data.labels.map((label, idx) => [label, data.inspected[idx], data.rejected[idx]]);
         rows.push(['Total', data.totals.inspected, data.totals.rejected]);
-        ChartModal.show('Top Operators by Inspected Quantity', config, ['Operator','Inspected','Rejected'], rows);
+        ChartModal.show('Operators by Inspected Quantity', config, ['Operator','Inspected','Rejected'], rows);
       } else if (type === 'shift' && shiftData.length) {
         const data = buildShiftChartData(true);
         const config = renderShift('detail', data);
