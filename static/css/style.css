@@ -497,10 +497,9 @@ table thead th {
 }
 
 /* Chart canvas sizing */
-#chart-canvas {
-  width: 100%;
-  height: auto;
-  min-width: 600px; /* Ensure enough width for labels */
+canvas.chart-canvas {
+  width: 800px;
+  height: 400px;
 }
 
 /* Stats alignment */
