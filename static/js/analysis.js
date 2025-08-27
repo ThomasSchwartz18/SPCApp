@@ -31,10 +31,9 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   // Model filter for MOAT table
-  const modelFilter = document.getElementById('model-filter');
-  if (modelFilter) {
-    modelFilter.addEventListener('change', () => {
-      const value = modelFilter.value;
+  const modelFilterBtns = document.querySelectorAll('.model-filter-btn');
+  if (modelFilterBtns.length) {
+    function applyModelFilter(value) {
       const rows = document.querySelectorAll('#moat-table tbody tr');
       rows.forEach(row => {
         const name = row.cells[0].textContent.toUpperCase();
@@ -44,8 +43,15 @@ window.addEventListener('DOMContentLoaded', () => {
           (value === 'th' && name.includes('TH'));
         row.style.display = show ? '' : 'none';
       });
+    }
+    modelFilterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        modelFilterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyModelFilter(btn.dataset.filter);
+      });
     });
-    modelFilter.dispatchEvent(new Event('change'));
+    applyModelFilter('all');
   }
 
   const refreshBtn = document.getElementById('ppm-refresh-btn');

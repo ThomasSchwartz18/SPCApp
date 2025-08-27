@@ -323,6 +323,9 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   const table = document.querySelector(`#${basePath}-table table`);
+  if (table && window.jQuery) {
+    $(table).DataTable();
+  }
   if (table) {
     table.addEventListener('click', async e => {
       if (!e.target.classList.contains('delete-row')) return;
