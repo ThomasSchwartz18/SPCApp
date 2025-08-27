@@ -79,3 +79,37 @@ def test_operator_grades_json(client):
     assert grades['Jane']['grade'] == 'A'
     assert grades['Bob']['coverage'] is None
     assert grades['Bob']['grade'] is None
+
+
+def test_operator_grades_multiple_operators(client):
+    """FI defects are split based on each operator's inspection share."""
+    conn = get_db()
+    # Two operators on the same job with different inspected quantities
+    conn.execute(
+        "INSERT INTO aoi_reports (report_date, shift, operator, customer, assembly, rev, job_number, qty_inspected, qty_rejected, additional_info) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        ('2024-02-01', '1st', 'Alice', 'Cust', 'Asm1', 'R1', 'J100', 80, 8, ''),
+    )
+    conn.execute(
+        "INSERT INTO aoi_reports (report_date, shift, operator, customer, assembly, rev, job_number, qty_inspected, qty_rejected, additional_info) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        ('2024-02-01', '1st', 'Bob', 'Cust', 'Asm1', 'R1', 'J100', 20, 1, ''),
+    )
+    # FI report totals for the job
+    conn.execute(
+        "INSERT INTO fi_reports (report_date, shift, operator, customer, assembly, rev, job_number, qty_inspected, qty_rejected, additional_info) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        ('2024-02-02', '1st', 'Frank', 'Cust', 'Asm1', 'R1', 'J100', 100, 30, ''),
+    )
+    conn.commit()
+    conn.close()
+
+    with client.session_transaction() as sess:
+        sess['user'] = 'analyst'
+    resp = client.get('/analysis/operator-grades?format=json')
+    assert resp.status_code == 200
+    data = resp.get_json()
+    grades = {g['operator']: g for g in data['grades']}
+
+    # FI rejects should be split 24/6 between Alice and Bob
+    assert math.isclose(grades['Alice']['coverage'], 8 / (8 + 24))
+    assert math.isclose(grades['Bob']['coverage'], 1 / (1 + 6))
+    assert grades['Alice']['grade'] == 'D'
+    assert grades['Bob']['grade'] == 'D'

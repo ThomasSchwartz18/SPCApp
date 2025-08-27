@@ -20,6 +20,19 @@ Material information is available through the route
 `/sap/material/<material_id>` which returns JSON containing the material
 `id` and `description`.
 
+## Operator Grading
+
+The `/analysis/operator-grades` route compares AOI and Final Inspect
+defects per operator. When a job is inspected by multiple operators, the
+FI rejects for that job are divided based on each operator's share of the
+AOI inspected quantity. Coverage is calculated as:
+
+```
+AOI_rejected / (AOI_rejected + weighted_FI_rejected)
+```
+
+The coverage percentage determines the letter grade (A–D).
+
 ## Analysis Comparison API
 
 The analysis module exposes a small JSON endpoint for correlating
