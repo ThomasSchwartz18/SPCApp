@@ -576,3 +576,65 @@ canvas.chart-canvas {
 .saved-query-bar {
   margin-bottom: 8px;
 }
+
+/* Custom navbar styles */
+.custom-navbar {
+  background-color: #E8E8E8 !important;
+  border: 2px solid #000;
+}
+
+.custom-navbar .navbar-brand,
+.custom-navbar .nav-link,
+.custom-navbar .navbar-text,
+.custom-navbar #theme-toggle {
+  color: #000;
+  text-decoration: none;
+}
+
+.custom-navbar .navbar-brand:hover,
+.custom-navbar .nav-link:hover,
+.custom-navbar #theme-toggle:hover {
+  color: #275317;
+}
+
+.custom-navbar .dropdown-toggle::after {
+  content: '\\25BC';
+  border: none;
+  margin-left: 0.2rem;
+  font-size: 0.6em;
+}
+
+.custom-navbar .dropdown-menu {
+  background-color: #ADADAD;
+  border: 2px solid #000;
+  display: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease;
+}
+
+.custom-navbar .dropdown:hover > .dropdown-menu,
+.custom-navbar .dropdown-menu:hover {
+  display: block;
+  opacity: 1;
+  visibility: visible;
+}
+
+.custom-navbar .dropdown-item:hover {
+  background-color: #E8E8E8;
+  color: #275317;
+}
+
+.nav-right .nav-right-item {
+  font-size: 0.9em;
+  text-decoration: underline;
+  color: #000;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 0.5rem;
+}
+
+.nav-right .nav-right-item:hover {
+  color: #275317;
+}
