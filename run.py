@@ -2083,10 +2083,22 @@ def operator_grades():
     rows = conn.execute(
         """
         WITH a AS (
-            SELECT operator, job_number, assembly, SUM(qty_rejected) AS aoi_rejected
+            SELECT operator,
+                   job_number,
+                   assembly,
+                   SUM(qty_rejected) AS aoi_rejected,
+                   SUM(qty_inspected) AS aoi_inspected
             FROM aoi_reports
             WHERE job_number IS NOT NULL AND job_number != ''
             GROUP BY operator, job_number, assembly
+        ),
+        job_totals AS (
+            SELECT job_number,
+                   assembly,
+                   SUM(qty_inspected) AS total_inspected
+            FROM aoi_reports
+            WHERE job_number IS NOT NULL AND job_number != ''
+            GROUP BY job_number, assembly
         ),
         f AS (
             SELECT job_number, assembly, SUM(qty_rejected) AS fi_rejected
@@ -2094,8 +2106,11 @@ def operator_grades():
             WHERE job_number IS NOT NULL AND job_number != ''
             GROUP BY job_number, assembly
         )
-        SELECT a.operator, SUM(a.aoi_rejected) AS aoi_rejected, SUM(f.fi_rejected) AS fi_rejected
+        SELECT a.operator,
+               SUM(a.aoi_rejected) AS aoi_rejected,
+               SUM(f.fi_rejected * a.aoi_inspected / job_totals.total_inspected) AS fi_rejected
         FROM a
+        JOIN job_totals ON a.job_number = job_totals.job_number AND a.assembly = job_totals.assembly
         LEFT JOIN f ON a.job_number = f.job_number AND a.assembly = f.assembly
         GROUP BY a.operator
         ORDER BY a.operator
