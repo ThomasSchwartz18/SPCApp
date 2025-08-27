@@ -445,12 +445,12 @@
         <button id="ppm-refresh-btn">Report Refresh</button>
         {% endif %}
         <div id="model-filter-container">
-          <label for="model-filter">Show Models</label>
-          <select id="model-filter">
-            <option value="all">All</option>
-            <option value="smt">SMT</option>
-            <option value="th">TH</option>
-          </select>
+          <span>Show Models</span>
+          <div class="model-toolbar">
+            <button type="button" class="model-filter-btn active" data-filter="all">All</button>
+            <button type="button" class="model-filter-btn" data-filter="smt">SMT</button>
+            <button type="button" class="model-filter-btn" data-filter="th">TH</button>
+          </div>
         </div>
         <table>
           <thead><tr>
