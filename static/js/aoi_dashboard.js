@@ -251,8 +251,9 @@ window.addEventListener('DOMContentLoaded', () => {
     if (!el) return;
     const data = buildOperatorsChartData();
     if (!data) { el.textContent = ''; return; }
+    const avgInspected = data.labels.length ? (data.totals.inspected / data.labels.length) : 0;
     const rate = data.totals.inspected ? (data.totals.rejected / data.totals.inspected * 100) : 0;
-    el.textContent = `Total inspected: ${data.totals.inspected}, Total rejected: ${data.totals.rejected}, Avg reject rate: ${rate.toFixed(2)}%`;
+    el.innerHTML = `Total inspected: ${data.totals.inspected}, Total rejected: ${data.totals.rejected}, Avg reject rate: ${rate.toFixed(2)}% <span class="avg-operators">Avg inspected/operator: ${avgInspected.toFixed(1)}</span>`;
   }
 
   function updateShiftDetails() {
