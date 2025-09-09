@@ -186,6 +186,7 @@
                   <th>Assembly</th>
                   <th>Inspected</th>
                   <th>Rejected</th>
+                  <th>FI Reject Rate</th>
                   <th>Yield</th>
                 </tr>
               </thead>
@@ -195,6 +196,13 @@
                   <td>{{ row['assembly'] }}</td>
                   <td>{{ row['inspected'] }}</td>
                   <td>{{ row['rejected'] }}</td>
+                  <td>
+                    {% if row.get('fi_reject_rate') is not none %}
+                    {{ '{:.2%}'.format(row.get('fi_reject_rate')) }}
+                    {% else %}
+                    <span class="text-muted">null</span>
+                    {% endif %}
+                  </td>
                   <td>{{ '{:.2%}'.format(row['yield']) }}</td>
                 </tr>
                 {% endfor %}
