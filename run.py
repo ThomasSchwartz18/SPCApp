@@ -1803,6 +1803,80 @@ def reports():
         return redirect('/')
     return render_template('reports.html')
 
+
+@app.route('/reports/aoi-operators')
+@login_required
+def aoi_operator_report_view():
+    """Render the AOI operator performance report."""
+    if not has_permission('reports'):
+        return redirect('/')
+    return render_template('aoi_operator_report.html')
+
+
+@app.route('/reports/aoi-operators/data')
+@login_required
+def aoi_operator_report_data():
+    """Return aggregated AOI operator data for reports."""
+    if not has_permission('reports'):
+        return jsonify(error='Forbidden'), 403
+
+    start = request.args.get('start')
+    end = request.args.get('end')
+
+    conn = get_db()
+    if start and end:
+        try:
+            start_date = datetime.strptime(start, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end, '%Y-%m-%d').date()
+        except ValueError:
+            conn.close()
+            return jsonify(error='Invalid date format'), 400
+    else:
+        end_row = conn.execute('SELECT MAX(report_date) AS max_date FROM aoi_reports').fetchone()
+        if not end_row or not end_row['max_date']:
+            conn.close()
+            return jsonify(summary={'inspected': 0, 'rejected': 0, 'yield': 0}, operators=[])
+        end_date = datetime.strptime(end_row['max_date'], '%Y-%m-%d').date()
+        start_date = end_date - timedelta(days=29)
+
+    params = [start_date.isoformat(), end_date.isoformat()]
+    rows = conn.execute(
+        'SELECT operator, SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
+        'FROM aoi_reports WHERE report_date BETWEEN ? AND ? '
+        'GROUP BY operator ORDER BY operator',
+        params,
+    ).fetchall()
+
+    totals = conn.execute(
+        'SELECT SUM(qty_inspected) AS inspected, SUM(qty_rejected) AS rejected '
+        'FROM aoi_reports WHERE report_date BETWEEN ? AND ?',
+        params,
+    ).fetchone()
+    conn.close()
+
+    total_inspected = totals['inspected'] or 0
+    total_rejected = totals['rejected'] or 0
+    overall_yield = 1 - (total_rejected * 1.0 / total_inspected) if total_inspected else 0
+
+    operators = [
+        {
+            'operator': r['operator'],
+            'inspected': r['inspected'] or 0,
+            'rejected': r['rejected'] or 0,
+            'yield': 1 - (r['rejected'] * 1.0 / r['inspected']) if r['inspected'] else 0,
+        }
+        for r in rows
+    ]
+
+    return jsonify(
+        summary={
+            'inspected': total_inspected,
+            'rejected': total_rejected,
+            'yield': overall_yield,
+        },
+        operators=operators,
+    )
+
 @app.route('/uploads')
 @login_required
 def list_uploads():
