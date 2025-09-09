@@ -43,7 +43,16 @@ document.getElementById('generate-report')?.addEventListener('click', async () =
   const fcCtx = makeCanvas();
   const ngCtx = makeCanvas();
   const opCtx = makeCanvas();
+  const opDetails = document.createElement('div');
+  opDetails.className = 'chart-details';
+  content.appendChild(opDetails);
   const yieldCtx = makeCanvas();
+
+  const opTotalsInspected = aoiData.operators.reduce((sum, o) => sum + o.inspected, 0);
+  const opTotalsRejected = aoiData.operators.reduce((sum, o) => sum + o.rejected, 0);
+  const opAvgRejectRate = opTotalsInspected ? (opTotalsRejected / opTotalsInspected * 100) : 0;
+  const opAvgInspected = aoiData.operators.length ? (opTotalsInspected / aoiData.operators.length) : 0;
+  opDetails.innerHTML = `Total inspected: ${opTotalsInspected}, Total rejected: ${opTotalsRejected}, Avg reject rate: ${opAvgRejectRate.toFixed(2)}% <span class="avg-operators">Avg inspected/operator: ${opAvgInspected.toFixed(1)}</span>`;
 
   const table = document.createElement('table');
   content.appendChild(table);

@@ -244,6 +244,11 @@ table thead th {
   font-size: 0.9em;
 }
 
+.avg-operators {
+  color: var(--color-accent);
+  font-weight: bold;
+}
+
 @media (max-width: 600px) {
   .chart-widget {
     height: 200px;
