@@ -231,18 +231,34 @@ window.addEventListener('DOMContentLoaded', () => {
     return config;
   }
 
-  function renderAssembly() {
+  async function renderAssembly() {
     const table = document.getElementById('assemblyTable');
     if (!table) return;
     const tbody = table.querySelector('tbody');
-    if (tbody) {
-      tbody.innerHTML = assemblies
-        .map(r => `<tr><td>${r.assembly}</td><td>${r.inspected}</td><td>${r.rejected}</td><td>${(r.yield * 100).toFixed(2)}%</td></tr>`)
-        .join('');
-      if (window.jQuery) {
-        if ($.fn.DataTable.isDataTable(table)) $(table).DataTable().destroy();
-        $(table).DataTable({ paging: false });
+    if (!tbody) return;
+
+    // Fetch latest assembly data including FI reject rates if not already present
+    if (!assemblies.length || assemblies[0].fi_reject_rate === undefined) {
+      try {
+        const params = filterForm ? new URLSearchParams(new FormData(filterForm)) : new URLSearchParams();
+        const resp = await fetch(`/${basePath}/report-data?${params.toString()}`);
+        const data = await resp.json();
+        assemblies = data.assemblies || [];
+      } catch (err) {
+        console.error(err);
       }
+    }
+
+    const rows = assemblies
+      .map(r => {
+        const fiRate = r.fi_reject_rate == null ? '<span class="text-muted">null</span>' : `${(r.fi_reject_rate * 100).toFixed(2)}%`;
+        return `<tr><td>${r.assembly}</td><td>${r.inspected}</td><td>${r.rejected}</td><td>${fiRate}</td><td>${(r.yield * 100).toFixed(2)}%</td></tr>`;
+      })
+      .join('');
+    tbody.innerHTML = rows;
+    if (window.jQuery) {
+      if ($.fn.DataTable.isDataTable(table)) $(table).DataTable().destroy();
+      $(table).DataTable({ paging: false });
     }
   }
 

@@ -20,6 +20,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from sap_client import create_sap_service
 
+try:
+    import requests  # Optional; used for Supabase queries
+except Exception:  # pragma: no cover - fail gracefully if not installed
+    requests = None
+from urllib.parse import quote
+
 def parse_aoi_rows(path: str):
     """Return rows from an AOI Excel file without headers."""
     ext = os.path.splitext(path)[1].lower()
@@ -1021,6 +1027,28 @@ def aoi_report_data():
         params,
     ).fetchall()
     conn.close()
+    # Fetch Final Inspect reject rate from Supabase combined_reports view
+    fi_rates = {}
+    sb_url = os.environ.get('SUPABASE_URL')
+    sb_key = os.environ.get('SUPABASE_KEY') or os.environ.get('SUPABASE_SERVICE_KEY')
+    if requests and sb_url and sb_key and asm_rows:
+        headers = {'apikey': sb_key, 'Authorization': f'Bearer {sb_key}'}
+        for r in asm_rows:
+            asm = r['assembly']
+            if not asm:
+                continue
+            try:
+                resp = requests.get(
+                    f"{sb_url}/rest/v1/combined_reports?select=fi_reject_rate&assembly=eq.{quote(asm)}",
+                    headers=headers,
+                    timeout=10,
+                )
+                if resp.ok:
+                    data = resp.json()
+                    if isinstance(data, list) and data:
+                        fi_rates[asm] = data[0].get('fi_reject_rate')
+            except Exception:
+                continue
 
     operators = [
         {
@@ -1036,6 +1064,7 @@ def aoi_report_data():
             'inspected': r['inspected'] or 0,
             'rejected': r['rejected'] or 0,
             'yield': 1 - (r['rejected'] * 1.0 / r['inspected']) if r['inspected'] else 0,
+            'fi_reject_rate': fi_rates.get(r['assembly']),
         }
         for r in asm_rows
     ]
